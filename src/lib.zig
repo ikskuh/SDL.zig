@@ -1,6 +1,29 @@
 const c = @import("c.zig");
 const std = @import("std");
 
+pub const image = @import("image.zig");
+
+pub const Rectangle = extern struct {
+    x: c_int,
+    y: c_int,
+    width: c_int,
+    height: c_int,
+
+    fn getSdlPtr(r: Rectangle) *const c.SDL_Rect {
+        return @ptrCast(*const c.SDL_Rect, &r);
+    }
+};
+
+pub const Point = extern struct {
+    x: c_int,
+    y: c_int,
+};
+
+pub const Size = extern struct {
+    width: c_int,
+    height: c_int,
+};
+
 pub const InitFlags = struct {
     pub const everything = InitFlags{
         .video = true,
@@ -194,6 +217,26 @@ pub const Renderer = struct {
     pub fn present(ren: Renderer) void {
         c.SDL_RenderPresent(ren.ptr);
     }
+
+    pub fn copy(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle) !void {
+        if (c.SDL_RenderCopy(ren.ptr, tex.ptr, if (srcRect) |r| r.getSdlPtr() else null, if (dstRect) |r| r.getSdlPtr() else null) < 0)
+            return error.SdlError;
+    }
+
+    pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
+        if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
+            return error.SdlError;
+    }
+
+    pub fn setColorRGB(ren: Renderer, r: u8, g: u8, b: u8) !void {
+        if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, 255) < 0)
+            return error.SdlError;
+    }
+
+    pub fn setColorRGBA(ren: Renderer, r: u8, g: u8, b: u8, a: u8) !void {
+        if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, a) < 0)
+            return error.SdlError;
+    }
 };
 
 pub const RendererFlags = struct {
@@ -221,6 +264,36 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
         ) orelse return error.SdlError,
     };
 }
+
+pub const Texture = struct {
+    ptr: *c.SDL_Texture,
+
+    fn deinit(tex: Texture) void {
+        c.SDL_DestroyTexture(tex.ptr);
+    }
+
+    const Info = struct {
+        width: usize,
+        height: usize,
+        access: c_int,
+        format: c.Uint32,
+    };
+
+    fn query(tex: Texture) !Info {
+        var format: c.Uint32 = undefined;
+        var w: c_int = undefined;
+        var h: c_int = undefined;
+        var access: c_int = undefined;
+        if (c.SDL_QueryTexture(tex.ptr, &format, &access, &w, &h) < 0)
+            return error.SdlError;
+        return Info{
+            .width = @intCast(usize, w),
+            .height = @intCast(usize, h),
+            .access = access,
+            .format = format,
+        };
+    }
+};
 
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
@@ -360,4 +433,25 @@ pub fn pollEvent() ?Event {
     if (c.SDL_PollEvent(&ev) != 0)
         return Event.from(ev);
     return null;
+}
+
+const MouseState = struct {
+    x: c_int,
+    y: c_int,
+    left: bool,
+    right: bool,
+    middle: bool,
+    extra1: bool,
+    extra2: bool,
+};
+
+pub fn getMouseState() MouseState {
+    var ms: MouseState = undefined;
+    const buttons = c.SDL_GetMouseState(&ms.x, &ms.y);
+    ms.left = ((buttons & 1) != 0);
+    ms.right = ((buttons & 4) != 0);
+    ms.middle = ((buttons & 2) != 0);
+    ms.extra1 = ((buttons & 8) != 0);
+    ms.extra2 = ((buttons & 16) != 0);
+    return ms;
 }
