@@ -74,6 +74,12 @@ pub const Window = struct {
     pub fn destroy(w: Window) void {
         c.SDL_DestroyWindow(w.ptr);
     }
+
+    pub fn getSize(w: Window) Size {
+        var s: Size = undefined;
+        c.SDL_GetWindowSize(w.ptr, &s.width, &s.height);
+        return s;
+    }
 };
 
 pub const WindowPosition = union(enum) {
@@ -435,7 +441,7 @@ pub fn pollEvent() ?Event {
     return null;
 }
 
-const MouseState = struct {
+pub const MouseState = struct {
     x: c_int,
     y: c_int,
     left: bool,
@@ -454,4 +460,20 @@ pub fn getMouseState() MouseState {
     ms.extra1 = ((buttons & 8) != 0);
     ms.extra2 = ((buttons & 16) != 0);
     return ms;
+}
+
+pub const KeyboardState = struct {
+    states: []u8,
+
+    pub fn isPressed(ks: KeyboardState, scanCode: c.SDL_Scancode) bool {
+        return ks.states[@intCast(usize, @enumToInt(scanCode))] != 0;
+    }
+};
+
+pub fn getKeyboardState() KeyboardState {
+    var len: c_int = undefined;
+    const slice = c.SDL_GetKeyboardState(&len);
+    return KeyboardState{
+        .states = slice[0..@intCast(usize, len)],
+    };
 }
