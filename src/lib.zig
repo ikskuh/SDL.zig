@@ -24,6 +24,112 @@ pub const Size = extern struct {
     height: c_int,
 };
 
+pub const Color = extern struct {
+    comptime {
+        std.debug.assert(c.Uint8 == u8);
+    }
+
+    pub const black = rgb(0x00, 0x00, 0x00);
+    pub const white = rgb(0xFF, 0xFF, 0xFF);
+    pub const red = rgb(0xFF, 0x00, 0x00);
+    pub const green = rgb(0x00, 0xFF, 0x00);
+    pub const blue = rgb(0x00, 0x00, 0xFF);
+    pub const magenta = rgb(0xFF, 0x00, 0xFF);
+    pub const cyan = rgb(0x00, 0xFF, 0xFF);
+    pub const yellow = rgb(0xFF, 0xFF, 0x00);
+
+    r: u8,
+    g: u8,
+    b: u8,
+    a: u8,
+
+    /// returns a initialized color struct with alpha = 255
+    pub fn rgb(r: u8, g: u8, b: u8) Color {
+        return Color{ .r = r, .g = g, .b = b, .a = 255 };
+    }
+
+    /// returns a initialized color struct
+    pub fn rgba(r: u8, g: u8, b: u8, a: u8) Color {
+        return Color{ .r = r, .g = g, .b = b, .a = a };
+    }
+
+    /// parses a hex string color literal.
+    /// allowed formats are:
+    /// - `RGB`
+    /// - `RGBA`
+    /// - `#RGB`
+    /// - `#RGBA`
+    /// - `RRGGBB`
+    /// - `#RRGGBB`
+    /// - `RRGGBBAA`
+    /// - `#RRGGBBAA`
+    pub fn parse(str: []const u8) !Color {
+        switch (str.len) {
+            // RGB
+            3 => {
+                const r = try std.fmt.parseInt(u8, str[0..1], 16);
+                const g = try std.fmt.parseInt(u8, str[1..2], 16);
+                const b = try std.fmt.parseInt(u8, str[2..3], 16);
+
+                return rgb(
+                    r | (r << 4),
+                    g | (g << 4),
+                    b | (b << 4),
+                );
+            },
+
+            // #RGB, RGBA
+            4 => {
+                if (str[0] == '#')
+                    return parse(str[1..]);
+
+                const r = try std.fmt.parseInt(u8, str[0..1], 16);
+                const g = try std.fmt.parseInt(u8, str[1..2], 16);
+                const b = try std.fmt.parseInt(u8, str[2..3], 16);
+                const a = try std.fmt.parseInt(u8, str[3..4], 16);
+
+                // bit-expand the patters to a uniform range
+                return rgb(
+                    r | (r << 4),
+                    g | (g << 4),
+                    b | (b << 4),
+                    a | (a << 4),
+                );
+            },
+
+            // #RGBA
+            5 => return parse(str[1..]),
+
+            // RRGGBB
+            6 => {
+                const r = try std.fmt.parseInt(u8, str[0..2], 16);
+                const g = try std.fmt.parseInt(u8, str[2..4], 16);
+                const b = try std.fmt.parseInt(u8, str[4..6], 16);
+
+                return rgb(r, g, b);
+            },
+
+            // #RRGGBB
+            7 => return parse(str[1..]),
+
+            // RRGGBBAA
+            8 => {
+                const r = try std.fmt.parseInt(u8, str[0..2], 16);
+                const g = try std.fmt.parseInt(u8, str[2..4], 16);
+                const b = try std.fmt.parseInt(u8, str[4..6], 16);
+                const a = try std.fmt.parseInt(u8, str[6..8], 16);
+
+                return rgba(r, g, b, a);
+            },
+
+            // #RRGGBBAA
+            9 => return parse(str[1..]),
+
+            else => return error.UnknownFormat,
+        }
+    }
+};
+
 pub const InitFlags = struct {
     pub const everything = InitFlags{
         .video = true,
@@ -299,6 +405,24 @@ pub const Texture = struct {
             .format = format,
         };
     }
+    fn resetColorMod(tex: Texture) !void {
+        try tex.setColorMod(Color.white);
+    }
+
+    fn setColorMod(tex: Texture, color: Color) !void {
+        if (c.SDL_SetTextureColorMod(tex.ptr, color.r, color.g, color.b) < 0)
+            return error.SdlError;
+        if (c.SDL_SetTextureAlphaMod(tex.ptr, color.a) < 0)
+            return error.SdlError;
+    }
+
+    fn setColorModRGB(tex: Texture, r: u8, g: u8, b: u8) !void {
+        tex.setColorMod(Color.rgb(r, g, b));
+    }
+
+    fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
+        tex.setColorMod(Color.rgba(r, g, b, a));
+    }
 };
 
 pub const Event = union(enum) {
@@ -476,4 +600,8 @@ pub fn getKeyboardState() KeyboardState {
     return KeyboardState{
         .states = slice[0..@intCast(usize, len)],
     };
+}
+
+pub fn getTicks() usize {
+    return c.SDL_GetTicks();
 }
