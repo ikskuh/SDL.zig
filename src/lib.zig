@@ -63,7 +63,11 @@ pub const Color = extern struct {
     /// - `#RRGGBB`
     /// - `RRGGBBAA`
     /// - `#RRGGBBAA`
-    pub fn parse(str: []const u8) !Color {
+    pub fn parse(str: []const u8) error{
+        UnknownFormat,
+        InvalidCharacter,
+        Overflow,
+    }!Color {
         switch (str.len) {
             // RGB
             3 => {
@@ -89,7 +93,7 @@ pub const Color = extern struct {
                 const a = try std.fmt.parseInt(u8, str[3..4], 16);
 
                 // bit-expand the patters to a uniform range
-                return rgb(
+                return rgba(
                     r | (r << 4),
                     g | (g << 4),
                     b | (b << 4),
@@ -337,6 +341,11 @@ pub const Renderer = struct {
 
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
+            return error.SdlError;
+    }
+
+    pub fn setColor(ren: Renderer, color: Color) !void {
+        if (c.SDL_SetRenderDrawColor(ren.ptr, color.r, color.g, color.b, color.a) < 0)
             return error.SdlError;
     }
 
