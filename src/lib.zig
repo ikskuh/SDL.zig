@@ -264,8 +264,8 @@ pub const WindowFlags = struct {
     //     @panic("niy");
     // }
 
-    fn toInteger(wf: WindowFlags) c_uint {
-        var val: c_uint = 0;
+    fn toInteger(wf: WindowFlags) c_int {
+        var val: c_int = 0;
         if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
         if (wf.fullscreenDesktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
         if (wf.openGL) val |= c.SDL_WINDOW_OPENGL;
@@ -313,7 +313,7 @@ pub fn createWindow(
             },
             width,
             height,
-            flags.toInteger(),
+            @intCast(u32, flags.toInteger()),
         ) orelse return error.SdlError,
     };
 }
@@ -366,8 +366,8 @@ pub const RendererFlags = struct {
     presentVSync: bool = false,
     targetTexture: bool = false,
 
-    fn toInteger(rf: RendererFlags) c_uint {
-        var val: c_uint = 0;
+    fn toInteger(rf: RendererFlags) c_int {
+        var val: c_int = 0;
         if (rf.software) val |= c.SDL_RENDERER_SOFTWARE;
         if (rf.accelerated) val |= c.SDL_RENDERER_ACCELERATED;
         if (rf.presentVSync) val |= c.SDL_RENDERER_PRESENTVSYNC;
@@ -381,7 +381,7 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
         .ptr = c.SDL_CreateRenderer(
             window.ptr,
             if (index) |idx| @intCast(c_int, idx) else -1,
-            flags.toInteger(),
+            @intCast(u32, flags.toInteger()),
         ) orelse return error.SdlError,
     };
 }
