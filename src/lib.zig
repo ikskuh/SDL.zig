@@ -339,6 +339,11 @@ pub const Renderer = struct {
             return error.SdlError;
     }
 
+    pub fn drawLine(ren: Renderer, x0: i32, y0: i32, x1: i32, y1: i32) !void {
+        if (c.SDL_RenderDrawLine(ren.ptr, x0, y0, x1, y1) < 0)
+            return error.SdlError;
+    }
+
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
             return error.SdlError;
@@ -389,15 +394,25 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
 pub const Texture = struct {
     ptr: *c.SDL_Texture,
 
-    fn deinit(tex: Texture) void {
+    fn destroy(tex: Texture) void {
         c.SDL_DestroyTexture(tex.ptr);
+    }
+
+    fn update(texture: Texture, pixels: []const u8, pitch: usize, rectangle: ?Rectangle) !void {
+        if (c.SDL_UpdateTexture(
+            texture.ptr,
+            if (rectangle) |rect| rect.getSdlPtr() else null,
+            pixels.ptr,
+            @intCast(c_int, pitch),
+        ) != 0)
+            return error.SdlError;
     }
 
     const Info = struct {
         width: usize,
         height: usize,
-        access: c_int,
-        format: c.Uint32,
+        access: Access,
+        format: Format,
     };
 
     fn query(tex: Texture) !Info {
@@ -410,8 +425,8 @@ pub const Texture = struct {
         return Info{
             .width = @intCast(usize, w),
             .height = @intCast(usize, h),
-            .access = access,
-            .format = format,
+            .access = @intToEnum(Access, access),
+            .format = @intToEnum(Format, format),
         };
     }
     fn resetColorMod(tex: Texture) !void {
@@ -432,7 +447,67 @@ pub const Texture = struct {
     fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
         tex.setColorMod(Color.rgba(r, g, b, a));
     }
+
+    pub const Format = enum(c.Uint32) {
+        index1_lsb = c.SDL_PIXELFORMAT_INDEX1LSB,
+        index1_msb = c.SDL_PIXELFORMAT_INDEX1MSB,
+        index4_lsb = c.SDL_PIXELFORMAT_INDEX4LSB,
+        index4_msb = c.SDL_PIXELFORMAT_INDEX4MSB,
+        index8 = c.SDL_PIXELFORMAT_INDEX8,
+        rgb332 = c.SDL_PIXELFORMAT_RGB332,
+        rgb444 = c.SDL_PIXELFORMAT_RGB444,
+        rgb555 = c.SDL_PIXELFORMAT_RGB555,
+        bgr555 = c.SDL_PIXELFORMAT_BGR555,
+        argb4444 = c.SDL_PIXELFORMAT_ARGB4444,
+        rgba4444 = c.SDL_PIXELFORMAT_RGBA4444,
+        abgr4444 = c.SDL_PIXELFORMAT_ABGR4444,
+        bgra4444 = c.SDL_PIXELFORMAT_BGRA4444,
+        argb1555 = c.SDL_PIXELFORMAT_ARGB1555,
+        rgba5551 = c.SDL_PIXELFORMAT_RGBA5551,
+        abgr1555 = c.SDL_PIXELFORMAT_ABGR1555,
+        bgra5551 = c.SDL_PIXELFORMAT_BGRA5551,
+        rgb565 = c.SDL_PIXELFORMAT_RGB565,
+        bgr565 = c.SDL_PIXELFORMAT_BGR565,
+        rgb24 = c.SDL_PIXELFORMAT_RGB24,
+        bgr24 = c.SDL_PIXELFORMAT_BGR24,
+        rgb888 = c.SDL_PIXELFORMAT_RGB888,
+        rgbx8888 = c.SDL_PIXELFORMAT_RGBX8888,
+        bgr888 = c.SDL_PIXELFORMAT_BGR888,
+        bgrx8888 = c.SDL_PIXELFORMAT_BGRX8888,
+        argb8888 = c.SDL_PIXELFORMAT_ARGB8888,
+        rgba8888 = c.SDL_PIXELFORMAT_RGBA8888,
+        abgr8888 = c.SDL_PIXELFORMAT_ABGR8888,
+        bgra8888 = c.SDL_PIXELFORMAT_BGRA8888,
+        argb2101010 = c.SDL_PIXELFORMAT_ARGB2101010,
+        yv12 = c.SDL_PIXELFORMAT_YV12,
+        iyuv = c.SDL_PIXELFORMAT_IYUV,
+        yuy2 = c.SDL_PIXELFORMAT_YUY2,
+        uyvy = c.SDL_PIXELFORMAT_UYVY,
+        yvyu = c.SDL_PIXELFORMAT_YVYU,
+        nv12 = c.SDL_PIXELFORMAT_NV12,
+        nv21 = c.SDL_PIXELFORMAT_NV21,
+        externalOES = c.SDL_PIXELFORMAT_EXTERNAL_OES,
+    };
+
+    pub const Access = enum(c_int) {
+        static = c.SDL_TEXTUREACCESS_STATIC,
+        streaming = c.SDL_TEXTUREACCESS_STREAMING,
+        target = c.SDL_TEXTUREACCESS_TARGET,
+    };
 };
+
+pub fn createTexture(renderer: Renderer, format: Texture.Format, access: Texture.Access, width: usize, height: usize) !Texture {
+    const texptr = c.SDL_CreateTexture(
+        renderer.ptr,
+        @enumToInt(format),
+        @enumToInt(access),
+        @intCast(c_int, width),
+        @intCast(c_int, height),
+    ) orelse return error.SdlError;
+    return Texture{
+        .ptr = texptr,
+    };
+}
 
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;

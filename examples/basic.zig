@@ -31,7 +31,7 @@ pub fn gameMain() !void {
                 .keyDown => |key| {
                     switch (key.keysym.scancode) {
                         .SDL_SCANCODE_ESCAPE => break :mainLoop,
-                        else => std.debug.warn("key pressed: {}\n", key.keysym.scancode),
+                        else => std.debug.warn("key pressed: {}\n", .{key.keysym.scancode}),
                     }
                 },
 
@@ -59,7 +59,7 @@ pub fn gameMain() !void {
 pub fn main() !void {
     gameMain() catch |err| switch (err) {
         error.SdlError => {
-            std.debug.warn("SDL Failure: {}\n", SDL.getError());
+            std.debug.warn("SDL Failure: {}\n", .{SDL.getError()});
             return err;
         },
         else => return err,
