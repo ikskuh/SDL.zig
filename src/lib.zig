@@ -344,6 +344,11 @@ pub const Renderer = struct {
             return error.SdlError;
     }
 
+    pub fn fillRect(ren: Renderer, rect: Rectangle) !void {
+        if (c.SDL_RenderFillRect(ren.ptr, rect.getSdlPtr()) < 0)
+            return error.SdlError;
+    }
+
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
             return error.SdlError;
@@ -361,6 +366,11 @@ pub const Renderer = struct {
 
     pub fn setColorRGBA(ren: Renderer, r: u8, g: u8, b: u8, a: u8) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, a) < 0)
+            return error.SdlError;
+    }
+
+    pub fn setDrawBlendMode(ren: Renderer, blendMode: c.SDL_BlendMode) !void {
+        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, blendMode) < 0)
             return error.SdlError;
     }
 };
