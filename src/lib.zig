@@ -141,7 +141,7 @@ pub const InitFlags = struct {
         .timer = true,
         .joystick = true,
         .haptic = true,
-        .gameController = true,
+        .game_controller = true,
         .events = true,
     };
     video: bool = false,
@@ -149,7 +149,7 @@ pub const InitFlags = struct {
     timer: bool = false,
     joystick: bool = false,
     haptic: bool = false,
-    gameController: bool = false,
+    game_controller: bool = false,
     events: bool = false,
 };
 
@@ -160,7 +160,7 @@ pub fn init(flags: InitFlags) !void {
     if (flags.timer) cflags |= c.SDL_INIT_TIMER;
     if (flags.joystick) cflags |= c.SDL_INIT_JOYSTICK;
     if (flags.haptic) cflags |= c.SDL_INIT_HAPTIC;
-    if (flags.gameController) cflags |= c.SDL_INIT_GAMECONTROLLER;
+    if (flags.game_controller) cflags |= c.SDL_INIT_GAMECONTROLLER;
     if (flags.events) cflags |= c.SDL_INIT_EVENTS;
     if (c.SDL_Init(cflags) < 0)
         return error.SdlError;
@@ -180,6 +180,13 @@ pub fn getError() ?[]const u8 {
 
 pub const Window = struct {
     ptr: *c.SDL_Window,
+
+    pub fn fromID(wid: u32) ?Window {
+        return if (c.SDL_GetWindowFromID(wid)) |ptr|
+            Window{ .ptr = ptr }
+        else
+            null;
+    }
 
     pub fn destroy(w: Window) void {
         c.SDL_DestroyWindow(w.ptr);
@@ -203,10 +210,10 @@ pub const WindowFlags = struct {
     fullscreen: bool = false, // SDL_WINDOW_FULLSCREEN,
 
     /// fullscreen window at the current desktop resolution,
-    fullscreenDesktop: bool = false, // SDL_WINDOW_FULLSCREEN_DESKTOP
+    fullscreen_desktop: bool = false, // SDL_WINDOW_FULLSCREEN_DESKTOP
 
     /// window usable with OpenGL context
-    openGL: bool = false, //  SDL_WINDOW_OPENGL,
+    opengl: bool = false, //  SDL_WINDOW_OPENGL,
 
     /// window is visible,
     shown: bool = false, //  SDL_WINDOW_SHOWN,
@@ -227,28 +234,28 @@ pub const WindowFlags = struct {
     maximized: bool = false, // SDL_WINDOW_MAXIMIZED,
 
     ///  window has grabbed input focus
-    inputGrabbed: bool = false, // SDL_WINDOW_INPUT_GRABBED,
+    input_grabbed: bool = false, // SDL_WINDOW_INPUT_GRABBED,
 
     /// window has input focus
-    inputFocus: bool = false, //SDL_WINDOW_INPUT_FOCUS,
+    input_focus: bool = false, //SDL_WINDOW_INPUT_FOCUS,
 
     ///  window has mouse focus
-    mouseFocus: bool = false, //SDL_WINDOW_MOUSE_FOCUS,
+    mouse_focus: bool = false, //SDL_WINDOW_MOUSE_FOCUS,
 
     /// window not created by SDL
     foreign: bool = false, //SDL_WINDOW_FOREIGN,
 
     /// window should be created in high-DPI mode if supported (>= SDL 2.0.1)
-    allowHighDPI: bool = false, //SDL_WINDOW_ALLOW_HIGHDPI,
+    allow_high_dpi: bool = false, //SDL_WINDOW_ALLOW_HIGHDPI,
 
     /// window has mouse captured (unrelated to INPUT_GRABBED, >= SDL 2.0.4)
-    mouseCapture: bool = false, //SDL_WINDOW_MOUSE_CAPTURE,
+    mouse_capture: bool = false, //SDL_WINDOW_MOUSE_CAPTURE,
 
     /// window should always be above others (X11 only, >= SDL 2.0.5)
-    alwaysOnTop: bool = false, //SDL_WINDOW_ALWAYS_ON_TOP,
+    always_on_top: bool = false, //SDL_WINDOW_ALWAYS_ON_TOP,
 
     /// window should not be added to the taskbar (X11 only, >= SDL 2.0.5)
-    skipTaskbar: bool = false, //SDL_WINDOW_SKIP_TASKBAR,
+    skip_taskbar: bool = false, //SDL_WINDOW_SKIP_TASKBAR,
 
     /// window should be treated as a utility window (X11 only, >= SDL 2.0.5)
     utility: bool = false, //SDL_WINDOW_UTILITY,
@@ -257,7 +264,7 @@ pub const WindowFlags = struct {
     tooltip: bool = false, //SDL_WINDOW_TOOLTIP,
 
     /// window should be treated as a popup menu (X11 only, >= SDL 2.0.5)
-    popupMenu: bool = false, //SDL_WINDOW_POPUP_MENU,
+    popup_menu: bool = false, //SDL_WINDOW_POPUP_MENU,
 
     // fn fromInteger(val: c_uint) WindowFlags {
     //     // TODO: Implement
@@ -267,25 +274,25 @@ pub const WindowFlags = struct {
     fn toInteger(wf: WindowFlags) c_int {
         var val: c_int = 0;
         if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
-        if (wf.fullscreenDesktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
-        if (wf.openGL) val |= c.SDL_WINDOW_OPENGL;
+        if (wf.fullscreen_desktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
+        if (wf.opengl) val |= c.SDL_WINDOW_OPENGL;
         if (wf.shown) val |= c.SDL_WINDOW_SHOWN;
         if (wf.hidden) val |= c.SDL_WINDOW_HIDDEN;
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
         if (wf.resizable) val |= c.SDL_WINDOW_RESIZABLE;
         if (wf.minimized) val |= c.SDL_WINDOW_MINIMIZED;
         if (wf.maximized) val |= c.SDL_WINDOW_MAXIMIZED;
-        if (wf.inputGrabbed) val |= c.SDL_WINDOW_INPUT_GRABBED;
-        if (wf.inputFocus) val |= c.SDL_WINDOW_INPUT_FOCUS;
-        if (wf.mouseFocus) val |= c.SDL_WINDOW_MOUSE_FOCUS;
+        if (wf.input_grabbed) val |= c.SDL_WINDOW_INPUT_GRABBED;
+        if (wf.input_focus) val |= c.SDL_WINDOW_INPUT_FOCUS;
+        if (wf.mouse_focus) val |= c.SDL_WINDOW_MOUSE_FOCUS;
         if (wf.foreign) val |= c.SDL_WINDOW_FOREIGN;
-        if (wf.allowHighDPI) val |= c.SDL_WINDOW_ALLOW_HIGHDPI;
-        if (wf.mouseCapture) val |= c.SDL_WINDOW_MOUSE_CAPTURE;
-        if (wf.alwaysOnTop) val |= c.SDL_WINDOW_ALWAYS_ON_TOP;
-        if (wf.skipTaskbar) val |= c.SDL_WINDOW_SKIP_TASKBAR;
+        if (wf.allow_high_dpi) val |= c.SDL_WINDOW_ALLOW_HIGHDPI;
+        if (wf.mouse_capture) val |= c.SDL_WINDOW_MOUSE_CAPTURE;
+        if (wf.always_on_top) val |= c.SDL_WINDOW_ALWAYS_ON_TOP;
+        if (wf.skip_taskbar) val |= c.SDL_WINDOW_SKIP_TASKBAR;
         if (wf.utility) val |= c.SDL_WINDOW_UTILITY;
         if (wf.tooltip) val |= c.SDL_WINDOW_TOOLTIP;
-        if (wf.popupMenu) val |= c.SDL_WINDOW_POPUP_MENU;
+        if (wf.popup_menu) val |= c.SDL_WINDOW_POPUP_MENU;
         return val;
     }
 };
@@ -378,15 +385,15 @@ pub const Renderer = struct {
 pub const RendererFlags = struct {
     software: bool = false,
     accelerated: bool = false,
-    presentVSync: bool = false,
-    targetTexture: bool = false,
+    present_vsync: bool = false,
+    target_texture: bool = false,
 
     fn toInteger(rf: RendererFlags) c_int {
         var val: c_int = 0;
         if (rf.software) val |= c.SDL_RENDERER_SOFTWARE;
         if (rf.accelerated) val |= c.SDL_RENDERER_ACCELERATED;
-        if (rf.presentVSync) val |= c.SDL_RENDERER_PRESENTVSYNC;
-        if (rf.targetTexture) val |= c.SDL_RENDERER_TARGETTEXTURE;
+        if (rf.present_vsync) val |= c.SDL_RENDERER_PRESENTVSYNC;
+        if (rf.target_texture) val |= c.SDL_RENDERER_TARGETTEXTURE;
         return val;
     }
 };
@@ -402,13 +409,46 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
 }
 
 pub const Texture = struct {
+    pub const PixelData = struct {
+        texture: *c.SDL_Texture,
+        pixels: [*]u8,
+        stride: usize,
+
+        pub fn scanline(self: *@This(), y: usize, comptime Pixel: type) [*]Pixel {
+            return @ptrCast([*]Pixel, self.pixels + y * self.stride);
+        }
+
+        pub fn release(self: *@This()) void {
+            c.SDL_UnlockTexture(self.texture);
+            self.* = undefined;
+        }
+    };
+
     ptr: *c.SDL_Texture,
 
-    fn destroy(tex: Texture) void {
+    pub fn destroy(tex: Texture) void {
         c.SDL_DestroyTexture(tex.ptr);
     }
 
-    fn update(texture: Texture, pixels: []const u8, pitch: usize, rectangle: ?Rectangle) !void {
+    pub fn lock(tex: Texture, rectangle: ?Rectangle) !PixelData {
+        var ptr: ?*c_void = undefined;
+        var pitch: c_int = undefined;
+        if (c.SDL_LockTexture(
+            tex.ptr,
+            if (rectangle) |rect| rect.getSdlPtr() else null,
+            &ptr,
+            &pitch,
+        ) != 0) {
+            return error.SdlError;
+        }
+        return PixelData{
+            .texture = tex.ptr,
+            .stride = @intCast(usize, pitch),
+            .pixels = @ptrCast([*]u8, ptr),
+        };
+    }
+
+    pub fn update(texture: Texture, pixels: []const u8, pitch: usize, rectangle: ?Rectangle) !void {
         if (c.SDL_UpdateTexture(
             texture.ptr,
             if (rectangle) |rect| rect.getSdlPtr() else null,
@@ -425,7 +465,7 @@ pub const Texture = struct {
         format: Format,
     };
 
-    fn query(tex: Texture) !Info {
+    pub fn query(tex: Texture) !Info {
         var format: c.Uint32 = undefined;
         var w: c_int = undefined;
         var h: c_int = undefined;
@@ -439,22 +479,22 @@ pub const Texture = struct {
             .format = @intToEnum(Format, format),
         };
     }
-    fn resetColorMod(tex: Texture) !void {
+    pub fn resetColorMod(tex: Texture) !void {
         try tex.setColorMod(Color.white);
     }
 
-    fn setColorMod(tex: Texture, color: Color) !void {
+    pub fn setColorMod(tex: Texture, color: Color) !void {
         if (c.SDL_SetTextureColorMod(tex.ptr, color.r, color.g, color.b) < 0)
             return error.SdlError;
         if (c.SDL_SetTextureAlphaMod(tex.ptr, color.a) < 0)
             return error.SdlError;
     }
 
-    fn setColorModRGB(tex: Texture, r: u8, g: u8, b: u8) !void {
+    pub fn setColorModRGB(tex: Texture, r: u8, g: u8, b: u8) !void {
         tex.setColorMod(Color.rgb(r, g, b));
     }
 
-    fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
+    pub fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
         tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
@@ -519,10 +559,85 @@ pub fn createTexture(renderer: Renderer, format: Texture.Format, access: Texture
     };
 }
 
+pub const WindowEvent = struct {
+    const Type = enum(u8) {
+        none = c.SDL_WINDOWEVENT_NONE,
+        shown = c.SDL_WINDOWEVENT_SHOWN,
+        hidden = c.SDL_WINDOWEVENT_HIDDEN,
+        exposed = c.SDL_WINDOWEVENT_EXPOSED,
+        moved = c.SDL_WINDOWEVENT_MOVED,
+        resized = c.SDL_WINDOWEVENT_RESIZED,
+        size_changed = c.SDL_WINDOWEVENT_SIZE_CHANGED,
+        minimized = c.SDL_WINDOWEVENT_MINIMIZED,
+        maximized = c.SDL_WINDOWEVENT_MAXIMIZED,
+        restored = c.SDL_WINDOWEVENT_RESTORED,
+        enter = c.SDL_WINDOWEVENT_ENTER,
+        leave = c.SDL_WINDOWEVENT_LEAVE,
+        focus_gained = c.SDL_WINDOWEVENT_FOCUS_GAINED,
+        focus_lost = c.SDL_WINDOWEVENT_FOCUS_LOST,
+        close = c.SDL_WINDOWEVENT_CLOSE,
+        take_focus = c.SDL_WINDOWEVENT_TAKE_FOCUS,
+        hit_test = c.SDL_WINDOWEVENT_HIT_TEST,
+
+        _,
+    };
+
+    const Data = union(Type) {
+        shown: void,
+        hidden: void,
+        exposed: void,
+        moved: Point,
+        resized: Size,
+        size_changed: Size,
+        minimized: void,
+        maximized: void,
+        restored: void,
+        enter: void,
+        leave: void,
+        focus_gained: void,
+        focus_lost: void,
+        close: void,
+        take_focus: void,
+        hit_test: void,
+        none: void,
+    };
+
+    timestamp: u32,
+    window_id: u32,
+    type: Data,
+
+    fn fromNative(ev: c.SDL_WindowEvent) WindowEvent {
+        return WindowEvent{
+            .timestamp = ev.timestamp,
+            .window_id = ev.windowID,
+            .type = switch (@intToEnum(Type, ev.event)) {
+                .shown => Data{ .shown = {} },
+                .hidden => Data{ .hidden = {} },
+                .exposed => Data{ .exposed = {} },
+                .moved => Data{ .moved = Point{ .x = ev.data1, .y = ev.data2 } },
+                .resized => Data{ .resized = Size{ .width = ev.data1, .height = ev.data2 } },
+                .size_changed => Data{ .size_changed = Size{ .width = ev.data1, .height = ev.data2 } },
+                .minimized => Data{ .minimized = {} },
+                .maximized => Data{ .maximized = {} },
+                .restored => Data{ .restored = {} },
+                .enter => Data{ .enter = {} },
+                .leave => Data{ .leave = {} },
+                .focus_gained => Data{ .focus_gained = {} },
+                .focus_lost => Data{ .focus_lost = {} },
+                .close => Data{ .close = {} },
+                .take_focus => Data{ .take_focus = {} },
+                .hit_test => Data{ .hit_test = {} },
+                else => Data{ .none = {} },
+            },
+        };
+    }
+};
+
+pub const EventType = @TagType(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
-    pub const WindowEvent = c.SDL_WindowEvent;
+
     pub const KeyboardEvent = c.SDL_KeyboardEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
@@ -547,106 +662,106 @@ pub const Event = union(enum) {
     pub const DollarGestureEvent = c.SDL_DollarGestureEvent;
     pub const DropEvent = c.SDL_DropEvent;
 
-    clipBoardUpdate: CommonEvent,
-    appDidEnterBackground: CommonEvent,
-    appDidEnterForeground: CommonEvent,
-    appWillEnterForeground: CommonEvent,
-    appWillEnterBackground: CommonEvent,
-    appLowMemory: CommonEvent,
-    appTerminating: CommonEvent,
-    renderTargetsReset: CommonEvent,
-    renderDeviceReset: CommonEvent,
-    keyMapChanged: CommonEvent,
+    clip_board_update: CommonEvent,
+    app_did_enter_background: CommonEvent,
+    app_did_enter_foreground: CommonEvent,
+    app_will_enter_foreground: CommonEvent,
+    app_will_enter_background: CommonEvent,
+    app_low_memory: CommonEvent,
+    app_terminating: CommonEvent,
+    render_targets_reset: CommonEvent,
+    render_device_reset: CommonEvent,
+    key_map_changed: CommonEvent,
     display: DisplayEvent,
     window: WindowEvent,
-    keyDown: KeyboardEvent,
-    keyUp: KeyboardEvent,
-    textEditing: TextEditingEvent,
-    textInput: TextInputEvent,
-    mouseMotion: MouseMotionEvent,
-    mouseButtonDown: MouseButtonEvent,
-    mouseButtonUp: MouseButtonEvent,
-    mouseWheel: MouseWheelEvent,
-    joyAxisMotion: JoyAxisEvent,
-    joyBallMotion: JoyBallEvent,
-    joyHatMotion: JoyHatEvent,
-    joyButtonDown: JoyButtonEvent,
-    joyButtonUp: JoyButtonEvent,
-    joyDeviceAdded: JoyDeviceEvent,
-    joyDeviceRemoved: JoyDeviceEvent,
-    controllerAxisMotion: ControllerAxisEvent,
-    controllerButtonDown: ControllerButtonEvent,
-    controllerButtonUp: ControllerButtonEvent,
-    controllerDeviceAdded: ControllerDeviceEvent,
-    controllerDeviceRemoved: ControllerDeviceEvent,
-    controllerDeviceRemapped: ControllerDeviceEvent,
-    audioDeviceAdded: AudioDeviceEvent,
-    audioDeviceRemoved: AudioDeviceEvent,
-    sensorUpdate: SensorEvent,
+    key_down: KeyboardEvent,
+    key_up: KeyboardEvent,
+    text_editing: TextEditingEvent,
+    text_input: TextInputEvent,
+    mouse_motion: MouseMotionEvent,
+    mouse_button_down: MouseButtonEvent,
+    mouse_button_up: MouseButtonEvent,
+    mouse_wheel: MouseWheelEvent,
+    joy_axis_motion: JoyAxisEvent,
+    joy_ball_motion: JoyBallEvent,
+    joy_hat_motion: JoyHatEvent,
+    joy_button_down: JoyButtonEvent,
+    joy_button_up: JoyButtonEvent,
+    joy_device_added: JoyDeviceEvent,
+    joy_device_removed: JoyDeviceEvent,
+    controller_axis_motion: ControllerAxisEvent,
+    controller_button_down: ControllerButtonEvent,
+    controller_button_up: ControllerButtonEvent,
+    controller_device_added: ControllerDeviceEvent,
+    controller_device_removed: ControllerDeviceEvent,
+    controller_device_remapped: ControllerDeviceEvent,
+    audio_device_added: AudioDeviceEvent,
+    audio_device_removed: AudioDeviceEvent,
+    sensor_update: SensorEvent,
     quit: QuitEvent,
-    sysWM: SysWMEvent,
-    fingerDown: TouchFingerEvent,
-    fingerUp: TouchFingerEvent,
-    fingerMotion: TouchFingerEvent,
-    multiGesture: MultiGestureEvent,
-    dollarGesture: DollarGestureEvent,
-    dollarRecord: DollarGestureEvent,
-    dropFile: DropEvent,
-    dropText: DropEvent,
-    dropBegin: DropEvent,
-    dropComplete: DropEvent,
+    sys_wm: SysWMEvent,
+    finger_down: TouchFingerEvent,
+    finger_up: TouchFingerEvent,
+    finger_motion: TouchFingerEvent,
+    multi_gesture: MultiGestureEvent,
+    dollar_gesture: DollarGestureEvent,
+    dollar_record: DollarGestureEvent,
+    drop_file: DropEvent,
+    drop_text: DropEvent,
+    drop_begin: DropEvent,
+    drop_complete: DropEvent,
     // user: UserEvent,
 
     fn from(raw: c.SDL_Event) Event {
         return switch (raw.type) {
             c.SDL_QUIT => Event{ .quit = raw.quit },
-            c.SDL_APP_TERMINATING => Event{ .appTerminating = raw.common },
-            c.SDL_APP_LOWMEMORY => Event{ .appLowMemory = raw.common },
-            c.SDL_APP_WILLENTERBACKGROUND => Event{ .appWillEnterBackground = raw.common },
-            c.SDL_APP_DIDENTERBACKGROUND => Event{ .appDidEnterBackground = raw.common },
-            c.SDL_APP_WILLENTERFOREGROUND => Event{ .appWillEnterForeground = raw.common },
-            c.SDL_APP_DIDENTERFOREGROUND => Event{ .appDidEnterForeground = raw.common },
+            c.SDL_APP_TERMINATING => Event{ .app_terminating = raw.common },
+            c.SDL_APP_LOWMEMORY => Event{ .app_low_memory = raw.common },
+            c.SDL_APP_WILLENTERBACKGROUND => Event{ .app_will_enter_background = raw.common },
+            c.SDL_APP_DIDENTERBACKGROUND => Event{ .app_did_enter_background = raw.common },
+            c.SDL_APP_WILLENTERFOREGROUND => Event{ .app_will_enter_foreground = raw.common },
+            c.SDL_APP_DIDENTERFOREGROUND => Event{ .app_did_enter_foreground = raw.common },
             c.SDL_DISPLAYEVENT => Event{ .display = raw.display },
-            c.SDL_WINDOWEVENT => Event{ .window = raw.window },
-            c.SDL_SYSWMEVENT => Event{ .sysWM = raw.syswm },
-            c.SDL_KEYDOWN => Event{ .keyDown = raw.key },
-            c.SDL_KEYUP => Event{ .keyUp = raw.key },
-            c.SDL_TEXTEDITING => Event{ .textEditing = raw.edit },
-            c.SDL_TEXTINPUT => Event{ .textInput = raw.text },
-            c.SDL_KEYMAPCHANGED => Event{ .keyMapChanged = raw.common },
-            c.SDL_MOUSEMOTION => Event{ .mouseMotion = raw.motion },
-            c.SDL_MOUSEBUTTONDOWN => Event{ .mouseButtonDown = raw.button },
-            c.SDL_MOUSEBUTTONUP => Event{ .mouseButtonUp = raw.button },
-            c.SDL_MOUSEWHEEL => Event{ .mouseWheel = raw.wheel },
-            c.SDL_JOYAXISMOTION => Event{ .joyAxisMotion = raw.jaxis },
-            c.SDL_JOYBALLMOTION => Event{ .joyBallMotion = raw.jball },
-            c.SDL_JOYHATMOTION => Event{ .joyHatMotion = raw.jhat },
-            c.SDL_JOYBUTTONDOWN => Event{ .joyButtonDown = raw.jbutton },
-            c.SDL_JOYBUTTONUP => Event{ .joyButtonUp = raw.jbutton },
-            c.SDL_JOYDEVICEADDED => Event{ .joyDeviceAdded = raw.jdevice },
-            c.SDL_JOYDEVICEREMOVED => Event{ .joyDeviceRemoved = raw.jdevice },
-            c.SDL_CONTROLLERAXISMOTION => Event{ .controllerAxisMotion = raw.caxis },
-            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controllerButtonDown = raw.cbutton },
-            c.SDL_CONTROLLERBUTTONUP => Event{ .controllerButtonUp = raw.cbutton },
-            c.SDL_CONTROLLERDEVICEADDED => Event{ .controllerDeviceAdded = raw.cdevice },
-            c.SDL_CONTROLLERDEVICEREMOVED => Event{ .controllerDeviceRemoved = raw.cdevice },
-            c.SDL_CONTROLLERDEVICEREMAPPED => Event{ .controllerDeviceRemapped = raw.cdevice },
-            c.SDL_FINGERDOWN => Event{ .fingerDown = raw.tfinger },
-            c.SDL_FINGERUP => Event{ .fingerUp = raw.tfinger },
-            c.SDL_FINGERMOTION => Event{ .fingerMotion = raw.tfinger },
-            c.SDL_DOLLARGESTURE => Event{ .dollarGesture = raw.dgesture },
-            c.SDL_DOLLARRECORD => Event{ .dollarRecord = raw.dgesture },
-            c.SDL_MULTIGESTURE => Event{ .multiGesture = raw.mgesture },
-            c.SDL_CLIPBOARDUPDATE => Event{ .clipBoardUpdate = raw.common },
-            c.SDL_DROPFILE => Event{ .dropFile = raw.drop },
-            c.SDL_DROPTEXT => Event{ .dropText = raw.drop },
-            c.SDL_DROPBEGIN => Event{ .dropBegin = raw.drop },
-            c.SDL_DROPCOMPLETE => Event{ .dropComplete = raw.drop },
-            c.SDL_AUDIODEVICEADDED => Event{ .audioDeviceAdded = raw.adevice },
-            c.SDL_AUDIODEVICEREMOVED => Event{ .audioDeviceRemoved = raw.adevice },
-            c.SDL_SENSORUPDATE => Event{ .sensorUpdate = raw.sensor },
-            c.SDL_RENDER_TARGETS_RESET => Event{ .renderTargetsReset = raw.common },
-            c.SDL_RENDER_DEVICE_RESET => Event{ .renderDeviceReset = raw.common },
+            c.SDL_WINDOWEVENT => Event{ .window = WindowEvent.fromNative(raw.window) },
+            c.SDL_SYSWMEVENT => Event{ .sys_wm = raw.syswm },
+            c.SDL_KEYDOWN => Event{ .key_down = raw.key },
+            c.SDL_KEYUP => Event{ .key_up = raw.key },
+            c.SDL_TEXTEDITING => Event{ .text_editing = raw.edit },
+            c.SDL_TEXTINPUT => Event{ .text_input = raw.text },
+            c.SDL_KEYMAPCHANGED => Event{ .key_map_changed = raw.common },
+            c.SDL_MOUSEMOTION => Event{ .mouse_motion = raw.motion },
+            c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = raw.button },
+            c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = raw.button },
+            c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = raw.wheel },
+            c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = raw.jaxis },
+            c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = raw.jball },
+            c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = raw.jhat },
+            c.SDL_JOYBUTTONDOWN => Event{ .joy_button_down = raw.jbutton },
+            c.SDL_JOYBUTTONUP => Event{ .joy_button_up = raw.jbutton },
+            c.SDL_JOYDEVICEADDED => Event{ .joy_device_added = raw.jdevice },
+            c.SDL_JOYDEVICEREMOVED => Event{ .joy_device_removed = raw.jdevice },
+            c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = raw.caxis },
+            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = raw.cbutton },
+            c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = raw.cbutton },
+            c.SDL_CONTROLLERDEVICEADDED => Event{ .controller_device_added = raw.cdevice },
+            c.SDL_CONTROLLERDEVICEREMOVED => Event{ .controller_device_removed = raw.cdevice },
+            c.SDL_CONTROLLERDEVICEREMAPPED => Event{ .controller_device_remapped = raw.cdevice },
+            c.SDL_FINGERDOWN => Event{ .finger_down = raw.tfinger },
+            c.SDL_FINGERUP => Event{ .finger_up = raw.tfinger },
+            c.SDL_FINGERMOTION => Event{ .finger_motion = raw.tfinger },
+            c.SDL_DOLLARGESTURE => Event{ .dollar_gesture = raw.dgesture },
+            c.SDL_DOLLARRECORD => Event{ .dollar_record = raw.dgesture },
+            c.SDL_MULTIGESTURE => Event{ .multi_gesture = raw.mgesture },
+            c.SDL_CLIPBOARDUPDATE => Event{ .clip_board_update = raw.common },
+            c.SDL_DROPFILE => Event{ .drop_file = raw.drop },
+            c.SDL_DROPTEXT => Event{ .drop_text = raw.drop },
+            c.SDL_DROPBEGIN => Event{ .drop_begin = raw.drop },
+            c.SDL_DROPCOMPLETE => Event{ .drop_complete = raw.drop },
+            c.SDL_AUDIODEVICEADDED => Event{ .audio_device_added = raw.adevice },
+            c.SDL_AUDIODEVICEREMOVED => Event{ .audio_device_removed = raw.adevice },
+            c.SDL_SENSORUPDATE => Event{ .sensor_update = raw.sensor },
+            c.SDL_RENDER_TARGETS_RESET => Event{ .render_targets_reset = raw.common },
+            c.SDL_RENDER_DEVICE_RESET => Event{ .render_device_reset = raw.common },
             else => @panic("Unsupported event type detected!"),
         };
     }
