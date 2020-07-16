@@ -21,6 +21,6 @@ pub fn quit() void {
 pub fn loadTexture(ren: SDL.Renderer, file: [:0]const u8) !SDL.Texture {
     // pub extern fn IMG_LoadTexture(renderer: ?*SDL_Renderer, file: [*c]const u8) ?*SDL_Texture;
     return SDL.Texture{
-        .ptr = c.IMG_LoadTexture(ren.ptr, file) orelse return error.SdlError,
+        .ptr = c.IMG_LoadTexture(ren.ptr, file) orelse return SDL.makeError(),
     };
 }

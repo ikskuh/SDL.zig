@@ -3,6 +3,15 @@ const std = @import("std");
 
 pub const image = @import("image.zig");
 
+pub fn makeError() error{SdlError} {
+    if (c.SDL_GetError()) |ptr| {
+        std.log.debug(.sdl2, "{}\n", .{
+            std.mem.span(ptr),
+        });
+    }
+    return error.SdlError;
+}
+
 pub const Rectangle = extern struct {
     x: c_int,
     y: c_int,
@@ -163,7 +172,7 @@ pub fn init(flags: InitFlags) !void {
     if (flags.game_controller) cflags |= c.SDL_INIT_GAMECONTROLLER;
     if (flags.events) cflags |= c.SDL_INIT_EVENTS;
     if (c.SDL_Init(cflags) < 0)
-        return error.SdlError;
+        return makeError();
 }
 
 pub fn quit() void {
@@ -321,7 +330,7 @@ pub fn createWindow(
             width,
             height,
             @intCast(u32, flags.toInteger()),
-        ) orelse return error.SdlError,
+        ) orelse return makeError(),
     };
 }
 
@@ -334,7 +343,7 @@ pub const Renderer = struct {
 
     pub fn clear(ren: Renderer) !void {
         if (c.SDL_RenderClear(ren.ptr) != 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn present(ren: Renderer) void {
@@ -343,42 +352,42 @@ pub const Renderer = struct {
 
     pub fn copy(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle) !void {
         if (c.SDL_RenderCopy(ren.ptr, tex.ptr, if (srcRect) |r| r.getSdlPtr() else null, if (dstRect) |r| r.getSdlPtr() else null) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn drawLine(ren: Renderer, x0: i32, y0: i32, x1: i32, y1: i32) !void {
         if (c.SDL_RenderDrawLine(ren.ptr, x0, y0, x1, y1) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn fillRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderFillRect(ren.ptr, rect.getSdlPtr()) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn setColor(ren: Renderer, color: Color) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, color.r, color.g, color.b, color.a) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn setColorRGB(ren: Renderer, r: u8, g: u8, b: u8) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, 255) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn setColorRGBA(ren: Renderer, r: u8, g: u8, b: u8, a: u8) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, a) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn setDrawBlendMode(ren: Renderer, blendMode: c.SDL_BlendMode) !void {
         if (c.SDL_SetRenderDrawBlendMode(ren.ptr, blendMode) < 0)
-            return error.SdlError;
+            return makeError();
     }
 };
 
@@ -404,7 +413,7 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
             window.ptr,
             if (index) |idx| @intCast(c_int, idx) else -1,
             @intCast(u32, flags.toInteger()),
-        ) orelse return error.SdlError,
+        ) orelse return makeError(),
     };
 }
 
@@ -439,7 +448,7 @@ pub const Texture = struct {
             &ptr,
             &pitch,
         ) != 0) {
-            return error.SdlError;
+            return makeError();
         }
         return PixelData{
             .texture = tex.ptr,
@@ -455,7 +464,7 @@ pub const Texture = struct {
             pixels.ptr,
             @intCast(c_int, pitch),
         ) != 0)
-            return error.SdlError;
+            return makeError();
     }
 
     const Info = struct {
@@ -471,7 +480,7 @@ pub const Texture = struct {
         var h: c_int = undefined;
         var access: c_int = undefined;
         if (c.SDL_QueryTexture(tex.ptr, &format, &access, &w, &h) < 0)
-            return error.SdlError;
+            return makeError();
         return Info{
             .width = @intCast(usize, w),
             .height = @intCast(usize, h),
@@ -485,9 +494,9 @@ pub const Texture = struct {
 
     pub fn setColorMod(tex: Texture, color: Color) !void {
         if (c.SDL_SetTextureColorMod(tex.ptr, color.r, color.g, color.b) < 0)
-            return error.SdlError;
+            return makeError();
         if (c.SDL_SetTextureAlphaMod(tex.ptr, color.a) < 0)
-            return error.SdlError;
+            return makeError();
     }
 
     pub fn setColorModRGB(tex: Texture, r: u8, g: u8, b: u8) !void {
@@ -553,7 +562,7 @@ pub fn createTexture(renderer: Renderer, format: Texture.Format, access: Texture
         @enumToInt(access),
         @intCast(c_int, width),
         @intCast(c_int, height),
-    ) orelse return error.SdlError;
+    ) orelse return makeError();
     return Texture{
         .ptr = texptr,
     };
