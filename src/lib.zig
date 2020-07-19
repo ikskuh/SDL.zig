@@ -1,5 +1,7 @@
-const c = @import("c.zig");
 const std = @import("std");
+
+/// Exports the C interface for SDL
+pub const c = @import("c.zig");
 
 pub const image = @import("image.zig");
 
