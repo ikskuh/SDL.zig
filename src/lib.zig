@@ -723,7 +723,7 @@ pub const Event = union(enum) {
     drop_complete: DropEvent,
     // user: UserEvent,
 
-    fn from(raw: c.SDL_Event) Event {
+    pub fn from(raw: c.SDL_Event) Event {
         return switch (raw.type) {
             c.SDL_QUIT => Event{ .quit = raw.quit },
             c.SDL_APP_TERMINATING => Event{ .app_terminating = raw.common },
@@ -782,6 +782,13 @@ pub fn pollEvent() ?Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_PollEvent(&ev) != 0)
         return Event.from(ev);
+    return null;
+}
+
+pub fn pollNativeEvent() ?c.SDL_Event {
+    var ev: c.SDL_Event = undefined;
+    if (c.SDL_PollEvent(&ev) != 0)
+        return ev;
     return null;
 }
 
