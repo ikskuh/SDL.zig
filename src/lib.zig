@@ -312,8 +312,8 @@ pub fn createWindow(
     title: [:0]const u8,
     x: WindowPosition,
     y: WindowPosition,
-    width: c_int,
-    height: c_int,
+    width: usize,
+    height: usize,
     flags: WindowFlags,
 ) !Window {
     return Window{
@@ -329,8 +329,8 @@ pub fn createWindow(
                 .centered => c.SDL_WINDOWPOS_CENTERED_MASK,
                 .absolute => |v| v,
             },
-            width,
-            height,
+            @intCast(c_int, width),
+            @intCast(c_int, height),
             @intCast(u32, flags.toInteger()),
         ) orelse return makeError(),
     };
