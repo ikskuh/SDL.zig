@@ -362,6 +362,11 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn drawPoint(ren: Renderer, x: i32, y: i32) !void {
+        if (c.SDL_RenderDrawPoint(ren.ptr, x, y) < 0)
+            return makeError();
+    }
+
     pub fn fillRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderFillRect(ren.ptr, rect.getSdlPtr()) < 0)
             return makeError();
