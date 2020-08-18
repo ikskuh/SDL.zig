@@ -5,9 +5,11 @@ pub const c = @import("c.zig");
 
 pub const image = @import("image.zig");
 
+const log = std.log.scoped(.sdl2);
+
 pub fn makeError() error{SdlError} {
     if (c.SDL_GetError()) |ptr| {
-        std.log.debug(.sdl2, "{}\n", .{
+        log.debug("{}\n", .{
             std.mem.span(ptr),
         });
     }
