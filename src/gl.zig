@@ -26,7 +26,7 @@ pub fn swapWindow(window: SDL.Window) void {
     c.SDL_GL_SwapWindow(window.ptr);
 }
 
-fn attribValueToInt(value: var) c_int {
+fn attribValueToInt(value: anytype) c_int {
     return switch (@TypeOf(value)) {
         usize => @intCast(c_int, value),
         bool => if (value) @as(c_int, 1) else 0,
