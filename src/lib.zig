@@ -824,7 +824,7 @@ pub fn getMouseState() MouseState {
 }
 
 pub const KeyboardState = struct {
-    states: []u8,
+    states: []const u8,
 
     pub fn isPressed(ks: KeyboardState, scanCode: c.SDL_Scancode) bool {
         return ks.states[@intCast(usize, @enumToInt(scanCode))] != 0;
