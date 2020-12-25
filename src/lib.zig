@@ -657,7 +657,7 @@ pub const WindowEvent = struct {
 pub const EventType = @TagType(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
-    // pub const DisplayEvent = c.SDL_DisplayEvent;
+    pub const DisplayEvent = c.SDL_DisplayEvent;
 
     pub const KeyboardEvent = c.SDL_KeyboardEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
@@ -693,7 +693,7 @@ pub const Event = union(enum) {
     render_targets_reset: CommonEvent,
     render_device_reset: CommonEvent,
     key_map_changed: CommonEvent,
-    // display: DisplayEvent,
+    display: DisplayEvent,
     window: WindowEvent,
     key_down: KeyboardEvent,
     key_up: KeyboardEvent,
@@ -742,7 +742,7 @@ pub const Event = union(enum) {
             c.SDL_APP_DIDENTERBACKGROUND => Event{ .app_did_enter_background = raw.common },
             c.SDL_APP_WILLENTERFOREGROUND => Event{ .app_will_enter_foreground = raw.common },
             c.SDL_APP_DIDENTERFOREGROUND => Event{ .app_did_enter_foreground = raw.common },
-            // c.SDL_DISPLAYEVENT => Event{ .display = raw.display },
+            c.SDL_DISPLAYEVENT => Event{ .display = raw.display },
             c.SDL_WINDOWEVENT => Event{ .window = WindowEvent.fromNative(raw.window) },
             c.SDL_SYSWMEVENT => Event{ .sys_wm = raw.syswm },
             c.SDL_KEYDOWN => Event{ .key_down = raw.key },
