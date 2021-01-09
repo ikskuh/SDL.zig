@@ -1,30 +1,9 @@
-pub usingnamespace @import("std").c.builtins;
+const wchar_t = if (@import("builtin").os.tag == .windows) u16 else u32;
 pub extern fn SDL_GetPlatform() [*c]const u8;
-pub const ptrdiff_t = c_long;
-pub const wchar_t = c_int;
 const struct_unnamed_1 = extern struct {
     __clang_max_align_nonce1: c_longlong align(8),
     __clang_max_align_nonce2: c_longdouble align(16),
 };
-pub const max_align_t = struct_unnamed_1;
-pub const int_least64_t = i64;
-pub const uint_least64_t = u64;
-pub const int_fast64_t = i64;
-pub const uint_fast64_t = u64;
-pub const int_least32_t = i32;
-pub const uint_least32_t = u32;
-pub const int_fast32_t = i32;
-pub const uint_fast32_t = u32;
-pub const int_least16_t = i16;
-pub const uint_least16_t = u16;
-pub const int_fast16_t = i16;
-pub const uint_fast16_t = u16;
-pub const int_least8_t = i8;
-pub const uint_least8_t = u8;
-pub const int_fast8_t = i8;
-pub const uint_fast8_t = u8;
-pub const intmax_t = c_long;
-pub const uintmax_t = c_ulong;
 pub const SDL_FALSE = @enumToInt(enum_unnamed_2.SDL_FALSE);
 pub const SDL_TRUE = @enumToInt(enum_unnamed_2.SDL_TRUE);
 const enum_unnamed_2 = extern enum(c_int) {
@@ -1748,7 +1727,6 @@ pub const SDLK_p = @enumToInt(enum_unnamed_34.SDLK_p);
 pub const SDLK_q = @enumToInt(enum_unnamed_34.SDLK_q);
 pub const SDLK_r = @enumToInt(enum_unnamed_34.SDLK_r);
 pub const SDLK_s = @enumToInt(enum_unnamed_34.SDLK_s);
-pub const SDLK_t = @enumToInt(enum_unnamed_34.SDLK_t);
 pub const SDLK_u = @enumToInt(enum_unnamed_34.SDLK_u);
 pub const SDLK_v = @enumToInt(enum_unnamed_34.SDLK_v);
 pub const SDLK_w = @enumToInt(enum_unnamed_34.SDLK_w);
@@ -1989,7 +1967,6 @@ const enum_unnamed_34 = extern enum(c_int) {
     SDLK_q = 113,
     SDLK_r = 114,
     SDLK_s = 115,
-    SDLK_t = 116,
     SDLK_u = 117,
     SDLK_v = 118,
     SDLK_w = 119,
@@ -3589,11 +3566,6 @@ pub const SDL_DISABLE_EMMINTRIN_H = 0;
 pub const SDL_DISABLE_PMMINTRIN_H = 0;
 pub const SDL_DISABLE_IMMINTRIN_H = 0;
 pub const SDL_DISABLE_MM3DNOW_H = 0;
-pub const SDL_DEPRECATED = __attribute__(deprecated);
-pub const SDL_UNUSED = __attribute__(unused);
-pub const DECLSPEC = __attribute__(visibility("default"));
-pub const SDL_INLINE = __inline__;
-pub const SDL_NORETURN = __attribute__(noreturn);
 pub const SIZEOF_VOIDP = 8;
 pub const SDL_AUDIO_DRIVER_ALSA = 1;
 pub const SDL_AUDIO_DRIVER_ALSA_DYNAMIC = "libasound.so.2";
@@ -3701,42 +3673,6 @@ pub inline fn INT8_C(v: anytype) @TypeOf(__int_c(v, __int8_c_suffix)) {
 pub inline fn UINT8_C(v: anytype) @TypeOf(__uint_c(v, __int8_c_suffix)) {
     return __uint_c(v, __int8_c_suffix);
 }
-pub const INT64_MAX = INT64_C(9223372036854775807);
-pub const INT64_MIN = -INT64_C(9223372036854775807) - 1;
-pub const UINT64_MAX = UINT64_C(18446744073709551615);
-pub const INT_LEAST64_MIN = __INT_LEAST64_MIN;
-pub const INT_LEAST64_MAX = __INT_LEAST64_MAX;
-pub const UINT_LEAST64_MAX = __UINT_LEAST64_MAX;
-pub const INT_FAST64_MIN = __INT_LEAST64_MIN;
-pub const INT_FAST64_MAX = __INT_LEAST64_MAX;
-pub const UINT_FAST64_MAX = __UINT_LEAST64_MAX;
-pub const INT32_MAX = INT32_C(2147483647);
-pub const INT32_MIN = -INT32_C(2147483647) - 1;
-pub const UINT32_MAX = UINT32_C(4294967295);
-pub const INT_LEAST32_MIN = __INT_LEAST32_MIN;
-pub const INT_LEAST32_MAX = __INT_LEAST32_MAX;
-pub const UINT_LEAST32_MAX = __UINT_LEAST32_MAX;
-pub const INT_FAST32_MIN = __INT_LEAST32_MIN;
-pub const INT_FAST32_MAX = __INT_LEAST32_MAX;
-pub const UINT_FAST32_MAX = __UINT_LEAST32_MAX;
-pub const INT16_MAX = INT16_C(32767);
-pub const INT16_MIN = -INT16_C(32767) - 1;
-pub const UINT16_MAX = UINT16_C(65535);
-pub const INT_LEAST16_MIN = __INT_LEAST16_MIN;
-pub const INT_LEAST16_MAX = __INT_LEAST16_MAX;
-pub const UINT_LEAST16_MAX = __UINT_LEAST16_MAX;
-pub const INT_FAST16_MIN = __INT_LEAST16_MIN;
-pub const INT_FAST16_MAX = __INT_LEAST16_MAX;
-pub const UINT_FAST16_MAX = __UINT_LEAST16_MAX;
-pub const INT8_MAX = INT8_C(127);
-pub const INT8_MIN = -INT8_C(127) - 1;
-pub const UINT8_MAX = UINT8_C(255);
-pub const INT_LEAST8_MIN = __INT_LEAST8_MIN;
-pub const INT_LEAST8_MAX = __INT_LEAST8_MAX;
-pub const UINT_LEAST8_MAX = __UINT_LEAST8_MAX;
-pub const INT_FAST8_MIN = __INT_LEAST8_MIN;
-pub const INT_FAST8_MAX = __INT_LEAST8_MAX;
-pub const UINT_FAST8_MAX = __UINT_LEAST8_MAX;
 pub inline fn __INTN_MIN(n: anytype) @TypeOf(__stdint_join3(INT, n, _MIN)) {
     return __stdint_join3(INT, n, _MIN);
 }
@@ -3752,28 +3688,12 @@ pub inline fn __INTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(INT, n, _C
 pub inline fn __UINTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(UINT, n, _C(v))) {
     return __stdint_join3(UINT, n, _C(v));
 }
-pub const INTPTR_MIN = -__INTPTR_MAX__ - 1;
-pub const INTPTR_MAX = __INTPTR_MAX__;
-pub const UINTPTR_MAX = __UINTPTR_MAX__;
-pub const PTRDIFF_MIN = -__PTRDIFF_MAX__ - 1;
-pub const PTRDIFF_MAX = __PTRDIFF_MAX__;
-pub const SIZE_MAX = __SIZE_MAX__;
-pub const INTMAX_MIN = -__INTMAX_MAX__ - 1;
-pub const INTMAX_MAX = __INTMAX_MAX__;
-pub const UINTMAX_MAX = __UINTMAX_MAX__;
-pub const SIG_ATOMIC_MIN = __INTN_MIN(__SIG_ATOMIC_WIDTH__);
-pub const SIG_ATOMIC_MAX = __INTN_MAX(__SIG_ATOMIC_WIDTH__);
-pub const WINT_MIN = __UINTN_C(__WINT_WIDTH__, 0);
-pub const WINT_MAX = __UINTN_MAX(__WINT_WIDTH__);
-pub const WCHAR_MAX = __WCHAR_MAX__;
-pub const WCHAR_MIN = __INTN_MIN(__WCHAR_WIDTH__);
 pub inline fn INTMAX_C(v: anytype) @TypeOf(__int_c(v, __INTMAX_C_SUFFIX__)) {
     return __int_c(v, __INTMAX_C_SUFFIX__);
 }
 pub inline fn UINTMAX_C(v: anytype) @TypeOf(__int_c(v, __UINTMAX_C_SUFFIX__)) {
     return __int_c(v, __UINTMAX_C_SUFFIX__);
 }
-pub const alloca = __builtin_alloca;
 pub inline fn SDL_arraysize(array: anytype) @TypeOf(@import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0])) {
     return @import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0]);
 }
@@ -3816,10 +3736,10 @@ pub inline fn SDL_zerop(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta
 pub inline fn SDL_zeroa(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x))) {
     return SDL_memset(x, 0, @import("std").meta.sizeof(x));
 }
-pub const SDL_ICONV_ERROR = usize - 1;
-pub const SDL_ICONV_E2BIG = usize - 2;
-pub const SDL_ICONV_EILSEQ = usize - 3;
-pub const SDL_ICONV_EINVAL = usize - 4;
+pub const SDL_ICONV_ERROR = @bitCast(usize, @as(isize, -1));
+pub const SDL_ICONV_E2BIG = @bitCast(usize, @as(isize, -2));
+pub const SDL_ICONV_EILSEQ = @bitCast(usize, @as(isize, -3));
+pub const SDL_ICONV_EINVAL = @bitCast(usize, @as(isize, -4));
 pub inline fn SDL_iconv_utf8_locale(S: anytype) @TypeOf(SDL_iconv_string("", "UTF-8", S, SDL_strlen(S) + 1)) {
     return SDL_iconv_string("", "UTF-8", S, SDL_strlen(S) + 1);
 }
@@ -3830,12 +3750,6 @@ pub inline fn SDL_iconv_utf8_ucs4(S: anytype) @TypeOf((@import("std").meta.cast(
     return (@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)));
 }
 pub const SDL_ASSERT_LEVEL = 2;
-pub inline fn SDL_TriggerBreakpoint() @TypeOf(__asm__ ++ __volatile__("int $3\n\t")) {
-    return __asm__ ++ __volatile__("int $3\n\t");
-}
-pub const SDL_FUNCTION = __func__;
-pub const SDL_FILE = __FILE__;
-pub const SDL_LINE = __LINE__;
 pub const SDL_NULL_WHILE_LOOP_CONDITION = 0;
 pub inline fn SDL_assert(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
     return SDL_enabled_assert(condition);
@@ -3857,18 +3771,8 @@ pub inline fn SDL_AtomicIncRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, 1)) {
 pub inline fn SDL_AtomicDecRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, -1) == 1) {
     return SDL_AtomicAdd(a, -1) == 1;
 }
-pub inline fn SDL_OutOfMemory() @TypeOf(SDL_Error(SDL_ENOMEM)) {
-    return SDL_Error(SDL_ENOMEM);
-}
-pub inline fn SDL_Unsupported() @TypeOf(SDL_Error(SDL_UNSUPPORTED)) {
-    return SDL_Error(SDL_UNSUPPORTED);
-}
-pub inline fn SDL_InvalidParamError(param: anytype) @TypeOf(SDL_SetError("Parameter '%s' is invalid", param)) {
-    return SDL_SetError("Parameter '%s' is invalid", param);
-}
 pub const SDL_LIL_ENDIAN = 1234;
 pub const SDL_BIG_ENDIAN = 4321;
-pub const SDL_BYTEORDER = __BYTE_ORDER;
 pub inline fn SDL_SwapLE16(X: anytype) @TypeOf(SDL_Swap16(X)) {
     return SDL_Swap16(X);
 }
@@ -3959,7 +3863,6 @@ pub const SDL_AUDIO_ALLOW_CHANNELS_CHANGE = 0x00000004;
 pub const SDL_AUDIO_ALLOW_SAMPLES_CHANGE = 0x00000008;
 pub const SDL_AUDIO_ALLOW_ANY_CHANGE = ((SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE) | SDL_AUDIO_ALLOW_CHANNELS_CHANGE) | SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 pub const SDL_AUDIOCVT_MAX_FILTERS = 9;
-pub const SDL_AUDIOCVT_PACKED = __attribute__(@"packed");
 pub inline fn SDL_LoadWAV(file: anytype, spec: anytype, audio_buf: anytype, audio_len: anytype) @TypeOf(SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1, spec, audio_buf, audio_len)) {
     return SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1, spec, audio_buf, audio_len);
 }
@@ -4072,8 +3975,8 @@ pub const SDL_STANDARD_GRAVITY = @as(f32, 9.80665);
 pub inline fn SDL_GameControllerAddMappingsFromFile(file: anytype) @TypeOf(SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), 1)) {
     return SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), 1);
 }
-pub const SDL_TOUCH_MOUSEID = u32 - 1;
-pub const SDL_MOUSE_TOUCHID = i64 - 1;
+pub const SDL_TOUCH_MOUSEID = @bitCast(u32, @as(i32, -1));
+pub const SDL_MOUSE_TOUCHID = @as(i64, -1);
 pub const SDL_RELEASED = 0;
 pub const SDL_PRESSED = 1;
 pub const SDL_TEXTEDITINGEVENT_TEXT_SIZE = 32;
@@ -4229,7 +4132,6 @@ pub const SDL_PATCHLEVEL = 15;
 pub inline fn SDL_VERSIONNUM(X: anytype, Y: anytype, Z: anytype) @TypeOf(((X * 1000) + (Y * 100)) + Z) {
     return ((X * 1000) + (Y * 100)) + Z;
 }
-pub const SDL_COMPILEDVERSION = SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
 pub inline fn SDL_VERSION_ATLEAST(X: anytype, Y: anytype, Z: anytype) @TypeOf(SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z)) {
     return SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z);
 }

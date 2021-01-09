@@ -21,7 +21,7 @@ function patch_file()
 patch_file '/SDL_compile_time_assert_/d' 
 
 # Delete all C _t types, but not SDL _t types
-#patch_file '/SDL_/n;/_t = /d' 
+patch_file '/SDL_/b;/_t = /d' 
 
 # Remove all reserved definitions (prefixed with _)
 patch_file '/pub const _/d'
@@ -66,20 +66,44 @@ done
 patch_file "/pub const HAVE_/d"
 
 # Remove some min/max translations
-patch_file '/SDL_/n;/pub const .*(_MAX) =/d'
-patch_file '/SDL_/n;/pub const .*(_MIN) =/d'
+patch_file -r '/SDL_/b;/pub const .*(_MAX) =/d'
+patch_file -r  '/SDL_/b;/pub const .*(_MIN) =/d'
 
 # Remove all generated comments
 patch_file 's|//.*||'
 
-# Insert semi-correct wchar_t definition
-# echo "const wchar_t = if(@import(\"builtin\").os.tag == .windows) u16 else u32; $(cat sdl.zig)" > sdl.zig
+# Delete original wchar_t definition
+patch_file '/wchar_t = /d'
 
+# and replace it with our own semi-correct wchar_t definition
+echo "const wchar_t = if(@import(\"builtin\").os.tag == .windows) u16 else u32; $(cat sdl.zig)" > sdl.zig
+
+# Delete all lines that declare C attributes
+patch_file '/ = __attribute__/d'
+patch_file '/SDL_INLINE/d'
+
+patch_file '/alloca = /d'
+patch_file '/SDL_FUNCTION = /d'
+patch_file '/SDL_FILE = /d'
+patch_file '/SDL_LINE = /d'
+patch_file '/SDL_COMPILEDVERSION = /d'
+patch_file '/SDL_BYTEORDER = /d'
+
+patch_file '/fn SDL_OutOfMemory/,+2d'
+patch_file '/fn SDL_Unsupported/,+2d'
+patch_file '/fn SDL_InvalidParamError/,+2d'
+patch_file '/fn SDL_TriggerBreakpoint/,+2d'
+
+patch_file -r 's/usize - ([0-9]+)/@bitCast(usize, @as(isize, -\1))/g'
+patch_file -r 's/u(8|16|32|64) - ([0-9]+)/@bitCast(u\1, @as(i\1, -\2))/g'
+patch_file -r 's/i(8|16|32|64) - ([0-9]+)/@as(i\1, -\2)/g'
 
 # Verify we didn't fuck up
 zig fmt sdl.zig
 
-zig test decls.zig 2> log.txt
+patch_file '/usingnamespace/d'
+
+zig test decls.zig 2>&1 | sed '/note: /,+2d' > log.txt
 
 # Print out generated LOC
 wc -l sdl.zig
