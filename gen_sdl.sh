@@ -1,4 +1,12 @@
 #!/bin/bash
+
+# The input file name to the SDL2 main header
+INFILE="/home/felix/projects/SDL/include/SDL.h"
+
+# The output file name of this script.
+# this should not be changed
+OUTFILE="src/binding/sdl.zig"
+
 setopt -e
 clear
 zig translate-c \
@@ -10,11 +18,11 @@ zig translate-c \
   -D SDL_DISABLE_PMMINTRIN_H=0 \
   -D SDL_DISABLE_IMMINTRIN_H=0 \
   -D SDL_DISABLE_MM3DNOW_H=0 \
-  /home/felix/projects/SDL/include/SDL.h > sdl.zig
+  "${INFILE}" > "${OUTFILE}"
 
 function patch_file()
 {
-  sed -i "$@" sdl.zig
+  sed -i "$@" "${OUTFILE}"
 }
 
 # Remove comptime assertions
@@ -76,7 +84,7 @@ patch_file 's|//.*||'
 patch_file '/wchar_t = /d'
 
 # and replace it with our own semi-correct wchar_t definition
-echo "const wchar_t = if(@import(\"builtin\").os.tag == .windows) u16 else u32; $(cat sdl.zig)" > sdl.zig
+echo "const wchar_t = if(@import(\"builtin\").os.tag == .windows) u16 else u32; $(cat ${OUTFILE})" > "${OUTFILE}"
 
 # Delete all lines that declare C attributes
 patch_file '/ = __attribute__/d'
@@ -99,11 +107,15 @@ patch_file -r 's/u(8|16|32|64) - ([0-9]+)/@bitCast(u\1, @as(i\1, -\2))/g'
 patch_file -r 's/i(8|16|32|64) - ([0-9]+)/@as(i\1, -\2)/g'
 
 # Verify we didn't fuck up
-zig fmt sdl.zig
+zig fmt "${OUTFILE}"
 
 patch_file '/usingnamespace/d'
 
-zig test decls.zig 2>&1 | sed '/note: /,+2d' > log.txt
+echo "test \"all decls\" { @import(\"std\").testing.refAllDecls(@import(\"${OUTFILE}\")); }" > test.zig
+
+zig test test.zig 2>&1 | sed '/note: /,+2d'
+
+rm test.zig
 
 # Print out generated LOC
-wc -l sdl.zig
+wc -l "${OUTFILE}"

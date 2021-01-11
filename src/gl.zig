@@ -1,5 +1,5 @@
 const SDL = @import("lib.zig");
-const c = @import("c.zig");
+const c = @import("binding/sdl.zig");
 const std = @import("std");
 
 pub const Context = struct {

@@ -4,12 +4,14 @@ pub fn build(b: *Builder) void {
     const mode = b.standardReleaseOptions();
 
     const lib_test = b.addTest("src/lib.zig");
+    lib_test.linkSystemLibrary("c");
+    lib_test.linkSystemLibrary("sdl2");
+    lib_test.linkSystemLibrary("SDL2_image");
 
     const demo_basic = b.addExecutable("demo-basic", "examples/basic.zig");
     demo_basic.setBuildMode(mode);
     demo_basic.linkSystemLibrary("c");
     demo_basic.linkSystemLibrary("sdl2");
-    demo_basic.linkSystemLibrary("SDL2_image");
     demo_basic.addPackagePath("sdl2", "src/lib.zig");
     demo_basic.install();
 

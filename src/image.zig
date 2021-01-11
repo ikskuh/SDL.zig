@@ -1,5 +1,5 @@
 const SDL = @import("lib.zig");
-const c = @import("c.zig");
+const c = @import("binding/sdl_image.zig");
 const std = @import("std");
 
 pub const InitFlags = packed struct {
@@ -23,4 +23,8 @@ pub fn loadTexture(ren: SDL.Renderer, file: [:0]const u8) !SDL.Texture {
     return SDL.Texture{
         .ptr = c.IMG_LoadTexture(ren.ptr, file) orelse return SDL.makeError(),
     };
+}
+
+test "platform independent declarations" {
+    std.testing.refAllDecls(@This());
 }

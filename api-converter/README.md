@@ -1,1 +1,0 @@
-Work-in-progress API conversion from SDL2 headers to actually useful cross-platform zig source.

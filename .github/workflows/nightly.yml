@@ -1,0 +1,133 @@
+name: Continuous Build
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: "0 5 * * *" # run at 5 AM UTC
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: sudo apt-get install libsdl2-dev libsdl2-image-dev
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: 0.7.1
+
+      - name: SDL version
+        run: sdl2-config --version
+
+      - name: Build Example
+        run: zig build install
+
+      - name: Run tests
+        run: zig build test
+
+  #  build-windows:
+  #    strategy:
+  #      fail-fast: false
+  #      matrix:
+  #        target:
+  #          [
+  #            i386-windows-gnu,
+  #            x86_64-windows-gnu,
+  #            i386-windows-msvc,
+  #            x86_64-windows-msvc,
+  #          ]
+  #
+  #    runs-on: windows-latest
+  #
+  #    steps:
+  #      - uses: actions/checkout@v2
+  #        with:
+  #          submodules: "recursive"
+  #
+  #      - name: Setup Zig
+  #        uses: goto-bus-stop/setup-zig@v1
+  #        with:
+  #          version: 0.7.1
+  #
+  #      - name: Install VisualStudio
+  #        if: ${{ matrix.target == 'i386-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
+  #        uses: ilammy/msvc-dev-cmd@v1
+  #        with:
+  #          uwp: false
+  #          arch: x64
+  #
+  #      - name: Download SDL2 (MinGW)
+  #        uses: carlosperate/download-file-action@v1.0.3
+  #        if: ${{ matrix.target == 'i386-windows-gnu' || matrix.target == 'x86_64-windows-gnu' }}
+  #        with:
+  #          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
+  #          file-name: SDL2.tar.gz
+  #          location: .
+  #
+  #      - name: Download SDL2_image (MinGW)
+  #        uses: carlosperate/download-file-action@v1.0.3
+  #        if: ${{ matrix.target == 'i386-windows-gnu' || matrix.target == 'x86_64-windows-gnu' }}
+  #        with:
+  #          file-url: https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-mingw.tar.gz
+  #          file-name: SDL2_image.tar.gz
+  #          location: .
+  #
+  #      - name: Download SDL2 (Visual Studio)
+  #        uses: carlosperate/download-file-action@v1.0.3
+  #        if: ${{ matrix.target == 'i386-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
+  #        with:
+  #          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip
+  #          file-name: SDL2.tar.gz
+  #          location: .
+  #
+  #      - name: Download SDL2_image (Visual Studio)
+  #        uses: carlosperate/download-file-action@v1.0.3
+  #        if: ${{ matrix.target == 'i386-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
+  #        with:
+  #          file-url: https://www.libsdl.org/projects/SDL_image/release/SDL2_image-devel-2.0.5-VC.zip
+  #          file-name: SDL2_image.tar.gz
+  #          location: .
+  #
+  #      - name: Extract SDL2
+  #        uses: brunoborges/justextract@v1
+  #        with:
+  #          file: SDL2.tar.gz
+  #
+  #      - name: Extract SDL2_image
+  #        uses: brunoborges/justextract@v1
+  #        with:
+  #          file: SDL2_image.tar.gz
+  #
+  #      - name: Build Example
+  #        run: zig build -Dtarget=${{matrix.target}} "-Dsdl-sdk=SDL2-2.0.14" "-Dsdl-image-sdk=SDL2_image-2.0.5" install
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Install dependencies
+        run: brew install sdl2 sdl2_image
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: 0.7.1
+
+      - name: Build Examples
+        run: zig build install
+
+      - name: Run tests
+        run: zig build test

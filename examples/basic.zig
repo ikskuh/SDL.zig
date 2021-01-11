@@ -1,7 +1,7 @@
 const std = @import("std");
 const SDL = @import("sdl2");
 
-pub fn gameMain() !void {
+pub fn main() !void {
     try SDL.init(.{
         .video = true,
         .events = true,
@@ -28,7 +28,7 @@ pub fn gameMain() !void {
                 .quit => {
                     break :mainLoop;
                 },
-                .keyDown => |key| {
+                .key_down => |key| {
                     switch (key.keysym.scancode) {
                         .SDL_SCANCODE_ESCAPE => break :mainLoop,
                         else => std.debug.warn("key pressed: {}\n", .{key.keysym.scancode}),
@@ -52,16 +52,4 @@ pub fn gameMain() !void {
 
         renderer.present();
     }
-}
-
-/// wraps gameMain, so we can react to an SdlError and print
-/// its error message
-pub fn main() !void {
-    gameMain() catch |err| switch (err) {
-        error.SdlError => {
-            std.debug.warn("SDL Failure: {}\n", .{SDL.getError()});
-            return err;
-        },
-        else => return err,
-    };
 }

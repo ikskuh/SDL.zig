@@ -1,7 +1,7 @@
 const std = @import("std");
 
 /// Exports the C interface for SDL
-pub const c = @import("c.zig");
+pub const c = @import("binding/sdl.zig");
 
 pub const image = @import("image.zig");
 pub const gl = @import("gl.zig");
@@ -41,10 +41,6 @@ pub const Size = extern struct {
 };
 
 pub const Color = extern struct {
-    comptime {
-        std.debug.assert(c.Uint8 == u8);
-    }
-
     pub const black = rgb(0x00, 0x00, 0x00);
     pub const white = rgb(0xFF, 0xFF, 0xFF);
     pub const red = rgb(0xFF, 0x00, 0x00);
@@ -188,7 +184,7 @@ pub fn quit() void {
 
 pub fn getError() ?[]const u8 {
     if (c.SDL_GetError()) |err| {
-        return std.mem.toSliceConst(u8, err);
+        return std.mem.spanZ(err);
     } else {
         return null;
     }
@@ -519,7 +515,7 @@ pub const Texture = struct {
         tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
-    pub const Format = enum(c.Uint32) {
+    pub const Format = enum(u32) {
         index1_lsb = c.SDL_PIXELFORMAT_INDEX1LSB,
         index1_msb = c.SDL_PIXELFORMAT_INDEX1MSB,
         index4_lsb = c.SDL_PIXELFORMAT_INDEX4LSB,
@@ -845,4 +841,8 @@ pub fn getTicks() usize {
 
 pub fn delay(ms: u32) void {
     c.SDL_Delay(ms);
+}
+
+test "platform independent declarations" {
+    std.testing.refAllDecls(@This());
 }
