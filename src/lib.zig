@@ -483,7 +483,7 @@ pub const Texture = struct {
     };
 
     pub fn query(tex: Texture) !Info {
-        var format: c.Uint32 = undefined;
+        var format: u32 = undefined;
         var w: c_int = undefined;
         var h: c_int = undefined;
         var access: c_int = undefined;
