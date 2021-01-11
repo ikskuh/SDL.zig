@@ -23,7 +23,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
         with:
-          version: 0.7.1
+          version: master
 
       - name: SDL version
         run: sdl2-config --version
@@ -124,7 +124,7 @@ jobs:
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
         with:
-          version: 0.7.1
+          version: master
 
       - name: Build Examples
         run: zig build install
