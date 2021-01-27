@@ -1,0 +1,17 @@
+pkgs:
+  SDL:
+    version: 0.0.0
+    description: "A shallow wrapper around SDL that provides object API and error handling"
+    license: MIT
+    source_url: "https://github.com/MasterQ32/SDL.zig"
+    tags:
+      sdl
+
+    root: src/lib.zig
+    files:
+      README.md
+      LICENSE
+      build.zig
+      examples/*.zig
+      src/*.zig
+      src/binding/*.zig
