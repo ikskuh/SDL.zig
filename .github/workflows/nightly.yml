@@ -17,6 +17,8 @@ jobs:
         with:
           submodules: "recursive"
 
+      - run: sudo apt-get update
+
       - name: Install dependencies
         run: sudo apt-get install libsdl2-dev libsdl2-image-dev
 
