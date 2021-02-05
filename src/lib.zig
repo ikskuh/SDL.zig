@@ -650,7 +650,7 @@ pub const WindowEvent = struct {
     }
 };
 
-pub const EventType = @TagType(Event);
+pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
