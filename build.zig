@@ -1,6 +1,7 @@
-const Builder = @import("std").build.Builder;
+const std = @import("std");
+const Builder = std.build.Builder;
 
-pub fn build(b: *Builder) void {
+pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
 
     const lib_test = b.addTest("src/lib.zig");
@@ -12,6 +13,13 @@ pub fn build(b: *Builder) void {
     demo_basic.setBuildMode(mode);
     demo_basic.linkSystemLibrary("c");
     demo_basic.linkSystemLibrary("sdl2");
+    if (demo_basic.target.isWindows()) {
+        demo_basic.addVcpkgPaths(.Dynamic) catch {};
+        if (demo_basic.vcpkg_bin_path) |path| {
+            const src_path = try std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" });
+            b.installBinFile(src_path, "SDL2.dll");
+        }
+    }
     demo_basic.addPackagePath("sdl2", "src/lib.zig");
     demo_basic.install();
 
