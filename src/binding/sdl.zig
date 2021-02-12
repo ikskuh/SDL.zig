@@ -3628,181 +3628,181 @@ pub const SDL_ASSEMBLY_ROUTINES = 1;
 pub const SDL_USE_IME = 1;
 pub const SDL_UDEV_DYNAMIC = "libudev.so.1";
 pub const SDL_LIBSAMPLERATE_DYNAMIC = "libsamplerate.so.0";
-pub inline fn offsetof(t: anytype, d: anytype) @TypeOf(__builtin_offsetof(t, d)) {
+pub fn offsetof(t: anytype, d: anytype) callconv(.Inline) @TypeOf(__builtin_offsetof(t, d)) {
     return __builtin_offsetof(t, d);
 }
-pub inline fn va_start(ap: anytype, param: anytype) @TypeOf(__builtin_va_start(ap, param)) {
+pub fn va_start(ap: anytype, param: anytype) callconv(.Inline) @TypeOf(__builtin_va_start(ap, param)) {
     return __builtin_va_start(ap, param);
 }
-pub inline fn va_end(ap: anytype) @TypeOf(__builtin_va_end(ap)) {
+pub fn va_end(ap: anytype) callconv(.Inline) @TypeOf(__builtin_va_end(ap)) {
     return __builtin_va_end(ap);
 }
-pub inline fn va_arg(ap: anytype, type_1: anytype) @TypeOf(__builtin_va_arg(ap, type_1)) {
+pub fn va_arg(ap: anytype, type_1: anytype) callconv(.Inline) @TypeOf(__builtin_va_arg(ap, type_1)) {
     return __builtin_va_arg(ap, type_1);
 }
-pub inline fn __va_copy(d: anytype, s: anytype) @TypeOf(__builtin_va_copy(d, s)) {
+pub fn __va_copy(d: anytype, s: anytype) callconv(.Inline) @TypeOf(__builtin_va_copy(d, s)) {
     return __builtin_va_copy(d, s);
 }
-pub inline fn va_copy(dest: anytype, src: anytype) @TypeOf(__builtin_va_copy(dest, src)) {
+pub fn va_copy(dest: anytype, src: anytype) callconv(.Inline) @TypeOf(__builtin_va_copy(dest, src)) {
     return __builtin_va_copy(dest, src);
 }
-pub inline fn __int_c(v: anytype, suffix: anytype) @TypeOf(__int_c_join(v, suffix)) {
+pub fn __int_c(v: anytype, suffix: anytype) callconv(.Inline) @TypeOf(__int_c_join(v, suffix)) {
     return __int_c_join(v, suffix);
 }
-pub inline fn INT64_C(v: anytype) @TypeOf(__int_c(v, __int64_c_suffix)) {
+pub fn INT64_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __int64_c_suffix)) {
     return __int_c(v, __int64_c_suffix);
 }
-pub inline fn UINT64_C(v: anytype) @TypeOf(__uint_c(v, __int64_c_suffix)) {
+pub fn UINT64_C(v: anytype) callconv(.Inline) @TypeOf(__uint_c(v, __int64_c_suffix)) {
     return __uint_c(v, __int64_c_suffix);
 }
-pub inline fn INT32_C(v: anytype) @TypeOf(__int_c(v, __int32_c_suffix)) {
+pub fn INT32_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __int32_c_suffix)) {
     return __int_c(v, __int32_c_suffix);
 }
-pub inline fn UINT32_C(v: anytype) @TypeOf(__uint_c(v, __int32_c_suffix)) {
+pub fn UINT32_C(v: anytype) callconv(.Inline) @TypeOf(__uint_c(v, __int32_c_suffix)) {
     return __uint_c(v, __int32_c_suffix);
 }
-pub inline fn INT16_C(v: anytype) @TypeOf(__int_c(v, __int16_c_suffix)) {
+pub fn INT16_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __int16_c_suffix)) {
     return __int_c(v, __int16_c_suffix);
 }
-pub inline fn UINT16_C(v: anytype) @TypeOf(__uint_c(v, __int16_c_suffix)) {
+pub fn UINT16_C(v: anytype) callconv(.Inline) @TypeOf(__uint_c(v, __int16_c_suffix)) {
     return __uint_c(v, __int16_c_suffix);
 }
-pub inline fn INT8_C(v: anytype) @TypeOf(__int_c(v, __int8_c_suffix)) {
+pub fn INT8_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __int8_c_suffix)) {
     return __int_c(v, __int8_c_suffix);
 }
-pub inline fn UINT8_C(v: anytype) @TypeOf(__uint_c(v, __int8_c_suffix)) {
+pub fn UINT8_C(v: anytype) callconv(.Inline) @TypeOf(__uint_c(v, __int8_c_suffix)) {
     return __uint_c(v, __int8_c_suffix);
 }
-pub inline fn __INTN_MIN(n: anytype) @TypeOf(__stdint_join3(INT, n, _MIN)) {
+pub fn __INTN_MIN(n: anytype) callconv(.Inline) @TypeOf(__stdint_join3(INT, n, _MIN)) {
     return __stdint_join3(INT, n, _MIN);
 }
-pub inline fn __INTN_MAX(n: anytype) @TypeOf(__stdint_join3(INT, n, _MAX)) {
+pub fn __INTN_MAX(n: anytype) callconv(.Inline) @TypeOf(__stdint_join3(INT, n, _MAX)) {
     return __stdint_join3(INT, n, _MAX);
 }
-pub inline fn __UINTN_MAX(n: anytype) @TypeOf(__stdint_join3(UINT, n, _MAX)) {
+pub fn __UINTN_MAX(n: anytype) callconv(.Inline) @TypeOf(__stdint_join3(UINT, n, _MAX)) {
     return __stdint_join3(UINT, n, _MAX);
 }
-pub inline fn __INTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(INT, n, _C(v))) {
+pub fn __INTN_C(n: anytype, v: anytype) callconv(.Inline) @TypeOf(__stdint_join3(INT, n, _C(v))) {
     return __stdint_join3(INT, n, _C(v));
 }
-pub inline fn __UINTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(UINT, n, _C(v))) {
+pub fn __UINTN_C(n: anytype, v: anytype) callconv(.Inline) @TypeOf(__stdint_join3(UINT, n, _C(v))) {
     return __stdint_join3(UINT, n, _C(v));
 }
-pub inline fn INTMAX_C(v: anytype) @TypeOf(__int_c(v, __INTMAX_C_SUFFIX__)) {
+pub fn INTMAX_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __INTMAX_C_SUFFIX__)) {
     return __int_c(v, __INTMAX_C_SUFFIX__);
 }
-pub inline fn UINTMAX_C(v: anytype) @TypeOf(__int_c(v, __UINTMAX_C_SUFFIX__)) {
+pub fn UINTMAX_C(v: anytype) callconv(.Inline) @TypeOf(__int_c(v, __UINTMAX_C_SUFFIX__)) {
     return __int_c(v, __UINTMAX_C_SUFFIX__);
 }
-pub inline fn SDL_arraysize(array: anytype) @TypeOf(@import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0])) {
+pub fn SDL_arraysize(array: anytype) callconv(.Inline) @TypeOf(@import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0])) {
     return @import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0]);
 }
-pub inline fn SDL_TABLESIZE(table: anytype) @TypeOf(SDL_arraysize(table)) {
+pub fn SDL_TABLESIZE(table: anytype) callconv(.Inline) @TypeOf(SDL_arraysize(table)) {
     return SDL_arraysize(table);
 }
-pub inline fn SDL_reinterpret_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
+pub fn SDL_reinterpret_cast(type_1: anytype, expression: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast(type_1, expression))) {
     return (@import("std").meta.cast(type_1, expression));
 }
-pub inline fn SDL_static_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
+pub fn SDL_static_cast(type_1: anytype, expression: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast(type_1, expression))) {
     return (@import("std").meta.cast(type_1, expression));
 }
-pub inline fn SDL_const_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
+pub fn SDL_const_cast(type_1: anytype, expression: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast(type_1, expression))) {
     return (@import("std").meta.cast(type_1, expression));
 }
-pub inline fn SDL_FOURCC(A: anytype, B: anytype, C: anytype, D: anytype) @TypeOf((((SDL_static_cast(u32, SDL_static_cast(u8, A)) << 0) | (SDL_static_cast(u32, SDL_static_cast(u8, B)) << 8)) | (SDL_static_cast(u32, SDL_static_cast(u8, C)) << 16)) | (SDL_static_cast(u32, SDL_static_cast(u8, D)) << 24)) {
+pub fn SDL_FOURCC(A: anytype, B: anytype, C: anytype, D: anytype) callconv(.Inline) @TypeOf((((SDL_static_cast(u32, SDL_static_cast(u8, A)) << 0) | (SDL_static_cast(u32, SDL_static_cast(u8, B)) << 8)) | (SDL_static_cast(u32, SDL_static_cast(u8, C)) << 16)) | (SDL_static_cast(u32, SDL_static_cast(u8, D)) << 24)) {
     return (((SDL_static_cast(u32, SDL_static_cast(u8, A)) << 0) | (SDL_static_cast(u32, SDL_static_cast(u8, B)) << 8)) | (SDL_static_cast(u32, SDL_static_cast(u8, C)) << 16)) | (SDL_static_cast(u32, SDL_static_cast(u8, D)) << 24);
 }
-pub inline fn SDL_PRINTF_VARARG_FUNC(fmtargnumber: anytype) @TypeOf(__attribute__(format(__printf__, fmtargnumber, fmtargnumber + 1))) {
+pub fn SDL_PRINTF_VARARG_FUNC(fmtargnumber: anytype) callconv(.Inline) @TypeOf(__attribute__(format(__printf__, fmtargnumber, fmtargnumber + 1))) {
     return __attribute__(format(__printf__, fmtargnumber, fmtargnumber + 1));
 }
-pub inline fn SDL_SCANF_VARARG_FUNC(fmtargnumber: anytype) @TypeOf(__attribute__(format(__scanf__, fmtargnumber, fmtargnumber + 1))) {
+pub fn SDL_SCANF_VARARG_FUNC(fmtargnumber: anytype) callconv(.Inline) @TypeOf(__attribute__(format(__scanf__, fmtargnumber, fmtargnumber + 1))) {
     return __attribute__(format(__scanf__, fmtargnumber, fmtargnumber + 1));
 }
-pub inline fn SDL_stack_alloc(type_1: anytype, count: anytype) @TypeOf((@import("std").meta.cast([*c]type_1, alloca(@import("std").meta.sizeof(type_1) * count)))) {
+pub fn SDL_stack_alloc(type_1: anytype, count: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast([*c]type_1, alloca(@import("std").meta.sizeof(type_1) * count)))) {
     return (@import("std").meta.cast([*c]type_1, alloca(@import("std").meta.sizeof(type_1) * count)));
 }
-pub inline fn SDL_min(x: anytype, y: anytype) @TypeOf(if (x < y) x else y) {
+pub fn SDL_min(x: anytype, y: anytype) callconv(.Inline) @TypeOf(if (x < y) x else y) {
     return if (x < y) x else y;
 }
-pub inline fn SDL_max(x: anytype, y: anytype) @TypeOf(if (x > y) x else y) {
+pub fn SDL_max(x: anytype, y: anytype) callconv(.Inline) @TypeOf(if (x > y) x else y) {
     return if (x > y) x else y;
 }
-pub inline fn SDL_zero(x: anytype) @TypeOf(SDL_memset(&x, 0, @import("std").meta.sizeof(x))) {
+pub fn SDL_zero(x: anytype) callconv(.Inline) @TypeOf(SDL_memset(&x, 0, @import("std").meta.sizeof(x))) {
     return SDL_memset(&x, 0, @import("std").meta.sizeof(x));
 }
-pub inline fn SDL_zerop(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x.*))) {
+pub fn SDL_zerop(x: anytype) callconv(.Inline) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x.*))) {
     return SDL_memset(x, 0, @import("std").meta.sizeof(x.*));
 }
-pub inline fn SDL_zeroa(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x))) {
+pub fn SDL_zeroa(x: anytype) callconv(.Inline) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x))) {
     return SDL_memset(x, 0, @import("std").meta.sizeof(x));
 }
 pub const SDL_ICONV_ERROR = @bitCast(usize, @as(isize, -1));
 pub const SDL_ICONV_E2BIG = @bitCast(usize, @as(isize, -2));
 pub const SDL_ICONV_EILSEQ = @bitCast(usize, @as(isize, -3));
 pub const SDL_ICONV_EINVAL = @bitCast(usize, @as(isize, -4));
-pub inline fn SDL_iconv_utf8_locale(S: anytype) @TypeOf(SDL_iconv_string("", "UTF-8", S, SDL_strlen(S) + 1)) {
+pub fn SDL_iconv_utf8_locale(S: anytype) callconv(.Inline) @TypeOf(SDL_iconv_string("", "UTF-8", S, SDL_strlen(S) + 1)) {
     return SDL_iconv_string("", "UTF-8", S, SDL_strlen(S) + 1);
 }
-pub inline fn SDL_iconv_utf8_ucs2(S: anytype) @TypeOf((@import("std").meta.cast([*c]u16, SDL_iconv_string("UCS-2-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)))) {
+pub fn SDL_iconv_utf8_ucs2(S: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast([*c]u16, SDL_iconv_string("UCS-2-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)))) {
     return (@import("std").meta.cast([*c]u16, SDL_iconv_string("UCS-2-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)));
 }
-pub inline fn SDL_iconv_utf8_ucs4(S: anytype) @TypeOf((@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)))) {
+pub fn SDL_iconv_utf8_ucs4(S: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)))) {
     return (@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)));
 }
 pub const SDL_ASSERT_LEVEL = 2;
 pub const SDL_NULL_WHILE_LOOP_CONDITION = 0;
-pub inline fn SDL_assert(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
+pub fn SDL_assert(condition: anytype) callconv(.Inline) @TypeOf(SDL_enabled_assert(condition)) {
     return SDL_enabled_assert(condition);
 }
-pub inline fn SDL_assert_release(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
+pub fn SDL_assert_release(condition: anytype) callconv(.Inline) @TypeOf(SDL_enabled_assert(condition)) {
     return SDL_enabled_assert(condition);
 }
-pub inline fn SDL_assert_paranoid(condition: anytype) @TypeOf(SDL_disabled_assert(condition)) {
+pub fn SDL_assert_paranoid(condition: anytype) callconv(.Inline) @TypeOf(SDL_disabled_assert(condition)) {
     return SDL_disabled_assert(condition);
 }
-pub inline fn SDL_assert_always(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
+pub fn SDL_assert_always(condition: anytype) callconv(.Inline) @TypeOf(SDL_enabled_assert(condition)) {
     return SDL_enabled_assert(condition);
 }
 pub const SDL_assert_state = SDL_AssertState;
 pub const SDL_assert_data = SDL_AssertData;
-pub inline fn SDL_AtomicIncRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, 1)) {
+pub fn SDL_AtomicIncRef(a: anytype) callconv(.Inline) @TypeOf(SDL_AtomicAdd(a, 1)) {
     return SDL_AtomicAdd(a, 1);
 }
-pub inline fn SDL_AtomicDecRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, -1) == 1) {
+pub fn SDL_AtomicDecRef(a: anytype) callconv(.Inline) @TypeOf(SDL_AtomicAdd(a, -1) == 1) {
     return SDL_AtomicAdd(a, -1) == 1;
 }
 pub const SDL_LIL_ENDIAN = 1234;
 pub const SDL_BIG_ENDIAN = 4321;
-pub inline fn SDL_SwapLE16(X: anytype) @TypeOf(SDL_Swap16(X)) {
+pub fn SDL_SwapLE16(X: anytype) callconv(.Inline) @TypeOf(SDL_Swap16(X)) {
     return SDL_Swap16(X);
 }
-pub inline fn SDL_SwapLE32(X: anytype) @TypeOf(SDL_Swap32(X)) {
+pub fn SDL_SwapLE32(X: anytype) callconv(.Inline) @TypeOf(SDL_Swap32(X)) {
     return SDL_Swap32(X);
 }
-pub inline fn SDL_SwapLE64(X: anytype) @TypeOf(SDL_Swap64(X)) {
+pub fn SDL_SwapLE64(X: anytype) callconv(.Inline) @TypeOf(SDL_Swap64(X)) {
     return SDL_Swap64(X);
 }
-pub inline fn SDL_SwapFloatLE(X: anytype) @TypeOf(SDL_SwapFloat(X)) {
+pub fn SDL_SwapFloatLE(X: anytype) callconv(.Inline) @TypeOf(SDL_SwapFloat(X)) {
     return SDL_SwapFloat(X);
 }
-pub inline fn SDL_SwapBE16(X: anytype) @TypeOf(X) {
+pub fn SDL_SwapBE16(X: anytype) callconv(.Inline) @TypeOf(X) {
     return X;
 }
-pub inline fn SDL_SwapBE32(X: anytype) @TypeOf(X) {
+pub fn SDL_SwapBE32(X: anytype) callconv(.Inline) @TypeOf(X) {
     return X;
 }
-pub inline fn SDL_SwapBE64(X: anytype) @TypeOf(X) {
+pub fn SDL_SwapBE64(X: anytype) callconv(.Inline) @TypeOf(X) {
     return X;
 }
-pub inline fn SDL_SwapFloatBE(X: anytype) @TypeOf(X) {
+pub fn SDL_SwapFloatBE(X: anytype) callconv(.Inline) @TypeOf(X) {
     return X;
 }
 pub const SDL_MUTEX_TIMEDOUT = 1;
 pub const SDL_MUTEX_MAXWAIT = ~(@import("std").meta.cast(u32, 0));
-pub inline fn SDL_mutexP(m: anytype) @TypeOf(SDL_LockMutex(m)) {
+pub fn SDL_mutexP(m: anytype) callconv(.Inline) @TypeOf(SDL_LockMutex(m)) {
     return SDL_LockMutex(m);
 }
-pub inline fn SDL_mutexV(m: anytype) @TypeOf(SDL_UnlockMutex(m)) {
+pub fn SDL_mutexV(m: anytype) callconv(.Inline) @TypeOf(SDL_UnlockMutex(m)) {
     return SDL_UnlockMutex(m);
 }
 pub const SDL_RWOPS_UNKNOWN = @as(c_uint, 0);
@@ -3818,25 +3818,25 @@ pub const SDL_AUDIO_MASK_BITSIZE = 0xFF;
 pub const SDL_AUDIO_MASK_DATATYPE = 1 << 8;
 pub const SDL_AUDIO_MASK_ENDIAN = 1 << 12;
 pub const SDL_AUDIO_MASK_SIGNED = 1 << 15;
-pub inline fn SDL_AUDIO_BITSIZE(x: anytype) @TypeOf(x & SDL_AUDIO_MASK_BITSIZE) {
+pub fn SDL_AUDIO_BITSIZE(x: anytype) callconv(.Inline) @TypeOf(x & SDL_AUDIO_MASK_BITSIZE) {
     return x & SDL_AUDIO_MASK_BITSIZE;
 }
-pub inline fn SDL_AUDIO_ISFLOAT(x: anytype) @TypeOf(x & SDL_AUDIO_MASK_DATATYPE) {
+pub fn SDL_AUDIO_ISFLOAT(x: anytype) callconv(.Inline) @TypeOf(x & SDL_AUDIO_MASK_DATATYPE) {
     return x & SDL_AUDIO_MASK_DATATYPE;
 }
-pub inline fn SDL_AUDIO_ISBIGENDIAN(x: anytype) @TypeOf(x & SDL_AUDIO_MASK_ENDIAN) {
+pub fn SDL_AUDIO_ISBIGENDIAN(x: anytype) callconv(.Inline) @TypeOf(x & SDL_AUDIO_MASK_ENDIAN) {
     return x & SDL_AUDIO_MASK_ENDIAN;
 }
-pub inline fn SDL_AUDIO_ISSIGNED(x: anytype) @TypeOf(x & SDL_AUDIO_MASK_SIGNED) {
+pub fn SDL_AUDIO_ISSIGNED(x: anytype) callconv(.Inline) @TypeOf(x & SDL_AUDIO_MASK_SIGNED) {
     return x & SDL_AUDIO_MASK_SIGNED;
 }
-pub inline fn SDL_AUDIO_ISINT(x: anytype) @TypeOf(!(SDL_AUDIO_ISFLOAT(x) != 0)) {
+pub fn SDL_AUDIO_ISINT(x: anytype) callconv(.Inline) @TypeOf(!(SDL_AUDIO_ISFLOAT(x) != 0)) {
     return !(SDL_AUDIO_ISFLOAT(x) != 0);
 }
-pub inline fn SDL_AUDIO_ISLITTLEENDIAN(x: anytype) @TypeOf(!(SDL_AUDIO_ISBIGENDIAN(x) != 0)) {
+pub fn SDL_AUDIO_ISLITTLEENDIAN(x: anytype) callconv(.Inline) @TypeOf(!(SDL_AUDIO_ISBIGENDIAN(x) != 0)) {
     return !(SDL_AUDIO_ISBIGENDIAN(x) != 0);
 }
-pub inline fn SDL_AUDIO_ISUNSIGNED(x: anytype) @TypeOf(!(SDL_AUDIO_ISSIGNED(x) != 0)) {
+pub fn SDL_AUDIO_ISUNSIGNED(x: anytype) callconv(.Inline) @TypeOf(!(SDL_AUDIO_ISSIGNED(x) != 0)) {
     return !(SDL_AUDIO_ISSIGNED(x) != 0);
 }
 pub const AUDIO_U8 = 0x0008;
@@ -3863,50 +3863,50 @@ pub const SDL_AUDIO_ALLOW_CHANNELS_CHANGE = 0x00000004;
 pub const SDL_AUDIO_ALLOW_SAMPLES_CHANGE = 0x00000008;
 pub const SDL_AUDIO_ALLOW_ANY_CHANGE = ((SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_FORMAT_CHANGE) | SDL_AUDIO_ALLOW_CHANNELS_CHANGE) | SDL_AUDIO_ALLOW_SAMPLES_CHANGE;
 pub const SDL_AUDIOCVT_MAX_FILTERS = 9;
-pub inline fn SDL_LoadWAV(file: anytype, spec: anytype, audio_buf: anytype, audio_len: anytype) @TypeOf(SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1, spec, audio_buf, audio_len)) {
+pub fn SDL_LoadWAV(file: anytype, spec: anytype, audio_buf: anytype, audio_len: anytype) callconv(.Inline) @TypeOf(SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1, spec, audio_buf, audio_len)) {
     return SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), 1, spec, audio_buf, audio_len);
 }
 pub const SDL_MIX_MAXVOLUME = 128;
 pub const SDL_CACHELINE_SIZE = 128;
 pub const SDL_ALPHA_OPAQUE = 255;
 pub const SDL_ALPHA_TRANSPARENT = 0;
-pub inline fn SDL_DEFINE_PIXELFOURCC(A: anytype, B: anytype, C: anytype, D: anytype) @TypeOf(SDL_FOURCC(A, B, C, D)) {
+pub fn SDL_DEFINE_PIXELFOURCC(A: anytype, B: anytype, C: anytype, D: anytype) callconv(.Inline) @TypeOf(SDL_FOURCC(A, B, C, D)) {
     return SDL_FOURCC(A, B, C, D);
 }
-pub inline fn SDL_DEFINE_PIXELFORMAT(type_1: anytype, order: anytype, layout: anytype, bits: anytype, bytes: anytype) @TypeOf((((((1 << 28) | (type_1 << 24)) | (order << 20)) | (layout << 16)) | (bits << 8)) | (bytes << 0)) {
+pub fn SDL_DEFINE_PIXELFORMAT(type_1: anytype, order: anytype, layout: anytype, bits: anytype, bytes: anytype) callconv(.Inline) @TypeOf((((((1 << 28) | (type_1 << 24)) | (order << 20)) | (layout << 16)) | (bits << 8)) | (bytes << 0)) {
     return (((((1 << 28) | (type_1 << 24)) | (order << 20)) | (layout << 16)) | (bits << 8)) | (bytes << 0);
 }
-pub inline fn SDL_PIXELFLAG(X: anytype) @TypeOf((X >> 28) & 0x0F) {
+pub fn SDL_PIXELFLAG(X: anytype) callconv(.Inline) @TypeOf((X >> 28) & 0x0F) {
     return (X >> 28) & 0x0F;
 }
-pub inline fn SDL_PIXELTYPE(X: anytype) @TypeOf((X >> 24) & 0x0F) {
+pub fn SDL_PIXELTYPE(X: anytype) callconv(.Inline) @TypeOf((X >> 24) & 0x0F) {
     return (X >> 24) & 0x0F;
 }
-pub inline fn SDL_PIXELORDER(X: anytype) @TypeOf((X >> 20) & 0x0F) {
+pub fn SDL_PIXELORDER(X: anytype) callconv(.Inline) @TypeOf((X >> 20) & 0x0F) {
     return (X >> 20) & 0x0F;
 }
-pub inline fn SDL_PIXELLAYOUT(X: anytype) @TypeOf((X >> 16) & 0x0F) {
+pub fn SDL_PIXELLAYOUT(X: anytype) callconv(.Inline) @TypeOf((X >> 16) & 0x0F) {
     return (X >> 16) & 0x0F;
 }
-pub inline fn SDL_BITSPERPIXEL(X: anytype) @TypeOf((X >> 8) & 0xFF) {
+pub fn SDL_BITSPERPIXEL(X: anytype) callconv(.Inline) @TypeOf((X >> 8) & 0xFF) {
     return (X >> 8) & 0xFF;
 }
-pub inline fn SDL_BYTESPERPIXEL(X: anytype) @TypeOf(if (SDL_ISPIXELFORMAT_FOURCC(X)) if (((X == SDL_PIXELFORMAT_YUY2) or (X == SDL_PIXELFORMAT_UYVY)) or (X == SDL_PIXELFORMAT_YVYU)) 2 else 1 else (X >> 0) & 0xFF) {
+pub fn SDL_BYTESPERPIXEL(X: anytype) callconv(.Inline) @TypeOf(if (SDL_ISPIXELFORMAT_FOURCC(X)) if (((X == SDL_PIXELFORMAT_YUY2) or (X == SDL_PIXELFORMAT_UYVY)) or (X == SDL_PIXELFORMAT_YVYU)) 2 else 1 else (X >> 0) & 0xFF) {
     return if (SDL_ISPIXELFORMAT_FOURCC(X)) if (((X == SDL_PIXELFORMAT_YUY2) or (X == SDL_PIXELFORMAT_UYVY)) or (X == SDL_PIXELFORMAT_YVYU)) 2 else 1 else (X >> 0) & 0xFF;
 }
-pub inline fn SDL_ISPIXELFORMAT_INDEXED(format: anytype) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX1) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX4)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX8))) {
+pub fn SDL_ISPIXELFORMAT_INDEXED(format: anytype) callconv(.Inline) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX1) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX4)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX8))) {
     return !(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX1) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX4)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_INDEX8));
 }
-pub inline fn SDL_ISPIXELFORMAT_PACKED(format: anytype) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED32))) {
+pub fn SDL_ISPIXELFORMAT_PACKED(format: anytype) callconv(.Inline) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED32))) {
     return !(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_PACKED32));
 }
-pub inline fn SDL_ISPIXELFORMAT_ARRAY(format: anytype) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU32)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF32))) {
+pub fn SDL_ISPIXELFORMAT_ARRAY(format: anytype) callconv(.Inline) @TypeOf(!(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU32)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF32))) {
     return !(SDL_ISPIXELFORMAT_FOURCC(format) != 0) and (((((SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU8) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYU32)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF16)) or (SDL_PIXELTYPE(format) == SDL_PIXELTYPE_ARRAYF32));
 }
-pub inline fn SDL_ISPIXELFORMAT_ALPHA(format: anytype) @TypeOf(((SDL_ISPIXELFORMAT_PACKED(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_PACKEDORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_BGRA))) or ((SDL_ISPIXELFORMAT_ARRAY(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_ARRAYORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_BGRA)))) {
+pub fn SDL_ISPIXELFORMAT_ALPHA(format: anytype) callconv(.Inline) @TypeOf(((SDL_ISPIXELFORMAT_PACKED(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_PACKEDORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_BGRA))) or ((SDL_ISPIXELFORMAT_ARRAY(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_ARRAYORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_BGRA)))) {
     return ((SDL_ISPIXELFORMAT_PACKED(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_PACKEDORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_PACKEDORDER_BGRA))) or ((SDL_ISPIXELFORMAT_ARRAY(format) != 0) and ((((SDL_PIXELORDER(format) == SDL_ARRAYORDER_ARGB) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_RGBA)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_ABGR)) or (SDL_PIXELORDER(format) == SDL_ARRAYORDER_BGRA)));
 }
-pub inline fn SDL_ISPIXELFORMAT_FOURCC(format: anytype) @TypeOf((format != 0) and (SDL_PIXELFLAG(format) != 1)) {
+pub fn SDL_ISPIXELFORMAT_FOURCC(format: anytype) callconv(.Inline) @TypeOf((format != 0) and (SDL_PIXELFLAG(format) != 1)) {
     return (format != 0) and (SDL_PIXELFLAG(format) != 1);
 }
 pub const SDL_Colour = SDL_Color;
@@ -3915,38 +3915,38 @@ pub const SDL_PREALLOC = 0x00000001;
 pub const SDL_RLEACCEL = 0x00000002;
 pub const SDL_DONTFREE = 0x00000004;
 pub const SDL_SIMD_ALIGNED = 0x00000008;
-pub inline fn SDL_MUSTLOCK(S: anytype) @TypeOf(((S.*.flags) & SDL_RLEACCEL) != 0) {
+pub fn SDL_MUSTLOCK(S: anytype) callconv(.Inline) @TypeOf(((S.*.flags) & SDL_RLEACCEL) != 0) {
     return ((S.*.flags) & SDL_RLEACCEL) != 0;
 }
-pub inline fn SDL_LoadBMP(file: anytype) @TypeOf(SDL_LoadBMP_RW(SDL_RWFromFile(file, "rb"), 1)) {
+pub fn SDL_LoadBMP(file: anytype) callconv(.Inline) @TypeOf(SDL_LoadBMP_RW(SDL_RWFromFile(file, "rb"), 1)) {
     return SDL_LoadBMP_RW(SDL_RWFromFile(file, "rb"), 1);
 }
-pub inline fn SDL_SaveBMP(surface: anytype, file: anytype) @TypeOf(SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)) {
+pub fn SDL_SaveBMP(surface: anytype, file: anytype) callconv(.Inline) @TypeOf(SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1)) {
     return SDL_SaveBMP_RW(surface, SDL_RWFromFile(file, "wb"), 1);
 }
 pub const SDL_BlitSurface = SDL_UpperBlit;
 pub const SDL_BlitScaled = SDL_UpperBlitScaled;
 pub const SDL_WINDOWPOS_UNDEFINED_MASK = @as(c_uint, 0x1FFF0000);
-pub inline fn SDL_WINDOWPOS_UNDEFINED_DISPLAY(X: anytype) @TypeOf(SDL_WINDOWPOS_UNDEFINED_MASK | X) {
+pub fn SDL_WINDOWPOS_UNDEFINED_DISPLAY(X: anytype) callconv(.Inline) @TypeOf(SDL_WINDOWPOS_UNDEFINED_MASK | X) {
     return SDL_WINDOWPOS_UNDEFINED_MASK | X;
 }
 pub const SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_DISPLAY(0);
-pub inline fn SDL_WINDOWPOS_ISUNDEFINED(X: anytype) @TypeOf((X & 0xFFFF0000) == SDL_WINDOWPOS_UNDEFINED_MASK) {
+pub fn SDL_WINDOWPOS_ISUNDEFINED(X: anytype) callconv(.Inline) @TypeOf((X & 0xFFFF0000) == SDL_WINDOWPOS_UNDEFINED_MASK) {
     return (X & 0xFFFF0000) == SDL_WINDOWPOS_UNDEFINED_MASK;
 }
 pub const SDL_WINDOWPOS_CENTERED_MASK = @as(c_uint, 0x2FFF0000);
-pub inline fn SDL_WINDOWPOS_CENTERED_DISPLAY(X: anytype) @TypeOf(SDL_WINDOWPOS_CENTERED_MASK | X) {
+pub fn SDL_WINDOWPOS_CENTERED_DISPLAY(X: anytype) callconv(.Inline) @TypeOf(SDL_WINDOWPOS_CENTERED_MASK | X) {
     return SDL_WINDOWPOS_CENTERED_MASK | X;
 }
 pub const SDL_WINDOWPOS_CENTERED = SDL_WINDOWPOS_CENTERED_DISPLAY(0);
-pub inline fn SDL_WINDOWPOS_ISCENTERED(X: anytype) @TypeOf((X & 0xFFFF0000) == SDL_WINDOWPOS_CENTERED_MASK) {
+pub fn SDL_WINDOWPOS_ISCENTERED(X: anytype) callconv(.Inline) @TypeOf((X & 0xFFFF0000) == SDL_WINDOWPOS_CENTERED_MASK) {
     return (X & 0xFFFF0000) == SDL_WINDOWPOS_CENTERED_MASK;
 }
 pub const SDLK_SCANCODE_MASK = 1 << 30;
-pub inline fn SDL_SCANCODE_TO_KEYCODE(X: anytype) @TypeOf(X | SDLK_SCANCODE_MASK) {
+pub fn SDL_SCANCODE_TO_KEYCODE(X: anytype) callconv(.Inline) @TypeOf(X | SDLK_SCANCODE_MASK) {
     return X | SDLK_SCANCODE_MASK;
 }
-pub inline fn SDL_BUTTON(X: anytype) @TypeOf(1 << (X - 1)) {
+pub fn SDL_BUTTON(X: anytype) callconv(.Inline) @TypeOf(1 << (X - 1)) {
     return 1 << (X - 1);
 }
 pub const SDL_BUTTON_LEFT = 1;
@@ -3972,7 +3972,7 @@ pub const SDL_HAT_RIGHTDOWN = SDL_HAT_RIGHT | SDL_HAT_DOWN;
 pub const SDL_HAT_LEFTUP = SDL_HAT_LEFT | SDL_HAT_UP;
 pub const SDL_HAT_LEFTDOWN = SDL_HAT_LEFT | SDL_HAT_DOWN;
 pub const SDL_STANDARD_GRAVITY = @as(f32, 9.80665);
-pub inline fn SDL_GameControllerAddMappingsFromFile(file: anytype) @TypeOf(SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), 1)) {
+pub fn SDL_GameControllerAddMappingsFromFile(file: anytype) callconv(.Inline) @TypeOf(SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), 1)) {
     return SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), 1);
 }
 pub const SDL_TOUCH_MOUSEID = @bitCast(u32, @as(i32, -1));
@@ -3985,7 +3985,7 @@ pub const SDL_QUERY = -1;
 pub const SDL_IGNORE = 0;
 pub const SDL_DISABLE = 0;
 pub const SDL_ENABLE = 1;
-pub inline fn SDL_GetEventState(type_1: anytype) @TypeOf(SDL_EventState(type_1, SDL_QUERY)) {
+pub fn SDL_GetEventState(type_1: anytype) callconv(.Inline) @TypeOf(SDL_EventState(type_1, SDL_QUERY)) {
     return SDL_EventState(type_1, SDL_QUERY);
 }
 pub const SDL_HAPTIC_CONSTANT = @as(c_uint, 1) << 0;
@@ -4121,18 +4121,18 @@ pub const SDL_HINT_PREFERRED_LOCALES = "SDL_PREFERRED_LOCALES";
 pub const SDL_NONSHAPEABLE_WINDOW = -1;
 pub const SDL_INVALID_SHAPE_ARGUMENT = -2;
 pub const SDL_WINDOW_LACKS_SHAPE = -3;
-pub inline fn SDL_SHAPEMODEALPHA(mode: anytype) @TypeOf(((mode == ShapeModeDefault) or (mode == ShapeModeBinarizeAlpha)) or (mode == ShapeModeReverseBinarizeAlpha)) {
+pub fn SDL_SHAPEMODEALPHA(mode: anytype) callconv(.Inline) @TypeOf(((mode == ShapeModeDefault) or (mode == ShapeModeBinarizeAlpha)) or (mode == ShapeModeReverseBinarizeAlpha)) {
     return ((mode == ShapeModeDefault) or (mode == ShapeModeBinarizeAlpha)) or (mode == ShapeModeReverseBinarizeAlpha);
 }
-pub inline fn SDL_TICKS_PASSED(A: anytype, B: anytype) @TypeOf((@import("std").meta.cast(i32, B - A)) <= 0) {
+pub fn SDL_TICKS_PASSED(A: anytype, B: anytype) callconv(.Inline) @TypeOf((@import("std").meta.cast(i32, B - A)) <= 0) {
     return (@import("std").meta.cast(i32, B - A)) <= 0;
 }
 pub const SDL_MAJOR_VERSION = 2;
 pub const SDL_PATCHLEVEL = 15;
-pub inline fn SDL_VERSIONNUM(X: anytype, Y: anytype, Z: anytype) @TypeOf(((X * 1000) + (Y * 100)) + Z) {
+pub fn SDL_VERSIONNUM(X: anytype, Y: anytype, Z: anytype) callconv(.Inline) @TypeOf(((X * 1000) + (Y * 100)) + Z) {
     return ((X * 1000) + (Y * 100)) + Z;
 }
-pub inline fn SDL_VERSION_ATLEAST(X: anytype, Y: anytype, Z: anytype) @TypeOf(SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z)) {
+pub fn SDL_VERSION_ATLEAST(X: anytype, Y: anytype, Z: anytype) callconv(.Inline) @TypeOf(SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z)) {
     return SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z);
 }
 pub const SDL_INIT_TIMER = @as(c_uint, 0x00000001);

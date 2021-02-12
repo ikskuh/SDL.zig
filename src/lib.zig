@@ -12,7 +12,7 @@ const log = std.log.scoped(.sdl2);
 
 pub fn makeError() error{SdlError} {
     if (c.SDL_GetError()) |ptr| {
-        log.debug("{}\n", .{
+        log.debug("{s}\n", .{
             std.mem.span(ptr),
         });
     }
