@@ -508,11 +508,11 @@ pub const Texture = struct {
     }
 
     pub fn setColorModRGB(tex: Texture, r: u8, g: u8, b: u8) !void {
-        tex.setColorMod(Color.rgb(r, g, b));
+        try tex.setColorMod(Color.rgb(r, g, b));
     }
 
     pub fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
-        tex.setColorMod(Color.rgba(r, g, b, a));
+        try tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
     pub const Format = enum(u32) {
