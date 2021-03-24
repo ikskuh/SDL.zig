@@ -22,6 +22,22 @@ pub fn deleteContext(context: Context) void {
     _ = c.SDL_GL_DeleteContext(context.ptr);
 }
 
+pub const SwapInterval = enum {
+    immediate, // immediate updates
+    vsync, // updates synchronized with the vertical retrace
+    adaptive_vsync, // same as vsync, but if a frame is missed swaps buffers immediately
+};
+
+pub fn setSwapInterval(interval: SwapInterval) !void {
+    if (c.SDL_GL_SetSwapInterval(switch (interval) {
+        .immediate => 0,
+        .vsync => 1,
+        .adaptive_vsync => -1,
+    }) != 0) {
+        return SDL.makeError();
+    }
+}
+
 pub fn swapWindow(window: SDL.Window) void {
     c.SDL_GL_SwapWindow(window.ptr);
 }
