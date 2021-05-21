@@ -1,6 +1,8 @@
 const SDL = @import("lib.zig");
-const c = @import("binding/sdl_image.zig");
 const std = @import("std");
+
+/// Exports the C interface for SDL_image
+pub const c = @import("binding/sdl_image.zig");
 
 pub const InitFlags = packed struct {
     jpg: bool = false, // IMG_INIT_JPG = 1,
