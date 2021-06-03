@@ -209,6 +209,15 @@ pub const Window = struct {
         c.SDL_GetWindowSize(w.ptr, &s.width, &s.height);
         return s;
     }
+
+    pub fn getSurface(w: Window) !Surface {
+        var surface_ptr = c.SDL_GetWindowSurface(w.ptr) orelse return makeError();
+        return Surface{.ptr = surface_ptr};
+    }
+
+    pub fn updateSurface(w: Window) !void {
+        if(c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
+    }
 };
 
 pub const WindowPosition = union(enum) {
@@ -336,6 +345,15 @@ pub fn createWindow(
         ) orelse return makeError(),
     };
 }
+
+pub const Surface = struct {
+    ptr: *c.SDL_Surface,
+
+    pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
+        const rect_ptr = if(rect) |_rect| _rect.getSdlPtr() else null;
+        if(c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+    }
+};
 
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
