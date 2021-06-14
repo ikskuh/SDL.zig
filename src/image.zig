@@ -27,6 +27,13 @@ pub fn loadTexture(ren: SDL.Renderer, file: [:0]const u8) !SDL.Texture {
     };
 }
 
+pub fn loadSurface(file: [:0]const u8) !SDL.Surface {
+    // pub extern fn IMG_Load(file: [*:0]const u8) ?*sdl.SDL_Surface;
+    return SDL.Surface{
+        .ptr = c.IMG_Load(file) orelse return SDL.makeError(),
+    };
+}
+
 test "platform independent declarations" {
     std.testing.refAllDecls(@This());
 }
