@@ -349,6 +349,14 @@ pub fn createWindow(
 pub const Surface = struct {
     ptr: *c.SDL_Surface,
 
+    pub fn destroy(s: Surface) void {
+        c.SDL_FreeSurface(s.ptr);
+    }
+
+    pub fn setColorKey(s: Surface, flag: c_int, color: Color) !void {
+        if(c.SDL_SetColorKey(s.ptr, flag, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+    }
+
     pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
         const rect_ptr = if (rect) |_rect| _rect.getSdlPtr() else null;
         if (c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
@@ -588,6 +596,16 @@ pub fn createTexture(renderer: Renderer, format: Texture.Format, access: Texture
         @enumToInt(access),
         @intCast(c_int, width),
         @intCast(c_int, height),
+    ) orelse return makeError();
+    return Texture{
+        .ptr = texptr,
+    };
+}
+
+pub fn createTextureFromSurface(renderer: Renderer, surface: Surface) !Texture {
+    const texptr = c.SDL_CreateTextureFromSurface(
+        renderer.ptr,
+        surface.ptr,
     ) orelse return makeError();
     return Texture{
         .ptr = texptr,
