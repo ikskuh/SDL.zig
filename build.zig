@@ -1,26 +1,23 @@
 const std = @import("std");
+
+const Sdk = @import("Sdk.zig");
+
 const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) !void {
+    const sdk = Sdk.init(b);
+
     const mode = b.standardReleaseOptions();
+    const target = b.standardTargetOptions(.{});
 
     const lib_test = b.addTest("src/lib.zig");
-    lib_test.linkSystemLibrary("c");
-    lib_test.linkSystemLibrary("sdl2");
-    lib_test.linkSystemLibrary("SDL2_image");
+    sdk.link(lib_test, .dynamic);
 
     const demo_basic = b.addExecutable("demo-basic", "examples/basic.zig");
     demo_basic.setBuildMode(mode);
-    demo_basic.linkSystemLibrary("c");
-    demo_basic.linkSystemLibrary("sdl2");
-    if (demo_basic.target.isWindows()) {
-        demo_basic.addVcpkgPaths(.Dynamic) catch {};
-        if (demo_basic.vcpkg_bin_path) |path| {
-            const src_path = try std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" });
-            b.installBinFile(src_path, "SDL2.dll");
-        }
-    }
-    demo_basic.addPackagePath("sdl2", "src/lib.zig");
+    demo_basic.setTarget(target);
+    sdk.link(demo_basic, .dynamic);
+    demo_basic.addPackage(sdk.getWrapperPackage("sdl2"));
     demo_basic.install();
 
     const run_demo_basic = demo_basic.run();
