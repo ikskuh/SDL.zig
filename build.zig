@@ -11,6 +11,13 @@ pub fn build(b: *Builder) !void {
     const target = b.standardTargetOptions(.{});
 
     const lib_test = b.addTest("src/lib.zig");
+    lib_test.setTarget(.{
+        // copy over the abi so we compile the test with -msvc or -gnu for windows
+        .abi = if (target.isWindows())
+            target.abi
+        else
+            null,
+    });
     sdk.link(lib_test, .dynamic);
 
     const demo_basic = b.addExecutable("demo-basic", "examples/basic.zig");

@@ -176,8 +176,9 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             }
         }
 
-        if (linkage == .dynamic) {
-            // On window, we need to copy SDL2.zig to the bin directory
+        if (linkage == .dynamic and exe.kind == .exe) {
+            // On window, we need to copy SDL2.dll to the bin directory
+            // for executables
             const sdl2_dll_path = std.fs.path.join(sdk.builder.allocator, &[_][]const u8{
                 sdk_paths.bin,
                 "SDL2.dll",
@@ -222,6 +223,12 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
             .arch_os_abi = entry.key_ptr.*,
         }) catch return error.InvalidTarget;
         const config_target = (std.zig.system.NativeTargetInfo.detect(sdk.builder.allocator, config_cross_target) catch @panic("out of memory")).target;
+
+        std.debug.print("  triple: {s}-{s}-{s}\n", .{
+            config_target.cpu.arch,
+            config_target.os.tag,
+            config_target.abi,
+        });
 
         if (target.cpu.arch != config_target.cpu.arch)
             continue;
