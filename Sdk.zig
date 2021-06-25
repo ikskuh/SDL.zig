@@ -102,6 +102,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
                         \\}
                         \\
                     ) catch @panic("io error");
+                    writer.writeAll(
+                        \\
+                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
+                        \\
+                    ) catch @panic("io error");
                 },
                 error.MissingTarget => {
                     writer.print("{s} is missing a SDK definition for {s}. Please add the following section to the file and fill the paths:\n", .{
@@ -114,6 +119,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
                         \\  "libs": "<path to sdl2 sdk>/lib",
                         \\  "bin": "<path to sdl2 sdk>/bin"
                         \\}
+                    ) catch @panic("io error");
+                    writer.writeAll(
+                        \\
+                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
+                        \\
                     ) catch @panic("io error");
                 },
                 error.InvalidJson => {
