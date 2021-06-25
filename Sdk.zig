@@ -25,6 +25,8 @@ config_path: []const u8,
 
 prepare_sources: *PrepareStubSourceStep,
 
+/// Creates a instance of the Sdk and initializes internal steps.
+/// Initialize once, use everywhere (in your `build` function).
 pub fn init(b: *Builder) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
     sdk.* = .{

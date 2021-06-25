@@ -6,7 +6,7 @@ A Zig package that provides you with the means to link SDL2 to your project, as 
 
 ### Linking SDL2 to your project
 
-This is a example `build.zig` that will link the SDL2 library to your project.
+This is an example `build.zig` that will link the SDL2 library to your project.
 
 ```zig
 const std = @import("std");
@@ -83,7 +83,7 @@ This package also exposes the SDL2 API with a more Zig-style API. Use this if yo
 
 **Note:** This API is experimental and might change in the future
 
-```
+```zig
 const std = @import("std");
 const SDL = @import("sdl2"); // Add this package by using sdk.getWrapperPackage
 
@@ -122,11 +122,34 @@ pub fn main() !void {
 }
 ```
 
+## `Sdk.zig` API
+
+```zig
+/// Just call `Sdk.init(b)` to obtain a handle to the Sdk!
+const Sdk = @This();
+
+/// Creates a instance of the Sdk and initializes internal steps.
+/// Initialize once, use everywhere (in your `build` function).
+pub fn init(b: *Builder) *Sdk
+
+/// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
+/// for a more *ziggy* feeling.
+/// This is similar to the *C import* result.
+pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg;
+
+/// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
+pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg ;
+
+/// Links SDL2 to the given exe and adds required installs if necessary.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
+pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void;
+```
+
 ## Support Matrix
 
 This project tries to provide you the best possible development experience for SDL2. Thus, this project supports
 the maximum amount of cross-compilation targets for SDL2.
-1
+
 The following table documents this. The rows document the *target* whereas the columns are the *build host*:
 
 |                       | Windows (x86_64) | Windows (i386) | Linux (x86_64) | MacOS (x86_64) |
