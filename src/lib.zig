@@ -354,7 +354,7 @@ pub const Surface = struct {
     }
 
     pub fn setColorKey(s: Surface, flag: c_int, color: Color) !void {
-        if(c.SDL_SetColorKey(s.ptr, flag, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+        if (c.SDL_SetColorKey(s.ptr, flag, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
     }
 
     pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
