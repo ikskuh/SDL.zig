@@ -3,7 +3,7 @@ const std = @import("std");
 /// Exports the C interface for SDL
 pub const c = @import("binding/sdl.zig");
 
-pub const image = @import("image.zig");
+// pub const image = @import("image.zig");
 pub const gl = @import("gl.zig");
 
 pub const Error = error{SdlError};
@@ -212,11 +212,11 @@ pub const Window = struct {
 
     pub fn getSurface(w: Window) !Surface {
         var surface_ptr = c.SDL_GetWindowSurface(w.ptr) orelse return makeError();
-        return Surface{.ptr = surface_ptr};
+        return Surface{ .ptr = surface_ptr };
     }
 
     pub fn updateSurface(w: Window) !void {
-        if(c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
+        if (c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
     }
 };
 
@@ -350,8 +350,8 @@ pub const Surface = struct {
     ptr: *c.SDL_Surface,
 
     pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
-        const rect_ptr = if(rect) |_rect| _rect.getSdlPtr() else null;
-        if(c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+        const rect_ptr = if (rect) |_rect| _rect.getSdlPtr() else null;
+        if (c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
     }
 };
 

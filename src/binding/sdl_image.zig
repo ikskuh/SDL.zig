@@ -20,8 +20,11 @@ pub fn SDL_IMAGE_VERSION_ATLEAST(X: anytype, Y: anytype, Z: anytype) bool {
 
 pub extern fn IMG_Linked_Version(void) callconv(.C) *const sdl.SDL_version;
 
-pub const IMG_InitFlags = extern enum {
-    IMG_INIT_JPG = 0x00000001, IMG_INIT_PNG = 0x00000002, IMG_INIT_TIF = 0x00000004, IMG_INIT_WEBP = 0x00000008
+pub const IMG_InitFlags = enum(c_int) {
+    IMG_INIT_JPG = 0x00000001,
+    IMG_INIT_PNG = 0x00000002,
+    IMG_INIT_TIF = 0x00000004,
+    IMG_INIT_WEBP = 0x00000008,
 };
 
 pub const IMG_INIT_JPG = @enumToInt(IMG_InitFlags.IMG_INIT_JPG);
