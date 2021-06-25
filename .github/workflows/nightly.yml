@@ -118,15 +118,30 @@ jobs:
           file: SDL2.tar.gz
     
       - name: Create SDK file
-        uses: DamianReeves/write-file-action@v1
+        uses: DamianReeves/write-file-action@v1.0
         with:
           path: .build_config/sdl.json
           contents: |
             {
-              "${{ matrix.target }}": {
+              "i386-windows-gnu": {
+                "include": "SDL2-2.0.14/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.14/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.14/i686-w64-mingw32/bin"
+              },
+              "x86_64-windows-gnu": {
                 "include": "SDL2-2.0.14/x86_64-w64-mingw32/include",
                 "libs": "SDL2-2.0.14/x86_64-w64-mingw32/lib",
                 "bin": "SDL2-2.0.14/x86_64-w64-mingw32/bin"
+              },
+              "i386-windows-msvc": {
+                "include": "SDL2-2.0.14/include",
+                "libs": "SDL2-2.0.14/lib/x86",
+                "bin": "SDL2-2.0.14/lib/x86"
+              },
+              "x86_64-windows-msvc": {
+                "include": "SDL2-2.0.14/include",
+                "libs": "SDL2-2.0.14/lib/x64",
+                "bin": "SDL2-2.0.14/lib/x64"
               }
             }
           write-mode: overwrite

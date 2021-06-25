@@ -127,13 +127,17 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             @panic("SDL cannot be linked statically for MSVC");
 
         // These will be added for C-Imports or C files.
-        // SDL2 ships the SDL include files under `include/SDL2/` which is very inconsitent with
-        // all other platforms, so we just remove this prefix here
-        const include_path = std.fs.path.join(b.allocator, &[_][]const u8{
-            sdk_paths.include,
-            "SDL2",
-        }) catch @panic("out of memory");
-        exe.addIncludeDir(include_path);
+        if (target.abi != .msvc) {
+            // SDL2 (mingw) ships the SDL include files under `include/SDL2/` which is very inconsitent with
+            // all other platforms, so we just remove this prefix here
+            const include_path = std.fs.path.join(b.allocator, &[_][]const u8{
+                sdk_paths.include,
+                "SDL2",
+            }) catch @panic("out of memory");
+            exe.addIncludeDir(include_path);
+        } else {
+            exe.addIncludeDir(sdk_paths.include);
+        }
 
         // link the right libraries
         if (target.abi == .msvc) {
