@@ -195,7 +195,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             sdk.builder.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
     } else if (target.os.tag == .linux) {
-        if (std.Target.current.os.tag != .linux) {
+        if (std.Target.current.os.tag != .linux or target.cpu.arch != std.Target.current.cpu.arch) {
             // linux cross-compilation requires us to do some dirty hacks:
             // we compile a stub .so file we will link against.
             // This will allow us to work around the "SDL doesn't provide dev packages for linux"
