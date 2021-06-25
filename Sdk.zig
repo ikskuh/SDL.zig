@@ -218,17 +218,10 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
 
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
-        std.debug.print("parse config {s}\n", .{entry.key_ptr.*});
         const config_cross_target = std.zig.CrossTarget.parse(.{
             .arch_os_abi = entry.key_ptr.*,
         }) catch return error.InvalidTarget;
         const config_target = (std.zig.system.NativeTargetInfo.detect(sdk.builder.allocator, config_cross_target) catch @panic("out of memory")).target;
-
-        std.debug.print("  triple: {s}-{s}-{s}\n", .{
-            config_target.cpu.arch,
-            config_target.os.tag,
-            config_target.abi,
-        });
 
         if (target.cpu.arch != config_target.cpu.arch)
             continue;
@@ -239,10 +232,6 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
         // load paths
 
         const node = entry.value_ptr.*.Object;
-
-        std.debug.print("selected config {s}\n", .{
-            tripleName(sdk.builder.allocator, target) catch @panic("out of memory"),
-        });
 
         return Paths{
             .include = node.get("include").?.String,

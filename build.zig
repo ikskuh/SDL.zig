@@ -10,6 +10,8 @@ pub fn build(b: *Builder) !void {
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
 
+    const sdl_linkage = b.option(std.build.LibExeObjStep.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
+
     const lib_test = b.addTest("src/lib.zig");
     lib_test.setTarget(.{
         // copy over the abi so we compile the test with -msvc or -gnu for windows
@@ -23,7 +25,7 @@ pub fn build(b: *Builder) !void {
     const demo_basic = b.addExecutable("demo-basic", "examples/basic.zig");
     demo_basic.setBuildMode(mode);
     demo_basic.setTarget(target);
-    sdk.link(demo_basic, .dynamic);
+    sdk.link(demo_basic, sdl_linkage);
     demo_basic.addPackage(sdk.getWrapperPackage("sdl2"));
     demo_basic.install();
 
