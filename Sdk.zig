@@ -7,7 +7,9 @@
 const std = @import("std");
 
 const Builder = std.build.Builder;
+const Step = std.build.Step;
 const FileSource = std.build.FileSource;
+const GeneratedFile = std.build.GeneratedFile;
 const LibExeObjStep = std.build.LibExeObjStep;
 
 const Sdk = @This();
@@ -16,8 +18,12 @@ fn sdkRoot() []const u8 {
     return std.fs.path.dirname(@src().file) orelse ".";
 }
 
+const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
+
 builder: *Builder,
 config_path: []const u8,
+
+prepare_sources: *PrepareStubSourceStep,
 
 pub fn init(b: *Builder) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
@@ -27,7 +33,10 @@ pub fn init(b: *Builder) *Sdk {
             b.pathFromRoot(".build_config"),
             "sdl.json",
         }) catch @panic("out of memory"),
+        .prepare_sources = undefined,
     };
+    sdk.prepare_sources = PrepareStubSourceStep.create(sdk);
+
     return sdk;
 }
 
@@ -186,8 +195,21 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             sdk.builder.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
     } else if (target.os.tag == .linux) {
-        // on linux, we should rely on the system libraries to "just work"
-        exe.linkSystemLibrary("sdl2");
+        if (std.Target.current.os.tag != .linux) {
+            // linux cross-compilation requires us to do some dirty hacks:
+            // we compile a stub .so file we will link against.
+            // This will allow us to work around the "SDL doesn't provide dev packages for linux"
+
+            const build_linux_sdl_stub = b.addSharedLibrary("SDL2", null, .unversioned);
+            build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
+            build_linux_sdl_stub.setTarget(exe.target);
+
+            // link against the output of our stub
+            exe.linkLibrary(build_linux_sdl_stub);
+        } else {
+            // on linux, we should rely on the system libraries to "just work"
+            exe.linkSystemLibrary("sdl2");
+        }
     } else if (target.isDarwin()) {
         // on MacOS, we require a brew install
         // requires sdl2 and sdl2_image to be installed via brew
@@ -242,6 +264,67 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
     return error.MissingTarget;
 }
 
+const PrepareStubSourceStep = struct {
+    const Self = @This();
+
+    step: Step,
+    sdk: *Sdk,
+
+    assembly_source: GeneratedFile,
+
+    pub fn create(sdk: *Sdk) *PrepareStubSourceStep {
+        const psss = sdk.builder.allocator.create(Self) catch @panic("out of memory");
+
+        psss.* = .{
+            .step = std.build.Step.init(
+                .custom,
+                "Prepare SDL2 stub sources",
+                sdk.builder.allocator,
+                make,
+            ),
+            .sdk = sdk,
+            .assembly_source = .{ .step = &psss.step },
+        };
+
+        return psss;
+    }
+
+    pub fn getStubFile(self: *Self) FileSource {
+        return .{ .generated = &self.assembly_source };
+    }
+
+    fn make(step: *Step) !void {
+        const self = @fieldParentPtr(Self, "step", step);
+
+        var cache = CacheBuilder.init(self.sdk.builder, "sdl");
+
+        cache.addBytes(sdl2_symbol_definitions);
+
+        var dirpath = try cache.createAndGetDir();
+        defer dirpath.dir.close();
+
+        var file = try dirpath.dir.createFile("sdl.S", .{});
+        defer file.close();
+
+        var writer = file.writer();
+        try writer.writeAll(".text\n");
+
+        var iter = std.mem.split(sdl2_symbol_definitions, "\n");
+        while (iter.next()) |line| {
+            const sym = std.mem.trim(u8, line, " \r\n\t");
+            if (sym.len == 0)
+                continue;
+            try writer.print(".global {s}\n", .{sym});
+            try writer.print("{s}: ret\n", .{sym});
+        }
+
+        self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
+            dirpath.path,
+            "sdl.S",
+        });
+    }
+};
+
 fn tripleName(allocator: *std.mem.Allocator, target: std.Target) ![]u8 {
     const arch_name = @tagName(target.cpu.arch);
     const os_name = @tagName(target.os.tag);
@@ -249,3 +332,80 @@ fn tripleName(allocator: *std.mem.Allocator, target: std.Target) ![]u8 {
 
     return std.fmt.allocPrint(allocator, "{s}-{s}-{s}", .{ arch_name, os_name, abi_name });
 }
+
+const CacheBuilder = struct {
+    const Self = @This();
+
+    builder: *std.build.Builder,
+    hasher: std.crypto.hash.Sha1,
+    subdir: ?[]const u8,
+
+    pub fn init(builder: *std.build.Builder, subdir: ?[]const u8) Self {
+        return Self{
+            .builder = builder,
+            .hasher = std.crypto.hash.Sha1.init(.{}),
+            .subdir = if (subdir) |s|
+                builder.dupe(s)
+            else
+                null,
+        };
+    }
+
+    pub fn addBytes(self: *Self, bytes: []const u8) void {
+        self.hasher.update(bytes);
+    }
+
+    pub fn addFile(self: *Self, file: std.build.FileSource) !void {
+        const path = file.getPath(self.builder);
+
+        const data = try std.fs.cwd().readFileAlloc(self.builder.allocator, path, 1 << 32); // 4 GB
+        defer self.builder.allocator.free(data);
+
+        self.addBytes(data);
+    }
+
+    fn createPath(self: *Self) ![]const u8 {
+        var hash: [20]u8 = undefined;
+        self.hasher.final(&hash);
+
+        const path = if (self.subdir) |subdir|
+            try std.fmt.allocPrint(
+                self.builder.allocator,
+                "{s}/{s}/o/{}",
+                .{
+                    self.builder.cache_root,
+                    subdir,
+                    std.fmt.fmtSliceHexLower(&hash),
+                },
+            )
+        else
+            try std.fmt.allocPrint(
+                self.builder.allocator,
+                "{s}/o/{}",
+                .{
+                    self.builder.cache_root,
+                    std.fmt.fmtSliceHexLower(&hash),
+                },
+            );
+
+        return path;
+    }
+
+    pub const DirAndPath = struct {
+        dir: std.fs.Dir,
+        path: []const u8,
+    };
+    pub fn createAndGetDir(self: *Self) !DirAndPath {
+        const path = try self.createPath();
+        return DirAndPath{
+            .path = path,
+            .dir = try std.fs.cwd().makeOpenPath(path, .{}),
+        };
+    }
+
+    pub fn createAndGetPath(self: *Self) ![]const u8 {
+        const path = try self.createPath();
+        try std.fs.cwd().makePath(path);
+        return path;
+    }
+};
