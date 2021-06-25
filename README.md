@@ -192,7 +192,7 @@ Legend:
 You can contribute to this project in several ways:
 - Use it!  
   This helps me to track bugs (which i know that there are some), and usability defects (which we can resolve then). I want this library to have the best development experience possible.
-- Implement/improve the linking experience:
+- Implement/improve the linking experience:  
   Right now, it's not possible to cross-compile for MacOS, which is very sad. We might find a way to do so, though! Also VCPKG is not well supported on windows platforms.
-- Improve the wrapper.
+- Improve the wrapper.  
   Just add the functions you need and make a PR. Or improve existing ones. I won't do it for you, so you have to get your own hands dirty!
