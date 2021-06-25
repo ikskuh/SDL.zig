@@ -270,4 +270,36 @@ jobs:
           write-mode: overwrite
 
       - name: Build
-        run: zig build -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} --verbose
+        run: zig build -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} 
+
+
+  build-cross-linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        host:
+          [
+            ubuntu-latest,
+            macos-latest,
+            windows-latest
+          ]
+        target:
+          [
+            x86_64-linux-gnu,
+            aarch64-linux-gnu,
+          ]
+
+    runs-on: ${{matrix.host}}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+
+      - name: Build
+        run: zig build -Dtarget=${{matrix.target}} --verbose
