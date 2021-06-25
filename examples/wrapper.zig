@@ -13,7 +13,7 @@ pub fn main() !void {
         "SDL.zig Basic Demo",
         .{ .centered = {} },
         .{ .centered = {} },
-        604,
+        640,
         480,
         .{ .shown = true },
     );
@@ -42,10 +42,10 @@ pub fn main() !void {
         try renderer.setColorRGB(0, 0, 0);
         try renderer.clear();
 
-        try renderer.setColor(SDL.Color.parse("#FF8080") catch unreachable);
+        try renderer.setColor(SDL.Color.parse("#F7A41D") catch unreachable);
         try renderer.drawRect(SDL.Rectangle{
-            .x = 10,
-            .y = 20,
+            .x = 270,
+            .y = 215,
             .width = 100,
             .height = 50,
         });

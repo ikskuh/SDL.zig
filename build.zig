@@ -29,16 +29,29 @@ pub fn build(b: *Builder) !void {
         test_lib_step.dependOn(&lib_test.step);
     }
 
-    const demo_basic = b.addExecutable("demo-basic", "examples/basic.zig");
-    demo_basic.setBuildMode(mode);
-    demo_basic.setTarget(target);
-    sdk.link(demo_basic, sdl_linkage);
-    demo_basic.addPackage(sdk.getWrapperPackage("sdl2"));
-    demo_basic.install();
+    const demo_wrapper = b.addExecutable("demo-wrapper", "examples/wrapper.zig");
+    demo_wrapper.setBuildMode(mode);
+    demo_wrapper.setTarget(target);
+    sdk.link(demo_wrapper, sdl_linkage);
+    demo_wrapper.addPackage(sdk.getWrapperPackage("sdl2"));
+    demo_wrapper.install();
 
-    const run_demo_basic = demo_basic.run();
-    run_demo_basic.step.dependOn(b.getInstallStep());
+    const demo_native = b.addExecutable("demo-native", "examples/native.zig");
+    demo_native.setBuildMode(mode);
+    demo_native.setTarget(target);
+    sdk.link(demo_native, sdl_linkage);
+    demo_native.addPackage(sdk.getNativePackage("sdl2"));
+    demo_native.install();
 
-    const run_demo_basic_step = b.step("demo-basic", "Runs the demo 'basic'");
-    run_demo_basic_step.dependOn(&run_demo_basic.step);
+    const run_demo_wrappr = demo_wrapper.run();
+    run_demo_wrappr.step.dependOn(b.getInstallStep());
+
+    const run_demo_native = demo_wrapper.run();
+    run_demo_native.step.dependOn(b.getInstallStep());
+
+    const run_demo_wrapper_step = b.step("run-wrapper", "Runs the demo for the SDL2 wrapper library");
+    run_demo_wrapper_step.dependOn(&run_demo_wrappr.step);
+
+    const run_demo_native_step = b.step("run-native", "Runs the demo for the SDL2 native library");
+    run_demo_native_step.dependOn(&run_demo_native.step);
 }
