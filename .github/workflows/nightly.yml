@@ -303,3 +303,5 @@ jobs:
 
       - name: Build
         run: zig build -Dskip-test -Dtarget=${{matrix.target}} --verbose
+        # This would not be a cross-compilation process, thus we must skip it
+        if: ${{ matrix.host != 'ubuntu-latest' && matrix.target == 'x86_64-linux-gnu' }}
