@@ -204,6 +204,9 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
             build_linux_sdl_stub.setTarget(exe.target);
 
+            // We need to link against libc
+            exe.linkLibC();
+
             // link against the output of our stub
             exe.linkLibrary(build_linux_sdl_stub);
         } else {

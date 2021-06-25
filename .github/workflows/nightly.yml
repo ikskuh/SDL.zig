@@ -270,7 +270,7 @@ jobs:
           write-mode: overwrite
 
       - name: Build
-        run: zig build -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} 
+        run: zig build -Dskip-test -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} 
 
 
   build-cross-linux:
@@ -302,4 +302,4 @@ jobs:
           version: master
 
       - name: Build
-        run: zig build -Dtarget=${{matrix.target}} --verbose
+        run: zig build -Dskip-test -Dtarget=${{matrix.target}} --verbose
