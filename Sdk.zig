@@ -84,7 +84,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
                     }) catch @panic("io error");
                     writer.print("{{\n  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
                     writer.writeAll(
-                        \\    "include": "<path to sdl2 sdk>/include",    
+                        \\    "include": "<path to sdl2 sdk>/include",
                         \\    "libs": "<path to sdl2 sdk>/lib",
                         \\    "bin": "<path to sdl2 sdk>/bin"
                         \\  }
@@ -99,7 +99,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
                     }) catch @panic("io error");
                     writer.print("  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
                     writer.writeAll(
-                        \\  "include": "<path to sdl2 sdk>/include",    
+                        \\  "include": "<path to sdl2 sdk>/include",
                         \\  "libs": "<path to sdl2 sdk>/lib",
                         \\  "bin": "<path to sdl2 sdk>/bin"
                         \\}
@@ -217,6 +217,7 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
 
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
+        std.debug.print("parse config {s}\n", .{entry.key_ptr.*});
         const config_cross_target = std.zig.CrossTarget.parse(.{
             .arch_os_abi = entry.key_ptr.*,
         }) catch return error.InvalidTarget;
@@ -231,6 +232,10 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
         // load paths
 
         const node = entry.value_ptr.*.Object;
+
+        std.debug.print("selected config {s}\n", .{
+            tripleName(sdk.builder.allocator, target) catch @panic("out of memory"),
+        });
 
         return Paths{
             .include = node.get("include").?.String,

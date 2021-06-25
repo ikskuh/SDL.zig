@@ -147,4 +147,4 @@ jobs:
           write-mode: overwrite
 
       - name: Build
-        run: zig build -Dtarget=${{matrix.target}} 
+        run: zig build -Dtarget=${{matrix.target}} --verbose
