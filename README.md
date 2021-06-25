@@ -145,6 +145,24 @@ pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg ;
 pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void;
 ```
 
+## Dependencies
+
+All of those are dependencies for the *target* platform, not for your host. Zig will run/build the same on all source platforms.
+
+### Windows
+
+For Windows, you need to fetch the correct dev libraries from the [SDL download page](https://www.libsdl.org/download-2.0.php). It is recommended to use the MinGW versions if you don't require MSVC compatibility.
+
+### MacOS
+
+Right now, cross-compiling for MacOS isn't possible. On a Mac, install SDL2 via `brew`.
+
+### Linux
+
+If you are cross-compiling, no dependencies exist. The build Sdk compiles a `libSDL2.so` stub which is used for linking.
+
+If you compile to your target platform, you require SDL2 to be installed via your OS package manager.
+
 ## Support Matrix
 
 This project tries to provide you the best possible development experience for SDL2. Thus, this project supports
