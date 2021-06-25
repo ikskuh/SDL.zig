@@ -170,15 +170,16 @@ the maximum amount of cross-compilation targets for SDL2.
 
 The following table documents this. The rows document the *target* whereas the columns are the *build host*:
 
-|                       | Windows (x86_64) | Windows (i386) | Linux (x86_64) | MacOS (x86_64) |
-|-----------------------|------------------|----------------|----------------|----------------|
-| `i386-windows-gnu`    | ✅               | ✅             | ✅             | ✅             |
-| `i386-windows-msvc`   | ✅               | ✅             | ✅             | ✅             |
-| `x86_64-windows-gnu`  | ✅               | ✅             | ✅             | ✅             |
-| `x86_64-windows-msvc` | ✅               | ✅             | ✅             | ✅             |
-| `x86_64-macos`        | ❌               | ❌             | ❌             | ✅             |
-| `x86_64-linux-gnu`    | 🧪               | 🧪             | ✅             | 🧪             |
-| `aarch64-linux-gnu`   | 🧪               | 🧪             | 🧪             | 🧪             |
+|                       | Windows (x86_64) | Windows (i386) | Linux (x86_64) | MacOS (x86_64) | MacOS (aarch64) |
+|-----------------------|------------------|----------------|----------------|----------------|-----------------|
+| `i386-windows-gnu`    | ✅               | ✅             | ✅             | ✅             | ⚠️               |
+| `i386-windows-msvc`   | ✅               | ✅             | ✅             | ✅             | ⚠️               |
+| `x86_64-windows-gnu`  | ✅               | ✅             | ✅             | ✅             | ⚠️               |
+| `x86_64-windows-msvc` | ✅               | ✅             | ✅             | ✅             | ⚠️               |
+| `x86_64-macos`        | ❌               | ❌             | ❌             | ✅             | ❌              |
+| `aarch64-macos`       | ❌               | ❌             | ❌             | ❌             | ⚠️               |
+| `x86_64-linux-gnu`    | 🧪               | 🧪             | ✅             | 🧪             | ⚠️               |
+| `aarch64-linux-gnu`   | 🧪               | 🧪             | 🧪             | 🧪             | ⚠️               |
 
 Legend:
 - ✅ Cross-compilation is known to work and tested via CI
