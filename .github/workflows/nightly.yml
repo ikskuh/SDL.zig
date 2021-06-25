@@ -203,4 +203,71 @@ jobs:
           write-mode: overwrite
 
       - name: Build
-        run: zig build -Dtarget=${{matrix.target}} -Dlink=static --verbose
+        run: zig build -Dtarget=${{matrix.target}} -Dlink=static
+
+
+  build-cross-windows:
+    strategy:
+      fail-fast: false
+      matrix:
+        host:
+          [
+            ubuntu-latest,
+            macos-latest
+          ]
+        target:
+          [
+            i386-windows-gnu,
+            x86_64-windows-gnu,
+          ]
+        linkage:
+          [
+            static,
+            dynamic
+          ]
+
+    runs-on: ${{matrix.host}}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "recursive"
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v1
+        with:
+          version: master
+
+      - name: Download SDL2 (MinGW)
+        uses: carlosperate/download-file-action@v1.0.3
+        with:
+          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
+          file-name: SDL2.tar.gz
+          location: .
+
+      - name: Extract SDL2
+        uses: brunoborges/justextract@v1
+        with:
+          file: SDL2.tar.gz
+    
+      - name: Create SDK file
+        uses: DamianReeves/write-file-action@v1.0
+        with:
+          path: .build_config/sdl.json
+          contents: |
+            {
+              "i386-windows-gnu": {
+                "include": "SDL2-2.0.14/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.14/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.14/i686-w64-mingw32/bin"
+              },
+              "x86_64-windows-gnu": {
+                "include": "SDL2-2.0.14/x86_64-w64-mingw32/include",
+                "libs": "SDL2-2.0.14/x86_64-w64-mingw32/lib",
+                "bin": "SDL2-2.0.14/x86_64-w64-mingw32/bin"
+              }
+            }
+          write-mode: overwrite
+
+      - name: Build
+        run: zig build -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} --verbose
