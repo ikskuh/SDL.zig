@@ -324,7 +324,7 @@ const PrepareStubSourceStep = struct {
         var writer = file.writer();
         try writer.writeAll(".text\n");
 
-        var iter = std.mem.split(sdl2_symbol_definitions, "\n");
+        var iter = std.mem.split(u8, sdl2_symbol_definitions, "\n");
         while (iter.next()) |line| {
             const sym = std.mem.trim(u8, line, " \r\n\t");
             if (sym.len == 0)
