@@ -7,7 +7,7 @@ INFILE="/home/felix/projects/SDL/include/SDL.h"
 # this should not be changed
 OUTFILE="src/binding/sdl.zig"
 
-setopt -e
+set -e #setopt -e
 clear
 zig translate-c \
   -target x86_64-linux-gnu \
