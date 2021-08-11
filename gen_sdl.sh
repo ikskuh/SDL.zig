@@ -28,8 +28,8 @@ function patch_file()
 # Remove comptime assertions
 patch_file '/SDL_compile_time_assert_/d' 
 
-# Delete all C _t types, but not SDL _t types
-patch_file '/SDL_/b;/_t = /d' 
+# Delete all C _t types, but not SDL _t types, and also not types that go past the end of the line, because we would need to remove more than just their first line.
+patch_file '/SDL_/b;/{ *$/b;/_t = /d' 
 
 # Remove all reserved definitions (prefixed with _)
 patch_file '/pub const _/d'
@@ -106,6 +106,15 @@ patch_file -r 's/usize - ([0-9]+)/@bitCast(usize, @as(isize, -\1))/g'
 patch_file -r 's/u(8|16|32|64) - ([0-9]+)/@bitCast(u\1, @as(i\1, -\2))/g'
 patch_file -r 's/i(8|16|32|64) - ([0-9]+)/@as(i\1, -\2)/g'
 
+# replace NULL as function call argument with null
+patch_file 's/(NULL/(null/g'
+
+# replace __builtin_bswap with @byteSwap builtin
+patch_file 's/__builtin_bswap16(\([^)]*\))/@byteSwap(@TypeOf(\1), \1)/g'
+patch_file 's/__builtin_bswap32(\([^)]*\))/@byteSwap(@TypeOf(\1), \1)/g'
+patch_file 's/__builtin_bswap64(\([^)]*\))/@byteSwap(@TypeOf(\1), \1)/g'
+patch_file 's/__builtin_bswap128(\([^)]*\))/@byteSwap(@TypeOf(\1), \1)/g'
+
 # Verify we didn't fuck up
 zig fmt "${OUTFILE}"
 
@@ -113,6 +122,9 @@ patch_file '/usingnamespace/d'
 
 echo "test \"all decls\" { @import(\"std\").testing.refAllDecls(@import(\"${OUTFILE}\")); }" > test.zig
 
+# known issues:
+# - SDL_MemoryBarrierRelease and SDL_MemoryBarrierAcquire use a non-defined SDL_CompilerBarrier() function
+# - the dependency loop of struct_SDL_AudioCVT.filters is a false positive (see https://github.com/ziglang/zig/issues/4476 )
 zig test test.zig 2>&1 | sed '/note: /,+2d'
 
 rm test.zig
