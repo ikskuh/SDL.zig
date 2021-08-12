@@ -973,3 +973,200 @@ pub const GameController = struct {
         trigger_right = c.SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
     };
 };
+
+pub const AudioDevice = struct {
+    pub fn makeUninitialized() AudioDevice {
+        return .{
+            .id = 0,
+        };
+    }
+
+    id: c.SDL_AudioDeviceID,
+
+    pub fn isInitialized(self: AudioDevice) bool {
+        return self.id != 0;
+    }
+
+    pub fn close(self: AudioDevice) void {
+        c.SDL_CloseAudioDevice(self.id);
+    }
+
+    pub fn pause(self: AudioDevice, do_pause: bool) void {
+        c.SDL_PauseAudioDevice(self.id, @boolToInt(do_pause));
+    }
+};
+
+const is_little_endian = @import("builtin").target.cpu.arch.endian() == .Little;
+
+pub const AudioFormat = struct {
+    pub const @"u8" = AudioFormat{
+        .sample_length_bits = 8,
+    };
+    pub const s8 = AudioFormat{
+        .sample_length_bits = 8,
+        .is_signed = true,
+    };
+    pub const u16_lsb = AudioFormat{
+        .sample_length_bits = 16,
+    };
+    pub const s16_lsb = AudioFormat{
+        .sample_length_bits = 16,
+        .is_signed = true,
+    };
+    pub const u16_msb = AudioFormat{
+        .sample_length_bits = 16,
+        .is_big_endian = true,
+    };
+    pub const s16_msb = AudioFormat{
+        .sample_length_bits = 16,
+        .is_big_endian = true,
+        .is_signed = true,
+    };
+    pub const @"u16" = u16_lsb;
+    pub const s16 = s16_lsb;
+    pub const u16_sys = if (is_little_endian) u16_lsb else u16_msb;
+    pub const s16_sys = if (is_little_endian) s16_lsb else s16_msb;
+    pub const s32_lsb = AudioFormat{
+        .sample_length_bits = 32,
+        .is_signed = true,
+    };
+    pub const s32_msb = AudioFormat{
+        .sample_length_bits = 32,
+        .is_big_endian = true,
+        .is_signed = true,
+    };
+    pub const s32 = s32_lsb;
+    pub const s32_sys = if (is_little_endian) s32_lsb else s32_msb;
+    pub const f32_lsb = AudioFormat{
+        .sample_length_bits = 32,
+        .is_float = true,
+        .is_signed = true,
+    };
+    pub const f32_msb = AudioFormat{
+        .sample_length_bits = 32,
+        .is_float = true,
+        .is_big_endian = true,
+        .is_signed = true,
+    };
+    pub const @"f32" = f32_lsb;
+    pub const f32_sys = if (is_little_endian) f32_lsb else f32_msb;
+
+    sample_length_bits: u8 = 32,
+    is_float: bool = false,
+    is_big_endian: bool = false,
+    is_signed: bool = false,
+
+    pub fn fromNative(native_packed: u16) AudioFormat {
+        return .{
+            .sample_length_bits = unpackSampleLengthBits(native_packed),
+            .is_float = unpackFloat(native_packed),
+            .is_big_endian = unpackBigEndian(native_packed),
+            .is_signed = unpackSigned(native_packed),
+        };
+    }
+    pub fn toNative(format: AudioFormat) u16 {
+        return (if (format.is_signed) @as(u16, c.SDL_AUDIO_MASK_SIGNED) else 0) |
+            (if (format.is_big_endian) @as(u16, c.SDL_AUDIO_MASK_ENDIAN) else 0) |
+            (if (format.is_float) @as(u16, c.SDL_AUDIO_MASK_DATATYPE) else 0) |
+            format.sample_length_bits;
+    }
+
+    pub fn unpackSampleLengthBits(native_packed: u16) u8 {
+        return @intCast(u8, native_packed & @as(u8, c.SDL_AUDIO_MASK_BITSIZE));
+    }
+    pub fn unpackFloat(native_packed: u16) bool {
+        return (native_packed & @as(u16, c.SDL_AUDIO_MASK_DATATYPE)) != 0;
+    }
+    pub fn unpackBigEndian(native_packed: u16) bool {
+        return (native_packed & @as(u16, c.SDL_AUDIO_MASK_ENDIAN)) != 0;
+    }
+    pub fn unpackSigned(native_packed: u16) bool {
+        return (native_packed & @as(u16, c.SDL_AUDIO_MASK_SIGNED)) != 0;
+    }
+};
+
+pub const AudioSpecRequest = struct {
+    ///in Hz, 0 obtains a supported value, values < 0 are not sane, values > 48000 are discouraged
+    ///(field originally named "freq")
+    sample_rate: c_int = 0,
+    ///AudioFormat.fromNative(0) obtains a supported standard format, like s16
+    buffer_format: AudioFormat = AudioFormat.fromNative(0),
+    ///0 obtains a supported value, otherwise either 1 (mono), 2 (stereo), 4 (quad), 6 (5.1 surround), or 8 (7.1 surround)
+    channel_count: u8 = 0,
+    ///frame = channel_count number of samples;
+    ///0 obtains a supported value, f.e. 46ms worth of buffer,
+    ///otherwise must be a power of two!
+    buffer_size_in_frames: u16 = 0,
+    ///periodically called to fill the audio buffer;
+    ///may be null for use in queueing mode (call c.SDL_QueueAudio periodically)
+    callback: c.SDL_AudioCallback,
+    ///passed to .callback
+    userdata: ?*c_void,
+};
+pub const AudioSpecResponse = struct {
+    ///in Hz, values <= 0 are not sane
+    ///(field originally named "freq")
+    sample_rate: c_int,
+    buffer_format: AudioFormat,
+    ///either 1 (mono), 2 (stereo), 4 (quadrophonic), 6 (5.1 surround), or 8 (7.1 surround)
+    channel_count: u8,
+    ///frame = channel_count number of samples;
+    ///will be a power of two
+    ///(field originally named "samples")
+    buffer_size_in_frames: u16,
+    ///(field originally named "size")
+    buffer_size_in_bytes: u32,
+};
+
+pub const OpenAudioDeviceAllowedChanges = struct {
+    pub const everything = .{ .sample_rate = true, .buffer_format = true, .channel_count = true, .buffer_size = true };
+
+    sample_rate: bool = false,
+    buffer_format: bool = false,
+    channel_count: bool = false,
+    buffer_size: bool = false,
+
+    pub fn toNative(self: OpenAudioDeviceAllowedChanges) c_int {
+        return (if (self.sample_rate) c.SDL_AUDIO_ALLOW_FREQUENCY_CHANGE else 0) |
+            (if (self.buffer_format) c.SDL_AUDIO_ALLOW_FORMAT_CHANGE else 0) |
+            (if (self.channel_count) c.SDL_AUDIO_ALLOW_CHANNELS_CHANGE else 0) |
+            (if (self.buffer_size) c.SDL_AUDIO_ALLOW_SAMPLES_CHANGE else 0);
+    }
+};
+pub const OpenAudioDeviceOptions = struct {
+    device_name: ?[*:0]const u8 = null,
+    is_capture: bool = false,
+    desired_spec: AudioSpecRequest,
+    allowed_changes_from_desired: OpenAudioDeviceAllowedChanges = .{},
+};
+pub const OpenAudioDeviceResult = struct {
+    device: AudioDevice,
+    obtained_spec: AudioSpecResponse,
+};
+
+pub fn openAudioDevice(options: OpenAudioDeviceOptions) !OpenAudioDeviceResult {
+    const desired_spec = std.mem.zeroInit(c.SDL_AudioSpec, .{
+        .freq = options.desired_spec.sample_rate,
+        .format = options.desired_spec.buffer_format.toNative(),
+        .channels = options.desired_spec.channel_count,
+        .samples = options.desired_spec.buffer_size_in_frames,
+        .callback = options.desired_spec.callback,
+        .userdata = options.desired_spec.userdata,
+    });
+    var obtained_spec = std.mem.zeroInit(c.SDL_AudioSpec, .{});
+    switch (c.SDL_OpenAudioDevice(options.device_name, @boolToInt(options.is_capture), &desired_spec, &obtained_spec, options.allowed_changes_from_desired.toNative())) {
+        0 => return makeError(),
+        else => |device_id| return OpenAudioDeviceResult{
+            .device = .{
+                .id = device_id,
+            },
+            .obtained_spec = .{
+                .sample_rate = obtained_spec.freq,
+                .buffer_format = AudioFormat.fromNative(obtained_spec.format),
+                .channel_count = obtained_spec.channels,
+                .buffer_size_in_frames = obtained_spec.samples,
+                .buffer_size_in_bytes = obtained_spec.size,
+            },
+        },
+    }
+}
