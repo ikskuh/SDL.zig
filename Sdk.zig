@@ -330,7 +330,9 @@ const PrepareStubSourceStep = struct {
             if (sym.len == 0)
                 continue;
             try writer.print(".global {s}\n", .{sym});
-            try writer.print("{s}: ret\n", .{sym});
+            try writer.writeAll(".align 4\n");
+            try writer.print("{s}:\n", .{sym});
+            try writer.writeAll("  .byte 0\n");
         }
 
         self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
