@@ -151,34 +151,56 @@ pub const Color = extern struct {
 
 pub const InitFlags = struct {
     pub const everything = InitFlags{
-        .video = true,
-        .audio = true,
         .timer = true,
+        .audio = true,
+        .video = true,
         .joystick = true,
         .haptic = true,
         .game_controller = true,
         .events = true,
+        .sensor = true,
     };
-    video: bool = false,
-    audio: bool = false,
     timer: bool = false,
+    audio: bool = false,
+    video: bool = false,
     joystick: bool = false,
     haptic: bool = false,
     game_controller: bool = false,
     events: bool = false,
+    sensor: bool = false,
+
+    pub fn from_u32(flags: u32) InitFlags {
+        return .{
+            .timer = (flags & c.SDL_INIT_TIMER) != 0,
+            .audio = (flags & c.SDL_INIT_AUDIO) != 0,
+            .video = (flags & c.SDL_INIT_VIDEO) != 0,
+            .joystick = (flags & c.SDL_INIT_JOYSTICK) != 0,
+            .haptic = (flags & c.SDL_INIT_HAPTIC) != 0,
+            .game_controller = (flags & c.SDL_INIT_GAMECONTROLLER) != 0,
+            .events = (flags & c.SDL_INIT_EVENTS) != 0,
+            .sensor = (flags & c.SDL_INIT_SENSOR) != 0,
+        };
+    }
+
+    pub fn as_u32(self: InitFlags) u32 {
+        return (if (self.timer) @as(u32, c.SDL_INIT_TIMER) else 0) |
+            (if (self.audio) @as(u32, c.SDL_INIT_AUDIO) else 0) |
+            (if (self.video) @as(u32, c.SDL_INIT_VIDEO) else 0) |
+            (if (self.joystick) @as(u32, c.SDL_INIT_JOYSTICK) else 0) |
+            (if (self.haptic) @as(u32, c.SDL_INIT_HAPTIC) else 0) |
+            (if (self.game_controller) @as(u32, c.SDL_INIT_GAMECONTROLLER) else 0) |
+            (if (self.events) @as(u32, c.SDL_INIT_EVENTS) else 0) |
+            (if (self.sensor) @as(u32, c.SDL_INIT_SENSOR) else 0);
+    }
 };
 
 pub fn init(flags: InitFlags) !void {
-    var cflags: c_uint = 0;
-    if (flags.video) cflags |= c.SDL_INIT_VIDEO;
-    if (flags.audio) cflags |= c.SDL_INIT_AUDIO;
-    if (flags.timer) cflags |= c.SDL_INIT_TIMER;
-    if (flags.joystick) cflags |= c.SDL_INIT_JOYSTICK;
-    if (flags.haptic) cflags |= c.SDL_INIT_HAPTIC;
-    if (flags.game_controller) cflags |= c.SDL_INIT_GAMECONTROLLER;
-    if (flags.events) cflags |= c.SDL_INIT_EVENTS;
-    if (c.SDL_Init(cflags) < 0)
+    if (c.SDL_Init(flags.as_u32()) < 0)
         return makeError();
+}
+
+pub fn wasInit(flags: InitFlags) InitFlags {
+    return InitFlags.from_u32(c.SDL_WasInit(flags.as_u32()));
 }
 
 pub fn quit() void {
