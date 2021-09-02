@@ -150,12 +150,12 @@ pub fn SDL_memcpy4(arg_dst: ?*c_void, arg_src: ?*const c_void, arg_dwords: usize
 pub const SDL_main_func = ?fn (c_int, [*c][*c]u8) callconv(.C) c_int;
 pub extern fn SDL_main(argc: c_int, argv: [*c][*c]u8) c_int;
 pub extern fn SDL_SetMainReady() void;
-pub const SDL_ASSERTION_RETRY = @enumToInt(enum_unnamed_4.SDL_ASSERTION_RETRY);
-pub const SDL_ASSERTION_BREAK = @enumToInt(enum_unnamed_4.SDL_ASSERTION_BREAK);
-pub const SDL_ASSERTION_ABORT = @enumToInt(enum_unnamed_4.SDL_ASSERTION_ABORT);
-pub const SDL_ASSERTION_IGNORE = @enumToInt(enum_unnamed_4.SDL_ASSERTION_IGNORE);
-pub const SDL_ASSERTION_ALWAYS_IGNORE = @enumToInt(enum_unnamed_4.SDL_ASSERTION_ALWAYS_IGNORE);
-const enum_unnamed_4 = enum(c_int) {
+pub const SDL_ASSERTION_RETRY = @enumToInt(SDL_AssertState.SDL_ASSERTION_RETRY);
+pub const SDL_ASSERTION_BREAK = @enumToInt(SDL_AssertState.SDL_ASSERTION_BREAK);
+pub const SDL_ASSERTION_ABORT = @enumToInt(SDL_AssertState.SDL_ASSERTION_ABORT);
+pub const SDL_ASSERTION_IGNORE = @enumToInt(SDL_AssertState.SDL_ASSERTION_IGNORE);
+pub const SDL_ASSERTION_ALWAYS_IGNORE = @enumToInt(SDL_AssertState.SDL_ASSERTION_ALWAYS_IGNORE);
+const SDL_AssertState = enum(c_int) {
     SDL_ASSERTION_RETRY,
     SDL_ASSERTION_BREAK,
     SDL_ASSERTION_ABORT,
@@ -163,17 +163,17 @@ const enum_unnamed_4 = enum(c_int) {
     SDL_ASSERTION_ALWAYS_IGNORE,
     _,
 };
-pub const SDL_AssertState = enum_unnamed_4;
-pub const struct_SDL_AssertData = extern struct {
+
+pub const SDL_AssertData = extern struct {
     always_ignore: c_int,
     trigger_count: c_uint,
     condition: [*c]const u8,
     filename: [*c]const u8,
     linenum: c_int,
     function: [*c]const u8,
-    next: [*c]const struct_SDL_AssertData,
+    next: [*c]const SDL_AssertData,
 };
-pub const SDL_AssertData = struct_SDL_AssertData;
+
 pub extern fn SDL_ReportAssertion([*c]SDL_AssertData, [*c]const u8, [*c]const u8, c_int) SDL_AssertState;
 pub const SDL_AssertionHandler = ?fn ([*c]const SDL_AssertData, ?*c_void) callconv(.C) SDL_AssertState;
 pub extern fn SDL_SetAssertionHandler(handler: SDL_AssertionHandler, userdata: ?*c_void) void;
@@ -3628,114 +3628,7 @@ pub const SDL_ASSEMBLY_ROUTINES = 1;
 pub const SDL_USE_IME = 1;
 pub const SDL_UDEV_DYNAMIC = "libudev.so.1";
 pub const SDL_LIBSAMPLERATE_DYNAMIC = "libsamplerate.so.0";
-pub inline fn offsetof(t: anytype, d: anytype) @TypeOf(__builtin_offsetof(t, d)) {
-    return __builtin_offsetof(t, d);
-}
-pub inline fn va_start(ap: anytype, param: anytype) @TypeOf(__builtin_va_start(ap, param)) {
-    return __builtin_va_start(ap, param);
-}
-pub inline fn va_end(ap: anytype) @TypeOf(__builtin_va_end(ap)) {
-    return __builtin_va_end(ap);
-}
-pub inline fn va_arg(ap: anytype, type_1: anytype) @TypeOf(__builtin_va_arg(ap, type_1)) {
-    return __builtin_va_arg(ap, type_1);
-}
-pub inline fn __va_copy(d: anytype, s: anytype) @TypeOf(__builtin_va_copy(d, s)) {
-    return __builtin_va_copy(d, s);
-}
-pub inline fn va_copy(dest: anytype, src: anytype) @TypeOf(__builtin_va_copy(dest, src)) {
-    return __builtin_va_copy(dest, src);
-}
-pub inline fn __int_c(v: anytype, suffix: anytype) @TypeOf(__int_c_join(v, suffix)) {
-    return __int_c_join(v, suffix);
-}
-pub inline fn INT64_C(v: anytype) @TypeOf(__int_c(v, __int64_c_suffix)) {
-    return __int_c(v, __int64_c_suffix);
-}
-pub inline fn UINT64_C(v: anytype) @TypeOf(__uint_c(v, __int64_c_suffix)) {
-    return __uint_c(v, __int64_c_suffix);
-}
-pub inline fn INT32_C(v: anytype) @TypeOf(__int_c(v, __int32_c_suffix)) {
-    return __int_c(v, __int32_c_suffix);
-}
-pub inline fn UINT32_C(v: anytype) @TypeOf(__uint_c(v, __int32_c_suffix)) {
-    return __uint_c(v, __int32_c_suffix);
-}
-pub inline fn INT16_C(v: anytype) @TypeOf(__int_c(v, __int16_c_suffix)) {
-    return __int_c(v, __int16_c_suffix);
-}
-pub inline fn UINT16_C(v: anytype) @TypeOf(__uint_c(v, __int16_c_suffix)) {
-    return __uint_c(v, __int16_c_suffix);
-}
-pub inline fn INT8_C(v: anytype) @TypeOf(__int_c(v, __int8_c_suffix)) {
-    return __int_c(v, __int8_c_suffix);
-}
-pub inline fn UINT8_C(v: anytype) @TypeOf(__uint_c(v, __int8_c_suffix)) {
-    return __uint_c(v, __int8_c_suffix);
-}
-pub inline fn __INTN_MIN(n: anytype) @TypeOf(__stdint_join3(INT, n, _MIN)) {
-    return __stdint_join3(INT, n, _MIN);
-}
-pub inline fn __INTN_MAX(n: anytype) @TypeOf(__stdint_join3(INT, n, _MAX)) {
-    return __stdint_join3(INT, n, _MAX);
-}
-pub inline fn __UINTN_MAX(n: anytype) @TypeOf(__stdint_join3(UINT, n, _MAX)) {
-    return __stdint_join3(UINT, n, _MAX);
-}
-pub inline fn __INTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(INT, n, _C(v))) {
-    return __stdint_join3(INT, n, _C(v));
-}
-pub inline fn __UINTN_C(n: anytype, v: anytype) @TypeOf(__stdint_join3(UINT, n, _C(v))) {
-    return __stdint_join3(UINT, n, _C(v));
-}
-pub inline fn INTMAX_C(v: anytype) @TypeOf(__int_c(v, __INTMAX_C_SUFFIX__)) {
-    return __int_c(v, __INTMAX_C_SUFFIX__);
-}
-pub inline fn UINTMAX_C(v: anytype) @TypeOf(__int_c(v, __UINTMAX_C_SUFFIX__)) {
-    return __int_c(v, __UINTMAX_C_SUFFIX__);
-}
-pub inline fn SDL_arraysize(array: anytype) @TypeOf(@import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0])) {
-    return @import("std").meta.sizeof(array) / @import("std").meta.sizeof(array[0]);
-}
-pub inline fn SDL_TABLESIZE(table: anytype) @TypeOf(SDL_arraysize(table)) {
-    return SDL_arraysize(table);
-}
-pub inline fn SDL_reinterpret_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
-    return (@import("std").meta.cast(type_1, expression));
-}
-pub inline fn SDL_static_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
-    return (@import("std").meta.cast(type_1, expression));
-}
-pub inline fn SDL_const_cast(type_1: anytype, expression: anytype) @TypeOf((@import("std").meta.cast(type_1, expression))) {
-    return (@import("std").meta.cast(type_1, expression));
-}
-pub inline fn SDL_FOURCC(A: anytype, B: anytype, C: anytype, D: anytype) @TypeOf((((SDL_static_cast(u32, SDL_static_cast(u8, A)) << 0) | (SDL_static_cast(u32, SDL_static_cast(u8, B)) << 8)) | (SDL_static_cast(u32, SDL_static_cast(u8, C)) << 16)) | (SDL_static_cast(u32, SDL_static_cast(u8, D)) << 24)) {
-    return (((SDL_static_cast(u32, SDL_static_cast(u8, A)) << 0) | (SDL_static_cast(u32, SDL_static_cast(u8, B)) << 8)) | (SDL_static_cast(u32, SDL_static_cast(u8, C)) << 16)) | (SDL_static_cast(u32, SDL_static_cast(u8, D)) << 24);
-}
-pub inline fn SDL_PRINTF_VARARG_FUNC(fmtargnumber: anytype) @TypeOf(__attribute__(format(__printf__, fmtargnumber, fmtargnumber + 1))) {
-    return __attribute__(format(__printf__, fmtargnumber, fmtargnumber + 1));
-}
-pub inline fn SDL_SCANF_VARARG_FUNC(fmtargnumber: anytype) @TypeOf(__attribute__(format(__scanf__, fmtargnumber, fmtargnumber + 1))) {
-    return __attribute__(format(__scanf__, fmtargnumber, fmtargnumber + 1));
-}
-pub inline fn SDL_stack_alloc(type_1: anytype, count: anytype) @TypeOf((@import("std").meta.cast([*c]type_1, alloca(@import("std").meta.sizeof(type_1) * count)))) {
-    return (@import("std").meta.cast([*c]type_1, alloca(@import("std").meta.sizeof(type_1) * count)));
-}
-pub inline fn SDL_min(x: anytype, y: anytype) @TypeOf(if (x < y) x else y) {
-    return if (x < y) x else y;
-}
-pub inline fn SDL_max(x: anytype, y: anytype) @TypeOf(if (x > y) x else y) {
-    return if (x > y) x else y;
-}
-pub inline fn SDL_zero(x: anytype) @TypeOf(SDL_memset(&x, 0, @import("std").meta.sizeof(x))) {
-    return SDL_memset(&x, 0, @import("std").meta.sizeof(x));
-}
-pub inline fn SDL_zerop(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x.*))) {
-    return SDL_memset(x, 0, @import("std").meta.sizeof(x.*));
-}
-pub inline fn SDL_zeroa(x: anytype) @TypeOf(SDL_memset(x, 0, @import("std").meta.sizeof(x))) {
-    return SDL_memset(x, 0, @import("std").meta.sizeof(x));
-}
+
 pub const SDL_ICONV_ERROR = @bitCast(usize, @as(isize, -1));
 pub const SDL_ICONV_E2BIG = @bitCast(usize, @as(isize, -2));
 pub const SDL_ICONV_EILSEQ = @bitCast(usize, @as(isize, -3));
@@ -3749,20 +3642,7 @@ pub inline fn SDL_iconv_utf8_ucs2(S: anytype) @TypeOf((@import("std").meta.cast(
 pub inline fn SDL_iconv_utf8_ucs4(S: anytype) @TypeOf((@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)))) {
     return (@import("std").meta.cast([*c]u32, SDL_iconv_string("UCS-4-INTERNAL", "UTF-8", S, SDL_strlen(S) + 1)));
 }
-pub const SDL_ASSERT_LEVEL = 2;
-pub const SDL_NULL_WHILE_LOOP_CONDITION = 0;
-pub inline fn SDL_assert(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
-    return SDL_enabled_assert(condition);
-}
-pub inline fn SDL_assert_release(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
-    return SDL_enabled_assert(condition);
-}
-pub inline fn SDL_assert_paranoid(condition: anytype) @TypeOf(SDL_disabled_assert(condition)) {
-    return SDL_disabled_assert(condition);
-}
-pub inline fn SDL_assert_always(condition: anytype) @TypeOf(SDL_enabled_assert(condition)) {
-    return SDL_enabled_assert(condition);
-}
+
 pub const SDL_assert_state = SDL_AssertState;
 pub const SDL_assert_data = SDL_AssertData;
 pub inline fn SDL_AtomicIncRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, 1)) {
@@ -3771,40 +3651,10 @@ pub inline fn SDL_AtomicIncRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, 1)) {
 pub inline fn SDL_AtomicDecRef(a: anytype) @TypeOf(SDL_AtomicAdd(a, -1) == 1) {
     return SDL_AtomicAdd(a, -1) == 1;
 }
-pub const SDL_LIL_ENDIAN = 1234;
-pub const SDL_BIG_ENDIAN = 4321;
-pub inline fn SDL_SwapLE16(X: anytype) @TypeOf(SDL_Swap16(X)) {
-    return SDL_Swap16(X);
-}
-pub inline fn SDL_SwapLE32(X: anytype) @TypeOf(SDL_Swap32(X)) {
-    return SDL_Swap32(X);
-}
-pub inline fn SDL_SwapLE64(X: anytype) @TypeOf(SDL_Swap64(X)) {
-    return SDL_Swap64(X);
-}
-pub inline fn SDL_SwapFloatLE(X: anytype) @TypeOf(SDL_SwapFloat(X)) {
-    return SDL_SwapFloat(X);
-}
-pub inline fn SDL_SwapBE16(X: anytype) @TypeOf(X) {
-    return X;
-}
-pub inline fn SDL_SwapBE32(X: anytype) @TypeOf(X) {
-    return X;
-}
-pub inline fn SDL_SwapBE64(X: anytype) @TypeOf(X) {
-    return X;
-}
-pub inline fn SDL_SwapFloatBE(X: anytype) @TypeOf(X) {
-    return X;
-}
+
 pub const SDL_MUTEX_TIMEDOUT = 1;
 pub const SDL_MUTEX_MAXWAIT = ~(@import("std").meta.cast(u32, 0));
-pub inline fn SDL_mutexP(m: anytype) @TypeOf(SDL_LockMutex(m)) {
-    return SDL_LockMutex(m);
-}
-pub inline fn SDL_mutexV(m: anytype) @TypeOf(SDL_UnlockMutex(m)) {
-    return SDL_UnlockMutex(m);
-}
+
 pub const SDL_RWOPS_UNKNOWN = @as(c_uint, 0);
 pub const SDL_RWOPS_WINFILE = @as(c_uint, 1);
 pub const SDL_RWOPS_STDFILE = @as(c_uint, 2);
@@ -3870,9 +3720,7 @@ pub const SDL_MIX_MAXVOLUME = 128;
 pub const SDL_CACHELINE_SIZE = 128;
 pub const SDL_ALPHA_OPAQUE = 255;
 pub const SDL_ALPHA_TRANSPARENT = 0;
-pub inline fn SDL_DEFINE_PIXELFOURCC(A: anytype, B: anytype, C: anytype, D: anytype) @TypeOf(SDL_FOURCC(A, B, C, D)) {
-    return SDL_FOURCC(A, B, C, D);
-}
+
 pub inline fn SDL_DEFINE_PIXELFORMAT(type_1: anytype, order: anytype, layout: anytype, bits: anytype, bytes: anytype) @TypeOf((((((1 << 28) | (type_1 << 24)) | (order << 20)) | (layout << 16)) | (bits << 8)) | (bytes << 0)) {
     return (((((1 << 28) | (type_1 << 24)) | (order << 20)) | (layout << 16)) | (bits << 8)) | (bytes << 0);
 }
@@ -4132,9 +3980,7 @@ pub const SDL_PATCHLEVEL = 15;
 pub inline fn SDL_VERSIONNUM(X: anytype, Y: anytype, Z: anytype) @TypeOf(((X * 1000) + (Y * 100)) + Z) {
     return ((X * 1000) + (Y * 100)) + Z;
 }
-pub inline fn SDL_VERSION_ATLEAST(X: anytype, Y: anytype, Z: anytype) @TypeOf(SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z)) {
-    return SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z);
-}
+
 pub const SDL_INIT_TIMER = @as(c_uint, 0x00000001);
 pub const SDL_INIT_AUDIO = @as(c_uint, 0x00000010);
 pub const SDL_INIT_VIDEO = @as(c_uint, 0x00000020);
