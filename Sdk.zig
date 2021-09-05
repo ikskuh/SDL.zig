@@ -54,10 +54,13 @@ pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
-    return std.build.Pkg{
+    return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .path = .{ .path = sdkRoot() ++ "/src/lib.zig" },
-    };
+        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            sdk.getNativePackage("sdl-native"),
+        },
+    });
 }
 
 /// Links SDL2 to the given exe and adds required installs if necessary.

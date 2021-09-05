@@ -26,7 +26,7 @@ pub fn main() !void {
                 SDL.SDL_QUIT => break :mainLoop,
                 SDL.SDL_KEYDOWN => {
                     switch (ev.key.keysym.scancode) {
-                        .SDL_SCANCODE_ESCAPE => break :mainLoop,
+                        SDL.SDL_SCANCODE_ESCAPE => break :mainLoop,
                         else => std.debug.warn("key pressed: {}\n", .{ev.key.keysym.scancode}),
                     }
                 },
