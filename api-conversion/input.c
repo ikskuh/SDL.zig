@@ -116,9 +116,7 @@ extern SDL_bool SDL_IntersectRectAndLine(const SDL_Rect *
 #define SDL_RWOPS_JNIFILE   3U  
 #define SDL_RWOPS_MEMORY    4U  
 #define SDL_RWOPS_MEMORY_RO 5U  
-#if defined(__VITA__)
 #define SDL_RWOPS_VITAFILE  6U  
-#endif
 typedef struct SDL_RWops
 {
     

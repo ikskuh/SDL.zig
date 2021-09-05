@@ -19,81 +19,21 @@ pub extern fn SDL_Quit() void;
 
 const is_big_endian = @import("std").Target.current.endianess == .big;
 
-// typedef struct SDL_RWops
-// {
-//     Sint64 ( * size) (struct SDL_RWops * context);
-//     Sint64 ( * seek) (struct SDL_RWops * context, Sint64 offset,
-//                              int whence);
-//     size_t ( * read) (struct SDL_RWops * context, void *ptr,
-//                              size_t size, size_t maxnum);
-//     size_t ( * write) (struct SDL_RWops * context, const void *ptr,
-//                               size_t size, size_t num);
-//     int ( * close) (struct SDL_RWops * context);
-//     Uint32 type;
-//     union
-//     {
-// #if defined(__ANDROID__)
-//         struct
-//         {
-//             void *asset;
-//         } androidio;
-// #elif defined(__WIN32__)
-//         struct
-//         {
-//             SDL_bool append;
-//             void *h;
-//             struct
-//             {
-//                 void *data;
-//                 size_t size;
-//                 size_t left;
-//             } buffer;
-//         } windowsio;
-// #elif defined(__VITA__)
-//         struct
-//         {
-//             int h;
-//             struct
-//             {
-//                 void *data;
-//                 size_t size;
-//                 size_t left;
-//             } buffer;
-//         } vitaio;
-// #endif
-// #ifdef HAVE_STDIO_H
-//         struct
-//         {
-//             SDL_bool autoclose;
-//             FILE *fp;
-//         } stdio;
-// #endif
-//         struct
-//         {
-//             Uint8 *base;
-//             Uint8 *here;
-//             Uint8 *stop;
-//         } mem;
-//         struct
-//         {
-//             void *data1;
-//             void *data2;
-//         } unknown;
-//     } hidden;
-// } SDL_RWops;
+pub const SDL_VERSION = SDL_version{
+    .major = SDL_MAJOR_VERSION,
+    .minor = SDL_MINOR_VERSION,
+    .patch = SDL_PATCHLEVEL,
+};
 
-// #define SDL_VERSION(x)                          \
-// {                                   \
-//     (x)->major = SDL_MAJOR_VERSION;                 \
-//     (x)->minor = SDL_MINOR_VERSION;                 \
-//     (x)->patch = SDL_PATCHLEVEL;                    \
-// }
-// #define SDL_VERSIONNUM(X, Y, Z)                     \
-//     ((X)*1000 + (Y)*100 + (Z))
-// #define SDL_COMPILEDVERSION \
-//     SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL)
-// #define SDL_VERSION_ATLEAST(X, Y, Z) \
-//     (SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z))
+pub fn SDL_VERSIONNUM(X: usize, Y: usize, Z: usize) usize {
+    return (X) * 1000 + (Y) * 100 + (Z);
+}
+
+pub const SDL_COMPILEDVERSION = SDL_VERSIONNUM(SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
+
+pub fn SDL_VERSION_ATLEAST(X: usize, Y: usize, Z: usize) bool {
+    return SDL_COMPILEDVERSION >= SDL_VERSIONNUM(X, Y, Z);
+}
 
 // // SDL_COMPILE_TIME_ASSERT(SDL_Event, sizeof(SDL_Event) == sizeof(((SDL_Event *)NULL)->padding));
 
@@ -169,36 +109,90 @@ pub const SDL_RWops = extern struct {
     read: ?fn ([*c]SDL_RWops, ?*c_void, usize, usize) callconv(.C) usize,
     write: ?fn ([*c]SDL_RWops, ?*const c_void, usize, usize) callconv(.C) usize,
     close: ?fn ([*c]SDL_RWops) callconv(.C) c_int,
+
     type: u32,
+    hidden: Data,
+
+    const Data = extern union {
+        mem: Memory,
+        unknown: Unknown,
+
+        pub const Memory = extern struct {
+            base: [*]u8,
+            here: [*]u8,
+            stop: [*]u8,
+        };
+        pub const Unknown = extern struct {
+            data1: ?*c_void,
+            data2: ?*c_void,
+        };
+
+        // #if defined(__ANDROID__)
+        //         struct
+        //         {
+        //             void *asset;
+        //         } androidio;
+        // #elif defined(__WIN32__)
+        //         struct
+        //         {
+        //             SDL_bool append;
+        //             void *h;
+        //             struct
+        //             {
+        //                 void *data;
+        //                 size_t size;
+        //                 size_t left;
+        //             } buffer;
+        //         } windowsio;
+        // #elif defined(__VITA__)
+        //         struct
+        //         {
+        //             int h;
+        //             struct
+        //             {
+        //                 void *data;
+        //                 size_t size;
+        //                 size_t left;
+        //             } buffer;
+        //         } vitaio;
+        // #endif
+        // #ifdef HAVE_STDIO_H
+        //         struct
+        //         {
+        //             SDL_bool autoclose;
+        //             FILE *fp;
+        //         } stdio;
+        // #endif
+    };
 };
-pub extern fn SDL_RWFromFile(file: [*c]const u8, mode: [*c]const u8) [*c]SDL_RWops;
-pub extern fn SDL_RWFromFP(fp: ?*c_void, autoclose: SDL_bool) [*c]SDL_RWops;
-pub extern fn SDL_RWFromMem(mem: ?*c_void, size: c_int) [*c]SDL_RWops;
-pub extern fn SDL_RWFromConstMem(mem: ?*const c_void, size: c_int) [*c]SDL_RWops;
-pub extern fn SDL_AllocRW() [*c]SDL_RWops;
-pub extern fn SDL_FreeRW(area: [*c]SDL_RWops) void;
-pub extern fn SDL_RWsize(context: [*c]SDL_RWops) i64;
-pub extern fn SDL_RWseek(context: [*c]SDL_RWops, offset: i64, whence: c_int) i64;
-pub extern fn SDL_RWtell(context: [*c]SDL_RWops) i64;
-pub extern fn SDL_RWread(context: [*c]SDL_RWops, ptr: ?*c_void, size: usize, maxnum: usize) usize;
-pub extern fn SDL_RWwrite(context: [*c]SDL_RWops, ptr: ?*const c_void, size: usize, num: usize) usize;
-pub extern fn SDL_RWclose(context: [*c]SDL_RWops) c_int;
-pub extern fn SDL_LoadFile_RW(src: [*c]SDL_RWops, datasize: [*c]usize, freesrc: c_int) ?*c_void;
-pub extern fn SDL_LoadFile(file: [*c]const u8, datasize: [*c]usize) ?*c_void;
-pub extern fn SDL_ReadU8(src: [*c]SDL_RWops) u8;
-pub extern fn SDL_ReadLE16(src: [*c]SDL_RWops) u16;
-pub extern fn SDL_ReadBE16(src: [*c]SDL_RWops) u16;
-pub extern fn SDL_ReadLE32(src: [*c]SDL_RWops) u32;
-pub extern fn SDL_ReadBE32(src: [*c]SDL_RWops) u32;
-pub extern fn SDL_ReadLE64(src: [*c]SDL_RWops) u64;
-pub extern fn SDL_ReadBE64(src: [*c]SDL_RWops) u64;
-pub extern fn SDL_WriteU8(dst: [*c]SDL_RWops, value: u8) usize;
-pub extern fn SDL_WriteLE16(dst: [*c]SDL_RWops, value: u16) usize;
-pub extern fn SDL_WriteBE16(dst: [*c]SDL_RWops, value: u16) usize;
-pub extern fn SDL_WriteLE32(dst: [*c]SDL_RWops, value: u32) usize;
-pub extern fn SDL_WriteBE32(dst: [*c]SDL_RWops, value: u32) usize;
-pub extern fn SDL_WriteLE64(dst: [*c]SDL_RWops, value: u64) usize;
-pub extern fn SDL_WriteBE64(dst: [*c]SDL_RWops, value: u64) usize;
+pub extern fn SDL_RWFromFile(file: [*c]const u8, mode: [*c]const u8) ?*SDL_RWops;
+pub extern fn SDL_RWFromFP(fp: ?*c_void, autoclose: SDL_bool) ?*SDL_RWops;
+pub extern fn SDL_RWFromMem(mem: ?*c_void, size: c_int) ?*SDL_RWops;
+pub extern fn SDL_RWFromConstMem(mem: ?*const c_void, size: c_int) ?*SDL_RWops;
+pub extern fn SDL_AllocRW() ?*SDL_RWops;
+pub extern fn SDL_FreeRW(area: SDL_RWops) void;
+pub extern fn SDL_RWsize(context: *SDL_RWops) i64;
+pub extern fn SDL_RWseek(context: *SDL_RWops, offset: i64, whence: c_int) i64;
+pub extern fn SDL_RWtell(context: *SDL_RWops) i64;
+pub extern fn SDL_RWread(context: *SDL_RWops, ptr: ?*c_void, size: usize, maxnum: usize) usize;
+pub extern fn SDL_RWwrite(context: *SDL_RWops, ptr: ?*const c_void, size: usize, num: usize) usize;
+pub extern fn SDL_RWclose(context: *SDL_RWops) c_int;
+pub extern fn SDL_LoadFile_RW(src: *SDL_RWops, datasize: *usize, freesrc: c_int) ?*c_void;
+pub extern fn SDL_LoadFile(file: [*:0]const u8, datasize: *usize) ?*c_void;
+pub extern fn SDL_ReadU8(src: *SDL_RWops) u8;
+pub extern fn SDL_ReadLE16(src: *SDL_RWops) u16;
+pub extern fn SDL_ReadBE16(src: *SDL_RWops) u16;
+pub extern fn SDL_ReadLE32(src: *SDL_RWops) u32;
+pub extern fn SDL_ReadBE32(src: *SDL_RWops) u32;
+pub extern fn SDL_ReadLE64(src: *SDL_RWops) u64;
+pub extern fn SDL_ReadBE64(src: *SDL_RWops) u64;
+pub extern fn SDL_WriteU8(dst: *SDL_RWops, value: u8) usize;
+pub extern fn SDL_WriteLE16(dst: *SDL_RWops, value: u16) usize;
+pub extern fn SDL_WriteBE16(dst: *SDL_RWops, value: u16) usize;
+pub extern fn SDL_WriteLE32(dst: *SDL_RWops, value: u32) usize;
+pub extern fn SDL_WriteBE32(dst: *SDL_RWops, value: u32) usize;
+pub extern fn SDL_WriteLE64(dst: *SDL_RWops, value: u64) usize;
+pub extern fn SDL_WriteBE64(dst: *SDL_RWops, value: u64) usize;
 pub const SDL_BLENDMODE_NONE: c_int = 0;
 pub const SDL_BLENDMODE_BLEND: c_int = 1;
 pub const SDL_BLENDMODE_ADD: c_int = 2;
@@ -1920,7 +1914,7 @@ pub const SDL_SysWMEvent = extern struct {
     timestamp: u32,
     msg: ?*SDL_SysWMmsg,
 };
-pub const union_SDL_Event = extern union {
+pub const SDL_Event = extern union {
     type: u32,
     common: SDL_CommonEvent,
     display: SDL_DisplayEvent,
@@ -1952,7 +1946,7 @@ pub const union_SDL_Event = extern union {
     drop: SDL_DropEvent,
     padding: [56]u8,
 };
-pub const SDL_Event = union_SDL_Event;
+
 pub extern fn SDL_PumpEvents() void;
 pub const SDL_ADDEVENT: c_int = 0;
 pub const SDL_PEEKEVENT: c_int = 1;
@@ -2276,380 +2270,6 @@ pub const SDL_Locale = extern struct {
     country: [*c]const u8,
 };
 pub extern fn SDL_GetPreferredLocales() [*c]SDL_Locale;
-pub const __INTMAX_C_SUFFIX__ = @compileError("unable to translate macro: undefined identifier `L`"); // (no file):65:9
-pub const __UINTMAX_C_SUFFIX__ = @compileError("unable to translate macro: undefined identifier `UL`"); // (no file):71:9
-pub const __INT64_C_SUFFIX__ = @compileError("unable to translate macro: undefined identifier `L`"); // (no file):162:9
-pub const __u32_C_SUFFIX__ = @compileError("unable to translate macro: undefined identifier `U`"); // (no file):184:9
-pub const __u64_C_SUFFIX__ = @compileError("unable to translate macro: undefined identifier `UL`"); // (no file):192:9
-pub const __seg_gs = @compileError("unable to translate macro: undefined identifier `__attribute__`"); // (no file):310:9
-pub const __seg_fs = @compileError("unable to translate macro: undefined identifier `__attribute__`"); // (no file):311:9
-pub const SDL_AUDIOCVT_PACKED = @compileError("unable to translate macro: undefined identifier `__attribute__`"); // input.c:712:9
-pub const SDL_QuitRequested = @compileError("unable to translate macro: undefined identifier `NULL`"); // input.c:2731:9
-pub const __llvm__ = @as(c_int, 1);
-pub const __clang__ = @as(c_int, 1);
-pub const __clang_major__ = @as(c_int, 12);
-pub const __clang_minor__ = @as(c_int, 0);
-pub const __clang_patchlevel__ = @as(c_int, 0);
-pub const __clang_version__ = "12.0.0 ";
-pub const __GNUC__ = @as(c_int, 4);
-pub const __GNUC_MINOR__ = @as(c_int, 2);
-pub const __GNUC_PATCHLEVEL__ = @as(c_int, 1);
-pub const __GXX_ABI_VERSION = @as(c_int, 1002);
-pub const __ATOMIC_RELAXED = @as(c_int, 0);
-pub const __ATOMIC_CONSUME = @as(c_int, 1);
-pub const __ATOMIC_ACQUIRE = @as(c_int, 2);
-pub const __ATOMIC_RELEASE = @as(c_int, 3);
-pub const __ATOMIC_ACQ_REL = @as(c_int, 4);
-pub const __ATOMIC_SEQ_CST = @as(c_int, 5);
-pub const __OPENCL_MEMORY_SCOPE_WORK_ITEM = @as(c_int, 0);
-pub const __OPENCL_MEMORY_SCOPE_WORK_GROUP = @as(c_int, 1);
-pub const __OPENCL_MEMORY_SCOPE_DEVICE = @as(c_int, 2);
-pub const __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES = @as(c_int, 3);
-pub const __OPENCL_MEMORY_SCOPE_SUB_GROUP = @as(c_int, 4);
-pub const __PRAGMA_REDEFINE_EXTNAME = @as(c_int, 1);
-pub const __VERSION__ = "Clang 12.0.0";
-pub const __OBJC_BOOL_IS_BOOL = @as(c_int, 0);
-pub const __CONSTANT_CFSTRINGS__ = @as(c_int, 1);
-pub const __OPTIMIZE__ = @as(c_int, 1);
-pub const __ORDER_LITTLE_ENDIAN__ = @as(c_int, 1234);
-pub const __ORDER_BIG_ENDIAN__ = @as(c_int, 4321);
-pub const __ORDER_PDP_ENDIAN__ = @as(c_int, 3412);
-pub const __BYTE_ORDER__ = __ORDER_LITTLE_ENDIAN__;
-pub const __LITTLE_ENDIAN__ = @as(c_int, 1);
-pub const _LP64 = @as(c_int, 1);
-pub const __LP64__ = @as(c_int, 1);
-pub const __CHAR_BIT__ = @as(c_int, 8);
-pub const __SCHAR_MAX__ = @as(c_int, 127);
-pub const __SHRT_MAX__ = @as(c_int, 32767);
-pub const __INT_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __LONG_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __LONG_LONG_MAX__ = @as(c_longlong, 9223372036854775807);
-pub const __WCHAR_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __WINT_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 4294967295, .decimal);
-pub const __INTMAX_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __SIZE_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __UINTMAX_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __PTRDIFF_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __INTPTR_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __UINTPTR_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __SIZEOF_DOUBLE__ = @as(c_int, 8);
-pub const __SIZEOF_FLOAT__ = @as(c_int, 4);
-pub const __SIZEOF_INT__ = @as(c_int, 4);
-pub const __SIZEOF_LONG__ = @as(c_int, 8);
-pub const __SIZEOF_LONG_DOUBLE__ = @as(c_int, 16);
-pub const __SIZEOF_LONG_LONG__ = @as(c_int, 8);
-pub const __SIZEOF_POINTER__ = @as(c_int, 8);
-pub const __SIZEOF_SHORT__ = @as(c_int, 2);
-pub const __SIZEOF_PTRDIFF_T__ = @as(c_int, 8);
-pub const __SIZEOF_SIZE_T__ = @as(c_int, 8);
-pub const __SIZEOF_WCHAR_T__ = @as(c_int, 4);
-pub const __SIZEOF_WINT_T__ = @as(c_int, 4);
-pub const __SIZEOF_INT128__ = @as(c_int, 16);
-pub const __INTMAX_TYPE__ = c_long;
-pub const __INTMAX_FMTd__ = "ld";
-pub const __INTMAX_FMTi__ = "li";
-pub const __UINTMAX_TYPE__ = c_ulong;
-pub const __UINTMAX_FMTo__ = "lo";
-pub const __UINTMAX_FMTu__ = "lu";
-pub const __UINTMAX_FMTx__ = "lx";
-pub const __UINTMAX_FMTX__ = "lX";
-pub const __INTMAX_WIDTH__ = @as(c_int, 64);
-pub const __PTRDIFF_TYPE__ = c_long;
-pub const __PTRDIFF_FMTd__ = "ld";
-pub const __PTRDIFF_FMTi__ = "li";
-pub const __PTRDIFF_WIDTH__ = @as(c_int, 64);
-pub const __INTPTR_TYPE__ = c_long;
-pub const __INTPTR_FMTd__ = "ld";
-pub const __INTPTR_FMTi__ = "li";
-pub const __INTPTR_WIDTH__ = @as(c_int, 64);
-pub const __SIZE_TYPE__ = c_ulong;
-pub const __SIZE_FMTo__ = "lo";
-pub const __SIZE_FMTu__ = "lu";
-pub const __SIZE_FMTx__ = "lx";
-pub const __SIZE_FMTX__ = "lX";
-pub const __SIZE_WIDTH__ = @as(c_int, 64);
-pub const __WCHAR_TYPE__ = c_int;
-pub const __WCHAR_WIDTH__ = @as(c_int, 32);
-pub const __WINT_TYPE__ = c_uint;
-pub const __WINT_WIDTH__ = @as(c_int, 32);
-pub const __SIG_ATOMIC_WIDTH__ = @as(c_int, 32);
-pub const __SIG_ATOMIC_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __CHAR16_TYPE__ = c_ushort;
-pub const __CHAR32_TYPE__ = c_uint;
-pub const __UINTMAX_WIDTH__ = @as(c_int, 64);
-pub const __UINTPTR_TYPE__ = c_ulong;
-pub const __UINTPTR_FMTo__ = "lo";
-pub const __UINTPTR_FMTu__ = "lu";
-pub const __UINTPTR_FMTx__ = "lx";
-pub const __UINTPTR_FMTX__ = "lX";
-pub const __UINTPTR_WIDTH__ = @as(c_int, 64);
-pub const __FLT_DENORM_MIN__ = @as(f32, 1.40129846e-45);
-pub const __FLT_HAS_DENORM__ = @as(c_int, 1);
-pub const __FLT_DIG__ = @as(c_int, 6);
-pub const __FLT_DECIMAL_DIG__ = @as(c_int, 9);
-pub const __FLT_EPSILON__ = @as(f32, 1.19209290e-7);
-pub const __FLT_HAS_INFINITY__ = @as(c_int, 1);
-pub const __FLT_HAS_QUIET_NAN__ = @as(c_int, 1);
-pub const __FLT_MANT_DIG__ = @as(c_int, 24);
-pub const __FLT_MAX_10_EXP__ = @as(c_int, 38);
-pub const __FLT_MAX_EXP__ = @as(c_int, 128);
-pub const __FLT_MAX__ = @as(f32, 3.40282347e+38);
-pub const __FLT_MIN_10_EXP__ = -@as(c_int, 37);
-pub const __FLT_MIN_EXP__ = -@as(c_int, 125);
-pub const __FLT_MIN__ = @as(f32, 1.17549435e-38);
-pub const __DBL_DENORM_MIN__ = 4.9406564584124654e-324;
-pub const __DBL_HAS_DENORM__ = @as(c_int, 1);
-pub const __DBL_DIG__ = @as(c_int, 15);
-pub const __DBL_DECIMAL_DIG__ = @as(c_int, 17);
-pub const __DBL_EPSILON__ = 2.2204460492503131e-16;
-pub const __DBL_HAS_INFINITY__ = @as(c_int, 1);
-pub const __DBL_HAS_QUIET_NAN__ = @as(c_int, 1);
-pub const __DBL_MANT_DIG__ = @as(c_int, 53);
-pub const __DBL_MAX_10_EXP__ = @as(c_int, 308);
-pub const __DBL_MAX_EXP__ = @as(c_int, 1024);
-pub const __DBL_MAX__ = 1.7976931348623157e+308;
-pub const __DBL_MIN_10_EXP__ = -@as(c_int, 307);
-pub const __DBL_MIN_EXP__ = -@as(c_int, 1021);
-pub const __DBL_MIN__ = 2.2250738585072014e-308;
-pub const __LDBL_DENORM_MIN__ = @as(c_longdouble, 3.64519953188247460253e-4951);
-pub const __LDBL_HAS_DENORM__ = @as(c_int, 1);
-pub const __LDBL_DIG__ = @as(c_int, 18);
-pub const __LDBL_DECIMAL_DIG__ = @as(c_int, 21);
-pub const __LDBL_EPSILON__ = @as(c_longdouble, 1.08420217248550443401e-19);
-pub const __LDBL_HAS_INFINITY__ = @as(c_int, 1);
-pub const __LDBL_HAS_QUIET_NAN__ = @as(c_int, 1);
-pub const __LDBL_MANT_DIG__ = @as(c_int, 64);
-pub const __LDBL_MAX_10_EXP__ = @as(c_int, 4932);
-pub const __LDBL_MAX_EXP__ = @as(c_int, 16384);
-pub const __LDBL_MAX__ = @as(c_longdouble, 1.18973149535723176502e+4932);
-pub const __LDBL_MIN_10_EXP__ = -@as(c_int, 4931);
-pub const __LDBL_MIN_EXP__ = -@as(c_int, 16381);
-pub const __LDBL_MIN__ = @as(c_longdouble, 3.36210314311209350626e-4932);
-pub const __POINTER_WIDTH__ = @as(c_int, 64);
-pub const __BIGGEST_ALIGNMENT__ = @as(c_int, 16);
-pub const __WINT_UNSIGNED__ = @as(c_int, 1);
-pub const __INT8_TYPE__ = i8;
-pub const __INT8_FMTd__ = "hhd";
-pub const __INT8_FMTi__ = "hhi";
-pub const __INT8_C_SUFFIX__ = "";
-pub const __INT16_TYPE__ = c_short;
-pub const __INT16_FMTd__ = "hd";
-pub const __INT16_FMTi__ = "hi";
-pub const __INT16_C_SUFFIX__ = "";
-pub const __INT32_TYPE__ = c_int;
-pub const __INT32_FMTd__ = "d";
-pub const __INT32_FMTi__ = "i";
-pub const __INT32_C_SUFFIX__ = "";
-pub const __INT64_TYPE__ = c_long;
-pub const __INT64_FMTd__ = "ld";
-pub const __INT64_FMTi__ = "li";
-pub const __u8_TYPE__ = u8;
-pub const __u8_FMTo__ = "hho";
-pub const __u8_FMTu__ = "hhu";
-pub const __u8_FMTx__ = "hhx";
-pub const __u8_FMTX__ = "hhX";
-pub const __u8_C_SUFFIX__ = "";
-pub const __u8_MAX__ = @as(c_int, 255);
-pub const __INT8_MAX__ = @as(c_int, 127);
-pub const __u16_TYPE__ = c_ushort;
-pub const __u16_FMTo__ = "ho";
-pub const __u16_FMTu__ = "hu";
-pub const __u16_FMTx__ = "hx";
-pub const __u16_FMTX__ = "hX";
-pub const __u16_C_SUFFIX__ = "";
-pub const __u16_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 65535, .decimal);
-pub const __INT16_MAX__ = @as(c_int, 32767);
-pub const __u32_TYPE__ = c_uint;
-pub const __u32_FMTo__ = "o";
-pub const __u32_FMTu__ = "u";
-pub const __u32_FMTx__ = "x";
-pub const __u32_FMTX__ = "X";
-pub const __u32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 4294967295, .decimal);
-pub const __INT32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __u64_TYPE__ = c_ulong;
-pub const __u64_FMTo__ = "lo";
-pub const __u64_FMTu__ = "lu";
-pub const __u64_FMTx__ = "lx";
-pub const __u64_FMTX__ = "lX";
-pub const __u64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __INT64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __INT_LEAST8_TYPE__ = i8;
-pub const __INT_LEAST8_MAX__ = @as(c_int, 127);
-pub const __INT_LEAST8_FMTd__ = "hhd";
-pub const __INT_LEAST8_FMTi__ = "hhi";
-pub const __UINT_LEAST8_TYPE__ = u8;
-pub const __UINT_LEAST8_MAX__ = @as(c_int, 255);
-pub const __UINT_LEAST8_FMTo__ = "hho";
-pub const __UINT_LEAST8_FMTu__ = "hhu";
-pub const __UINT_LEAST8_FMTx__ = "hhx";
-pub const __UINT_LEAST8_FMTX__ = "hhX";
-pub const __INT_LEAST16_TYPE__ = c_short;
-pub const __INT_LEAST16_MAX__ = @as(c_int, 32767);
-pub const __INT_LEAST16_FMTd__ = "hd";
-pub const __INT_LEAST16_FMTi__ = "hi";
-pub const __UINT_LEAST16_TYPE__ = c_ushort;
-pub const __UINT_LEAST16_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 65535, .decimal);
-pub const __UINT_LEAST16_FMTo__ = "ho";
-pub const __UINT_LEAST16_FMTu__ = "hu";
-pub const __UINT_LEAST16_FMTx__ = "hx";
-pub const __UINT_LEAST16_FMTX__ = "hX";
-pub const __INT_LEAST32_TYPE__ = c_int;
-pub const __INT_LEAST32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __INT_LEAST32_FMTd__ = "d";
-pub const __INT_LEAST32_FMTi__ = "i";
-pub const __UINT_LEAST32_TYPE__ = c_uint;
-pub const __UINT_LEAST32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 4294967295, .decimal);
-pub const __UINT_LEAST32_FMTo__ = "o";
-pub const __UINT_LEAST32_FMTu__ = "u";
-pub const __UINT_LEAST32_FMTx__ = "x";
-pub const __UINT_LEAST32_FMTX__ = "X";
-pub const __INT_LEAST64_TYPE__ = c_long;
-pub const __INT_LEAST64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __INT_LEAST64_FMTd__ = "ld";
-pub const __INT_LEAST64_FMTi__ = "li";
-pub const __UINT_LEAST64_TYPE__ = c_ulong;
-pub const __UINT_LEAST64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __UINT_LEAST64_FMTo__ = "lo";
-pub const __UINT_LEAST64_FMTu__ = "lu";
-pub const __UINT_LEAST64_FMTx__ = "lx";
-pub const __UINT_LEAST64_FMTX__ = "lX";
-pub const __INT_FAST8_TYPE__ = i8;
-pub const __INT_FAST8_MAX__ = @as(c_int, 127);
-pub const __INT_FAST8_FMTd__ = "hhd";
-pub const __INT_FAST8_FMTi__ = "hhi";
-pub const __UINT_FAST8_TYPE__ = u8;
-pub const __UINT_FAST8_MAX__ = @as(c_int, 255);
-pub const __UINT_FAST8_FMTo__ = "hho";
-pub const __UINT_FAST8_FMTu__ = "hhu";
-pub const __UINT_FAST8_FMTx__ = "hhx";
-pub const __UINT_FAST8_FMTX__ = "hhX";
-pub const __INT_FAST16_TYPE__ = c_short;
-pub const __INT_FAST16_MAX__ = @as(c_int, 32767);
-pub const __INT_FAST16_FMTd__ = "hd";
-pub const __INT_FAST16_FMTi__ = "hi";
-pub const __UINT_FAST16_TYPE__ = c_ushort;
-pub const __UINT_FAST16_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 65535, .decimal);
-pub const __UINT_FAST16_FMTo__ = "ho";
-pub const __UINT_FAST16_FMTu__ = "hu";
-pub const __UINT_FAST16_FMTx__ = "hx";
-pub const __UINT_FAST16_FMTX__ = "hX";
-pub const __INT_FAST32_TYPE__ = c_int;
-pub const __INT_FAST32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_int, 2147483647, .decimal);
-pub const __INT_FAST32_FMTd__ = "d";
-pub const __INT_FAST32_FMTi__ = "i";
-pub const __UINT_FAST32_TYPE__ = c_uint;
-pub const __UINT_FAST32_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 4294967295, .decimal);
-pub const __UINT_FAST32_FMTo__ = "o";
-pub const __UINT_FAST32_FMTu__ = "u";
-pub const __UINT_FAST32_FMTx__ = "x";
-pub const __UINT_FAST32_FMTX__ = "X";
-pub const __INT_FAST64_TYPE__ = c_long;
-pub const __INT_FAST64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_long, 9223372036854775807, .decimal);
-pub const __INT_FAST64_FMTd__ = "ld";
-pub const __INT_FAST64_FMTi__ = "li";
-pub const __UINT_FAST64_TYPE__ = c_ulong;
-pub const __UINT_FAST64_MAX__ = @import("std").zig.c_translation.promoteIntLiteral(c_ulong, 18446744073709551615, .decimal);
-pub const __UINT_FAST64_FMTo__ = "lo";
-pub const __UINT_FAST64_FMTu__ = "lu";
-pub const __UINT_FAST64_FMTx__ = "lx";
-pub const __UINT_FAST64_FMTX__ = "lX";
-pub const __USER_LABEL_PREFIX__ = "";
-pub const __FINITE_MATH_ONLY__ = @as(c_int, 0);
-pub const __GNUC_STDC_INLINE__ = @as(c_int, 1);
-pub const __GCC_ATOMIC_TEST_AND_SET_TRUEVAL = @as(c_int, 1);
-pub const __CLANG_ATOMIC_BOOL_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_CHAR_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_CHAR16_T_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_CHAR32_T_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_WCHAR_T_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_SHORT_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_INT_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_LONG_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_LLONG_LOCK_FREE = @as(c_int, 2);
-pub const __CLANG_ATOMIC_POINTER_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_BOOL_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_CHAR_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_CHAR16_T_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_CHAR32_T_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_WCHAR_T_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_SHORT_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_INT_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_LONG_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_LLONG_LOCK_FREE = @as(c_int, 2);
-pub const __GCC_ATOMIC_POINTER_LOCK_FREE = @as(c_int, 2);
-pub const __FLT_EVAL_METHOD__ = @as(c_int, 0);
-pub const __FLT_RADIX__ = @as(c_int, 2);
-pub const __DECIMAL_DIG__ = __LDBL_DECIMAL_DIG__;
-pub const __GCC_ASM_FLAG_OUTPUTS__ = @as(c_int, 1);
-pub const __code_model_small__ = @as(c_int, 1);
-pub const __amd64__ = @as(c_int, 1);
-pub const __amd64 = @as(c_int, 1);
-pub const __x86_64 = @as(c_int, 1);
-pub const __x86_64__ = @as(c_int, 1);
-pub const __SEG_GS = @as(c_int, 1);
-pub const __SEG_FS = @as(c_int, 1);
-pub const __znver1 = @as(c_int, 1);
-pub const __znver1__ = @as(c_int, 1);
-pub const __tune_znver1__ = @as(c_int, 1);
-pub const __REGISTER_PREFIX__ = "";
-pub const __NO_MATH_INLINES = @as(c_int, 1);
-pub const __AES__ = @as(c_int, 1);
-pub const __PCLMUL__ = @as(c_int, 1);
-pub const __LAHF_SAHF__ = @as(c_int, 1);
-pub const __LZCNT__ = @as(c_int, 1);
-pub const __RDRND__ = @as(c_int, 1);
-pub const __FSGSBASE__ = @as(c_int, 1);
-pub const __BMI__ = @as(c_int, 1);
-pub const __BMI2__ = @as(c_int, 1);
-pub const __POPCNT__ = @as(c_int, 1);
-pub const __PRFCHW__ = @as(c_int, 1);
-pub const __RDSEED__ = @as(c_int, 1);
-pub const __ADX__ = @as(c_int, 1);
-pub const __MWAITX__ = @as(c_int, 1);
-pub const __MOVBE__ = @as(c_int, 1);
-pub const __SSE4A__ = @as(c_int, 1);
-pub const __FMA__ = @as(c_int, 1);
-pub const __F16C__ = @as(c_int, 1);
-pub const __SHA__ = @as(c_int, 1);
-pub const __FXSR__ = @as(c_int, 1);
-pub const __XSAVE__ = @as(c_int, 1);
-pub const __XSAVEOPT__ = @as(c_int, 1);
-pub const __XSAVEC__ = @as(c_int, 1);
-pub const __XSAVES__ = @as(c_int, 1);
-pub const __CLFLUSHOPT__ = @as(c_int, 1);
-pub const __CLZERO__ = @as(c_int, 1);
-pub const __AVX2__ = @as(c_int, 1);
-pub const __AVX__ = @as(c_int, 1);
-pub const __SSE4_2__ = @as(c_int, 1);
-pub const __SSE4_1__ = @as(c_int, 1);
-pub const __SSSE3__ = @as(c_int, 1);
-pub const __SSE3__ = @as(c_int, 1);
-pub const __SSE2__ = @as(c_int, 1);
-pub const __SSE2_MATH__ = @as(c_int, 1);
-pub const __SSE__ = @as(c_int, 1);
-pub const __SSE_MATH__ = @as(c_int, 1);
-pub const __MMX__ = @as(c_int, 1);
-pub const __GCC_HAVE_SYNC_COMPARE_AND_SWAP_1 = @as(c_int, 1);
-pub const __GCC_HAVE_SYNC_COMPARE_AND_SWAP_2 = @as(c_int, 1);
-pub const __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4 = @as(c_int, 1);
-pub const __GCC_HAVE_SYNC_COMPARE_AND_SWAP_8 = @as(c_int, 1);
-pub const __GCC_HAVE_SYNC_COMPARE_AND_SWAP_16 = @as(c_int, 1);
-pub const __SIZEOF_FLOAT128__ = @as(c_int, 16);
-pub const unix = @as(c_int, 1);
-pub const __unix = @as(c_int, 1);
-pub const __unix__ = @as(c_int, 1);
-pub const linux = @as(c_int, 1);
-pub const __linux = @as(c_int, 1);
-pub const __linux__ = @as(c_int, 1);
-pub const __ELF__ = @as(c_int, 1);
-pub const __gnu_linux__ = @as(c_int, 1);
-pub const __FLOAT128__ = @as(c_int, 1);
-pub const __STDC__ = @as(c_int, 1);
-pub const __STDC_HOSTED__ = @as(c_int, 1);
-pub const __STDC_VERSION__ = @as(c_long, 201710);
-pub const __STDC_UTF_16__ = @as(c_int, 1);
-pub const __STDC_UTF_32__ = @as(c_int, 1);
-pub const _DEBUG = @as(c_int, 1);
 pub const SDL_TRUE = @as(c_int, 1);
 pub const SDL_FALSE = @as(c_int, 0);
 pub inline fn SDL_static_cast(Type: anytype, Value: anytype) @TypeOf(Type(Value)) {
@@ -2665,6 +2285,7 @@ pub const SDL_RWOPS_STDFILE = @as(c_uint, 2);
 pub const SDL_RWOPS_JNIFILE = @as(c_uint, 3);
 pub const SDL_RWOPS_MEMORY = @as(c_uint, 4);
 pub const SDL_RWOPS_MEMORY_RO = @as(c_uint, 5);
+pub const SDL_RWOPS_VITAFILE = @as(c_uint, 6);
 pub const RW_SEEK_SET = @as(c_int, 0);
 pub const RW_SEEK_CUR = @as(c_int, 1);
 pub const RW_SEEK_END = @as(c_int, 2);
@@ -2811,16 +2432,16 @@ pub inline fn SDL_SHAPEMODEALPHA(mode: anytype) @TypeOf(((mode == ShapeModeDefau
 }
 pub const SDL_STANDARD_GRAVITY = @as(f32, 9.80665);
 pub const SDLK_SCANCODE_MASK = @as(c_int, 1) << @as(c_int, 30);
-pub inline fn SDL_SCANCODE_TO_KEYCODE(X: anytype) @TypeOf(X | SDLK_SCANCODE_MASK) {
+pub inline fn SDL_SCANCODE_TO_KEYCODE(X: SDL_Scancode) SDL_Keycode {
     return X | SDLK_SCANCODE_MASK;
 }
-pub inline fn SDL_OutOfMemory() @TypeOf(SDL_Error(SDL_ENOMEM)) {
+pub inline fn SDL_OutOfMemory() c_int {
     return SDL_Error(SDL_ENOMEM);
 }
-pub inline fn SDL_Unsupported() @TypeOf(SDL_Error(SDL_UNSUPPORTED)) {
+pub inline fn SDL_Unsupported() c_int {
     return SDL_Error(SDL_UNSUPPORTED);
 }
-pub inline fn SDL_InvalidParamError(param: anytype) @TypeOf(SDL_SetError("Parameter '%s' is invalid", param)) {
+pub inline fn SDL_InvalidParamError(param: anytype) c_int {
     return SDL_SetError("Parameter '%s' is invalid", param);
 }
 pub const SDL_IPHONE_MAX_GFORCE = 5.0;
@@ -2835,7 +2456,7 @@ pub const SDL_HAT_RIGHTUP = SDL_HAT_RIGHT | SDL_HAT_UP;
 pub const SDL_HAT_RIGHTDOWN = SDL_HAT_RIGHT | SDL_HAT_DOWN;
 pub const SDL_HAT_LEFTUP = SDL_HAT_LEFT | SDL_HAT_UP;
 pub const SDL_HAT_LEFTDOWN = SDL_HAT_LEFT | SDL_HAT_DOWN;
-pub inline fn SDL_BUTTON(X: anytype) @TypeOf(@as(c_int, 1) << (X - @as(c_int, 1))) {
+pub inline fn SDL_BUTTON(X: c_int) c_int {
     return @as(c_int, 1) << (X - @as(c_int, 1));
 }
 pub const SDL_BUTTON_LEFT = @as(c_int, 1);
@@ -2849,11 +2470,11 @@ pub const SDL_BUTTON_RMASK = SDL_BUTTON(SDL_BUTTON_RIGHT);
 pub const SDL_BUTTON_X1MASK = SDL_BUTTON(SDL_BUTTON_X1);
 pub const SDL_BUTTON_X2MASK = SDL_BUTTON(SDL_BUTTON_X2);
 pub const SDL_MUTEX_TIMEDOUT = @as(c_int, 1);
-pub const SDL_MUTEX_MAXWAIT = ~@import("std").zig.c_translation.cast(u32, @as(c_int, 0));
-pub inline fn SDL_mutexP(m: anytype) @TypeOf(SDL_LockMutex(m)) {
+pub const SDL_MUTEX_MAXWAIT = ~@as(u32, 0);
+pub inline fn SDL_mutexP(m: anytype) c_int {
     return SDL_LockMutex(m);
 }
-pub inline fn SDL_mutexV(m: anytype) @TypeOf(SDL_UnlockMutex(m)) {
+pub inline fn SDL_mutexV(m: anytype) c_int {
     return SDL_UnlockMutex(m);
 }
 pub const SDL_RELEASED = @as(c_int, 0);
@@ -2864,11 +2485,11 @@ pub const SDL_QUERY = -@as(c_int, 1);
 pub const SDL_IGNORE = @as(c_int, 0);
 pub const SDL_DISABLE = @as(c_int, 0);
 pub const SDL_ENABLE = @as(c_int, 1);
-pub inline fn SDL_GetEventState(@"type": anytype) @TypeOf(SDL_EventState(@"type", SDL_QUERY)) {
+pub inline fn SDL_GetEventState(@"type": anytype) u8 {
     return SDL_EventState(@"type", SDL_QUERY);
 }
 pub const SDL_MAX_LOG_MESSAGE = @as(c_int, 4096);
-pub inline fn SDL_GameControllerAddMappingsFromFile(file: anytype) @TypeOf(SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), @as(c_int, 1))) {
+pub inline fn SDL_GameControllerAddMappingsFromFile(file: anytype) c_int {
     return SDL_GameControllerAddMappingsFromRW(SDL_RWFromFile(file, "rb"), @as(c_int, 1));
 }
 pub const SDL_HAPTIC_CONSTANT = @as(c_uint, 1) << @as(c_int, 0);
