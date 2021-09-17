@@ -15,7 +15,7 @@ pub fn build(b: *Builder) !void {
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
     if (!skip_tests) {
-        const lib_test = b.addTest("src/lib.zig");
+        const lib_test = b.addTest("src/wrapper/sdl.zig");
         lib_test.setTarget(.{
             // copy over the abi so we compile the test with -msvc or -gnu for windows
             .abi = if (target.isWindows())
@@ -23,6 +23,7 @@ pub fn build(b: *Builder) !void {
             else
                 null,
         });
+        lib_test.addPackage(sdk.getNativePackage("sdl-native"));
         sdk.link(lib_test, .dynamic);
 
         const test_lib_step = b.step("test", "Runs the library tests.");
