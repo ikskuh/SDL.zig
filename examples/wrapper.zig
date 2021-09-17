@@ -30,7 +30,7 @@ pub fn main() !void {
                 },
                 .key_down => |key| {
                     switch (key.keysym.scancode) {
-                        .SDL_SCANCODE_ESCAPE => break :mainLoop,
+                        SDL.c.SDL_SCANCODE_ESCAPE => break :mainLoop,
                         else => std.debug.warn("key pressed: {}\n", .{key.keysym.scancode}),
                     }
                 },
