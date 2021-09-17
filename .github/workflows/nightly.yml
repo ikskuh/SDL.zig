@@ -87,7 +87,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           uwp: false
-          arch: x86
+          arch: amd64_x86 # cross-compile from amd64 to x86
 
       - name: Install VisualStudio (x64)
         if: ${{ matrix.target == 'x86_64-windows-msvc' }}
