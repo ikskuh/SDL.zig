@@ -47,9 +47,31 @@ pub fn init(b: *Builder) *Sdk {
 /// for a more *ziggy* feeling.
 /// This is similar to the *C import* result.
 pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
+    const build_options = sdk.builder.addOptions();
+    build_options.addOption(bool, "vulkan", false);
     return std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
         .path = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            build_options.getPackage("build_options"),
+        },
+    };
+}
+
+/// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
+/// for a more *ziggy* feeling, with Vulkan support! The Vulkan package provided by `vulkan-zig` must be
+/// provided as an argument.
+/// This is similar to the *C import* result.
+pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
+    const build_options = sdk.builder.addOptions();
+    build_options.addOption(bool, "vulkan", true);
+    return std.build.Pkg{
+        .name = sdk.builder.dupe(package_name),
+        .path = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            build_options.getPackage("build_options"),
+            vulkan,
+        },
     };
 }
 

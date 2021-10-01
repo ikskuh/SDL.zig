@@ -1,3 +1,7 @@
+const build_options = @import("build_options");
+
+usingnamespace if (build_options.vulkan) @import("vulkan.zig") else struct {};
+
 pub const SDL_INIT_TIMER: u32 = 0x00000001;
 pub const SDL_INIT_AUDIO: u32 = 0x00000010;
 pub const SDL_INIT_VIDEO: u32 = 0x00000020;
