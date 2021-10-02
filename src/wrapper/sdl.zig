@@ -1,10 +1,15 @@
 const std = @import("std");
+const build_options = @import("build_options");
 
 /// Exports the C interface for SDL
 pub const c = @import("sdl-native");
 
 // pub const image = @import("image.zig");
 pub const gl = @import("gl.zig");
+
+usingnamespace if (build_options.vulkan) struct {
+    pub const vulkan = @import("vulkan.zig");
+} else struct {};
 
 pub const Error = error{SdlError};
 
@@ -287,6 +292,9 @@ pub const WindowFlags = struct {
     /// window should be treated as a popup menu (X11 only, >= SDL 2.0.5)
     popup_menu: bool = false, //SDL_WINDOW_POPUP_MENU,
 
+    /// window usable with a Vulkan instance
+    vulkan: bool = false, // SDL_WINDOW_VULKAN,
+
     // fn fromInteger(val: c_uint) WindowFlags {
     //     // TODO: Implement
     //     @panic("niy");
@@ -314,6 +322,7 @@ pub const WindowFlags = struct {
         if (wf.utility) val |= c.SDL_WINDOW_UTILITY;
         if (wf.tooltip) val |= c.SDL_WINDOW_TOOLTIP;
         if (wf.popup_menu) val |= c.SDL_WINDOW_POPUP_MENU;
+        if (wf.vulkan) val |= c.SDL_WINDOW_VULKAN;
         return val;
     }
 };

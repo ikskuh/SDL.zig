@@ -77,11 +77,30 @@ pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.b
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
+    const build_options = sdk.builder.addOptions();
+    build_options.addOption(bool, "vulkan", false);
     return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
         .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
         .dependencies = &[_]std.build.Pkg{
+            build_options.getPackage("build_options"),
             sdk.getNativePackage("sdl-native"),
+        },
+    });
+}
+
+/// Returns the smart wrapper for the SDL api with Vulkan support. Contains convenients zig types, tagged
+/// unions and so on.
+pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
+    const build_options = sdk.builder.addOptions();
+    build_options.addOption(bool, "vulkan", true);
+    return sdk.builder.dupePkg(std.build.Pkg{
+        .name = sdk.builder.dupe(package_name),
+        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            build_options.getPackage("build_options"),
+            sdk.getNativePackageVulkan("sdl-native", vulkan),
+            vulkan,
         },
     });
 }
