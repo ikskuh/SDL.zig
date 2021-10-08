@@ -5,6 +5,7 @@
 //!
 //!
 const std = @import("std");
+const target = @import("builtin").target;
 
 const Builder = std.build.Builder;
 const Step = std.build.Step;
@@ -69,12 +70,12 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
     // TODO: Implement
 
     const b = sdk.builder;
-    const target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
+    const detected_target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
 
     // This is required on all platforms
     exe.linkLibC();
 
-    if (target.os.tag == .windows) {
+    if (detected_target.os.tag == .windows) {
         // try linking with vcpkg
         // TODO: Implement proper vcpkg support
         exe.addVcpkgPaths(linkage) catch {};
@@ -86,10 +87,10 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             return;
         }
 
-        const sdk_paths = sdk.getPaths(target) catch |err| {
+        const sdk_paths = sdk.getPaths(detected_target) catch |err| {
             const writer = std.io.getStdErr().writer();
 
-            const target_name = tripleName(sdk.builder.allocator, target) catch @panic("out of memory");
+            const target_name = tripleName(sdk.builder.allocator, detected_target) catch @panic("out of memory");
 
             switch (err) {
                 error.FileNotFound => {
@@ -210,7 +211,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             sdk.builder.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
     } else if (target.os.tag == .linux) {
-        if (std.Target.current.os.tag != .linux or target.cpu.arch != std.Target.current.cpu.arch) {
+        if (target.os.tag != .linux or target.cpu.arch != target.cpu.arch) {
             // linux cross-compilation requires us to do some dirty hacks:
             // we compile a stub .so file we will link against.
             // This will allow us to work around the "SDL doesn't provide dev packages for linux"
@@ -244,7 +245,7 @@ const Paths = struct {
     bin: []const u8,
 };
 
-fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
+fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
     const json_data = std.fs.cwd().readFileAlloc(sdk.builder.allocator, sdk.config_path, 1 << 20) catch |err| switch (err) {
         error.FileNotFound => return error.FileNotFound,
         else => |e| @panic(@errorName(e)),
@@ -263,11 +264,11 @@ fn getPaths(sdk: *Sdk, target: std.Target) error{ MissingTarget, FileNotFound, I
         }) catch return error.InvalidTarget;
         const config_target = (std.zig.system.NativeTargetInfo.detect(sdk.builder.allocator, config_cross_target) catch @panic("out of memory")).target;
 
-        if (target.cpu.arch != config_target.cpu.arch)
+        if (target_local.cpu.arch != config_target.cpu.arch)
             continue;
-        if (target.os.tag != config_target.os.tag)
+        if (target_local.os.tag != config_target.os.tag)
             continue;
-        if (target.abi != config_target.abi)
+        if (target_local.abi != config_target.abi)
             continue;
         // load paths
 
@@ -345,10 +346,10 @@ const PrepareStubSourceStep = struct {
     }
 };
 
-fn tripleName(allocator: *std.mem.Allocator, target: std.Target) ![]u8 {
-    const arch_name = @tagName(target.cpu.arch);
-    const os_name = @tagName(target.os.tag);
-    const abi_name = @tagName(target.abi);
+fn tripleName(allocator: *std.mem.Allocator, target_local: std.Target) ![]u8 {
+    const arch_name = @tagName(target_local.cpu.arch);
+    const os_name = @tagName(target_local.os.tag);
+    const abi_name = @tagName(target_local.abi);
 
     return std.fmt.allocPrint(allocator, "{s}-{s}-{s}", .{ arch_name, os_name, abi_name });
 }
