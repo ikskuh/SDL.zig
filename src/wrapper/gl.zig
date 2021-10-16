@@ -72,7 +72,7 @@ pub fn setAttribute(attrib: Attribute) !void {
     inline for (std.meta.fields(Attribute)) |fld| {
         if (attrib == @field(AttributeName, fld.name)) {
             const res = c.SDL_GL_SetAttribute(
-                @intToEnum(c.SDL_GLattr, @enumToInt(attrib)),
+                @intCast(c.SDL_GLattr, @enumToInt(attrib)),
                 attribValueToInt(@field(attrib, fld.name)),
             );
             if (res != 0) {
