@@ -25,7 +25,10 @@ pub const Rectangle = extern struct {
     width: c_int,
     height: c_int,
 
-    fn getSdlPtr(r: Rectangle) *const c.SDL_Rect {
+    fn getSdlPtr(r: *Rectangle) *c.SDL_Rect {
+        return @ptrCast(*c.SDL_Rect, r);
+    }
+    fn getConstSdlPtr(r: Rectangle) *const c.SDL_Rect {
         return @ptrCast(*const c.SDL_Rect, &r);
     }
 };
@@ -363,6 +366,19 @@ pub const Surface = struct {
     }
 };
 
+pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
+    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
+}
+
+pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_rectangle: ?*Rectangle) !void {
+    if (c.SDL_BlitScaled(
+        src.ptr,
+        if (src_rectangle) |rect| rect.getSdlPtr() else null,
+        dest.ptr,
+        if (dest_rectangle) |rect| rect.getSdlPtr() else null,
+    ) < 0) return error.SdlError;
+}
+
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
 
@@ -380,7 +396,7 @@ pub const Renderer = struct {
     }
 
     pub fn copy(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle) !void {
-        if (c.SDL_RenderCopy(ren.ptr, tex.ptr, if (srcRect) |r| r.getSdlPtr() else null, if (dstRect) |r| r.getSdlPtr() else null) < 0)
+        if (c.SDL_RenderCopy(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getSdlPtr() else null) < 0)
             return makeError();
     }
 
@@ -395,12 +411,12 @@ pub const Renderer = struct {
     }
 
     pub fn fillRect(ren: Renderer, rect: Rectangle) !void {
-        if (c.SDL_RenderFillRect(ren.ptr, rect.getSdlPtr()) < 0)
+        if (c.SDL_RenderFillRect(ren.ptr, rect.getConstSdlPtr()) < 0)
             return makeError();
     }
 
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
-        if (c.SDL_RenderDrawRect(ren.ptr, rect.getSdlPtr()) < 0)
+        if (c.SDL_RenderDrawRect(ren.ptr, rect.getConstSdlPtr()) < 0)
             return makeError();
     }
 
@@ -478,7 +494,7 @@ pub const Texture = struct {
         var pitch: c_int = undefined;
         if (c.SDL_LockTexture(
             tex.ptr,
-            if (rectangle) |rect| rect.getSdlPtr() else null,
+            if (rectangle) |rect| rect.getConstSdlPtr() else null,
             &ptr,
             &pitch,
         ) != 0) {
@@ -494,7 +510,7 @@ pub const Texture = struct {
     pub fn update(texture: Texture, pixels: []const u8, pitch: usize, rectangle: ?Rectangle) !void {
         if (c.SDL_UpdateTexture(
             texture.ptr,
-            if (rectangle) |rect| rect.getSdlPtr() else null,
+            if (rectangle) |rect| rect.getConstSdlPtr() else null,
             pixels.ptr,
             @intCast(c_int, pitch),
         ) != 0)
@@ -505,7 +521,7 @@ pub const Texture = struct {
         width: usize,
         height: usize,
         access: Access,
-        format: Format,
+        format: PixelFormatEnum,
     };
 
     pub fn query(tex: Texture) !Info {
@@ -519,7 +535,7 @@ pub const Texture = struct {
             .width = @intCast(usize, w),
             .height = @intCast(usize, h),
             .access = @intToEnum(Access, access),
-            .format = @intToEnum(Format, format),
+            .format = @intToEnum(PixelFormatEnum, format),
         };
     }
     pub fn resetColorMod(tex: Texture) !void {
@@ -541,46 +557,7 @@ pub const Texture = struct {
         try tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
-    pub const Format = enum(u32) {
-        index1_lsb = c.SDL_PIXELFORMAT_INDEX1LSB,
-        index1_msb = c.SDL_PIXELFORMAT_INDEX1MSB,
-        index4_lsb = c.SDL_PIXELFORMAT_INDEX4LSB,
-        index4_msb = c.SDL_PIXELFORMAT_INDEX4MSB,
-        index8 = c.SDL_PIXELFORMAT_INDEX8,
-        rgb332 = c.SDL_PIXELFORMAT_RGB332,
-        rgb444 = c.SDL_PIXELFORMAT_RGB444,
-        rgb555 = c.SDL_PIXELFORMAT_RGB555,
-        bgr555 = c.SDL_PIXELFORMAT_BGR555,
-        argb4444 = c.SDL_PIXELFORMAT_ARGB4444,
-        rgba4444 = c.SDL_PIXELFORMAT_RGBA4444,
-        abgr4444 = c.SDL_PIXELFORMAT_ABGR4444,
-        bgra4444 = c.SDL_PIXELFORMAT_BGRA4444,
-        argb1555 = c.SDL_PIXELFORMAT_ARGB1555,
-        rgba5551 = c.SDL_PIXELFORMAT_RGBA5551,
-        abgr1555 = c.SDL_PIXELFORMAT_ABGR1555,
-        bgra5551 = c.SDL_PIXELFORMAT_BGRA5551,
-        rgb565 = c.SDL_PIXELFORMAT_RGB565,
-        bgr565 = c.SDL_PIXELFORMAT_BGR565,
-        rgb24 = c.SDL_PIXELFORMAT_RGB24,
-        bgr24 = c.SDL_PIXELFORMAT_BGR24,
-        rgb888 = c.SDL_PIXELFORMAT_RGB888,
-        rgbx8888 = c.SDL_PIXELFORMAT_RGBX8888,
-        bgr888 = c.SDL_PIXELFORMAT_BGR888,
-        bgrx8888 = c.SDL_PIXELFORMAT_BGRX8888,
-        argb8888 = c.SDL_PIXELFORMAT_ARGB8888,
-        rgba8888 = c.SDL_PIXELFORMAT_RGBA8888,
-        abgr8888 = c.SDL_PIXELFORMAT_ABGR8888,
-        bgra8888 = c.SDL_PIXELFORMAT_BGRA8888,
-        argb2101010 = c.SDL_PIXELFORMAT_ARGB2101010,
-        yv12 = c.SDL_PIXELFORMAT_YV12,
-        iyuv = c.SDL_PIXELFORMAT_IYUV,
-        yuy2 = c.SDL_PIXELFORMAT_YUY2,
-        uyvy = c.SDL_PIXELFORMAT_UYVY,
-        yvyu = c.SDL_PIXELFORMAT_YVYU,
-        nv12 = c.SDL_PIXELFORMAT_NV12,
-        nv21 = c.SDL_PIXELFORMAT_NV21,
-        externalOES = c.SDL_PIXELFORMAT_EXTERNAL_OES,
-    };
+    pub const Format = PixelFormatEnum;
 
     pub const Access = enum(c_int) {
         static = c.SDL_TEXTUREACCESS_STATIC,
@@ -589,7 +566,48 @@ pub const Texture = struct {
     };
 };
 
-pub fn createTexture(renderer: Renderer, format: Texture.Format, access: Texture.Access, width: usize, height: usize) !Texture {
+pub const PixelFormatEnum = enum(u32) {
+    index1_lsb = c.SDL_PIXELFORMAT_INDEX1LSB,
+    index1_msb = c.SDL_PIXELFORMAT_INDEX1MSB,
+    index4_lsb = c.SDL_PIXELFORMAT_INDEX4LSB,
+    index4_msb = c.SDL_PIXELFORMAT_INDEX4MSB,
+    index8 = c.SDL_PIXELFORMAT_INDEX8,
+    rgb332 = c.SDL_PIXELFORMAT_RGB332,
+    rgb444 = c.SDL_PIXELFORMAT_RGB444,
+    rgb555 = c.SDL_PIXELFORMAT_RGB555,
+    bgr555 = c.SDL_PIXELFORMAT_BGR555,
+    argb4444 = c.SDL_PIXELFORMAT_ARGB4444,
+    rgba4444 = c.SDL_PIXELFORMAT_RGBA4444,
+    abgr4444 = c.SDL_PIXELFORMAT_ABGR4444,
+    bgra4444 = c.SDL_PIXELFORMAT_BGRA4444,
+    argb1555 = c.SDL_PIXELFORMAT_ARGB1555,
+    rgba5551 = c.SDL_PIXELFORMAT_RGBA5551,
+    abgr1555 = c.SDL_PIXELFORMAT_ABGR1555,
+    bgra5551 = c.SDL_PIXELFORMAT_BGRA5551,
+    rgb565 = c.SDL_PIXELFORMAT_RGB565,
+    bgr565 = c.SDL_PIXELFORMAT_BGR565,
+    rgb24 = c.SDL_PIXELFORMAT_RGB24,
+    bgr24 = c.SDL_PIXELFORMAT_BGR24,
+    rgb888 = c.SDL_PIXELFORMAT_RGB888,
+    rgbx8888 = c.SDL_PIXELFORMAT_RGBX8888,
+    bgr888 = c.SDL_PIXELFORMAT_BGR888,
+    bgrx8888 = c.SDL_PIXELFORMAT_BGRX8888,
+    argb8888 = c.SDL_PIXELFORMAT_ARGB8888,
+    rgba8888 = c.SDL_PIXELFORMAT_RGBA8888,
+    abgr8888 = c.SDL_PIXELFORMAT_ABGR8888,
+    bgra8888 = c.SDL_PIXELFORMAT_BGRA8888,
+    argb2101010 = c.SDL_PIXELFORMAT_ARGB2101010,
+    yv12 = c.SDL_PIXELFORMAT_YV12,
+    iyuv = c.SDL_PIXELFORMAT_IYUV,
+    yuy2 = c.SDL_PIXELFORMAT_YUY2,
+    uyvy = c.SDL_PIXELFORMAT_UYVY,
+    yvyu = c.SDL_PIXELFORMAT_YVYU,
+    nv12 = c.SDL_PIXELFORMAT_NV12,
+    nv21 = c.SDL_PIXELFORMAT_NV21,
+    externalOES = c.SDL_PIXELFORMAT_EXTERNAL_OES,
+};
+
+pub fn createTexture(renderer: Renderer, format: PixelFormatEnum, access: Texture.Access, width: usize, height: usize) !Texture {
     const texptr = c.SDL_CreateTexture(
         renderer.ptr,
         @enumToInt(format),
