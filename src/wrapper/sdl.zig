@@ -900,3 +900,54 @@ pub fn delay(ms: u32) void {
 test "platform independent declarations" {
     std.testing.refAllDecls(@This());
 }
+
+pub fn numJoysticks() !u31 {
+    const num = c.SDL_NumJoysticks();
+    if (num < 0) return error.SdlError;
+    return @intCast(u31, num);
+}
+
+pub const GameController = struct {
+    ptr: *c.SDL_GameController,
+
+    pub fn open(joystick_index: u31) !GameController {
+        return GameController{
+            .ptr = c.SDL_GameControllerOpen(joystick_index) orelse return error.SdlError,
+        };
+    }
+
+    pub fn close(self: GameController) void {
+        c.SDL_GameControllerClose(self.ptr);
+    }
+
+    pub fn nameForIndex(joystick_index: u31) ?[:0]const u8 {
+        return std.mem.spanZ(c.SDL_GameControllerNameForIndex(joystick_index));
+    }
+
+    pub const Button = enum(i32) {
+        a = c.SDL_CONTROLLER_BUTTON_A,
+        b = c.SDL_CONTROLLER_BUTTON_B,
+        x = c.SDL_CONTROLLER_BUTTON_X,
+        y = c.SDL_CONTROLLER_BUTTON_Y,
+        back = c.SDL_CONTROLLER_BUTTON_BACK,
+        start = c.SDL_CONTROLLER_BUTTON_START,
+        guide = c.SDL_CONTROLLER_BUTTON_GUIDE,
+        left_stick = c.SDL_CONTROLLER_BUTTON_LEFTSTICK,
+        right_stick = c.SDL_CONTROLLER_BUTTON_RIGHTSTICK,
+        left_shoulder = c.SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+        right_shoulder = c.SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+        dpad_up = c.SDL_CONTROLLER_BUTTON_DPAD_UP,
+        dpad_down = c.SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        dpad_left = c.SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        dpad_right = c.SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    };
+
+    pub const Axis = enum(i32) {
+        left_x = c.SDL_CONTROLLER_AXIS_LEFTX,
+        left_y = c.SDL_CONTROLLER_AXIS_LEFTY,
+        right_x = c.SDL_CONTROLLER_AXIS_RIGHTX,
+        right_y = c.SDL_CONTROLLER_AXIS_RIGHTY,
+        trigger_left = c.SDL_CONTROLLER_AXIS_TRIGGERLEFT,
+        trigger_right = c.SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
+    };
+};
