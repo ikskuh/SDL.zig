@@ -726,12 +726,80 @@ pub const WindowEvent = struct {
     }
 };
 
+pub const KeyModifierBit = enum(u16) {
+    left_shift = c.KMOD_LSHIFT,
+    right_shift = c.KMOD_RSHIFT,
+    left_control = c.KMOD_LCTRL,
+    right_control = c.KMOD_RCTRL,
+    ///left alternate
+    left_alt = c.KMOD_LALT,
+    ///right alternate
+    right_alt = c.KMOD_RALT,
+    left_gui = c.KMOD_LGUI,
+    right_gui = c.KMOD_RGUI,
+    ///numeric lock
+    num_lock = c.KMOD_NUM,
+    ///capital letters lock
+    caps_lock = c.KMOD_CAPS,
+    mode = c.KMOD_MODE,
+    ///scroll lock (= previous value c.KMOD_RESERVED)
+    scroll_lock = c.KMOD_SCROLL,
+};
+pub const KeyModifierSet = struct {
+    storage: u16,
+
+    pub fn fromNative(native: u16) KeyModifierSet {
+        return .{ .storage = native };
+    }
+    pub fn toNative(self: KeyModifierSet) u16 {
+        return self.storage;
+    }
+
+    pub fn get(self: KeyModifierSet, modifier: KeyModifierBit) bool {
+        return (self.storage & @enumToInt(modifier)) != 0;
+    }
+    pub fn set(self: *KeyModifierSet, modifier: KeyModifierBit) void {
+        self.storage |= @enumToInt(modifier);
+    }
+    pub fn clear(self: *KeyModifierSet, modifier: KeyModifierBit) void {
+        self.storage &= ~@enumToInt(modifier);
+    }
+};
+pub const KeyboardEvent = struct {
+    pub const KeyState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    window_id: u32,
+    key_state: KeyState,
+    is_repeat: bool,
+    scancode: Scancode,
+    keycode: Keycode,
+    modifiers: KeyModifierSet,
+
+    pub fn fromNative(native: c.SDL_KeyboardEvent) KeyboardEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_KEYDOWN, c.SDL_KEYUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .key_state = @intToEnum(KeyState, native.state),
+            .is_repeat = native.repeat != 0,
+            .scancode = @intToEnum(Scancode, native.keysym.scancode),
+            .keycode = @intToEnum(Keycode, native.keysym.sym),
+            .modifiers = KeyModifierSet.fromNative(native.keysym.mod),
+        };
+    }
+};
+
 pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
-
-    pub const KeyboardEvent = c.SDL_KeyboardEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
     pub const MouseMotionEvent = c.SDL_MouseMotionEvent;
@@ -817,8 +885,8 @@ pub const Event = union(enum) {
             c.SDL_DISPLAYEVENT => Event{ .display = raw.display },
             c.SDL_WINDOWEVENT => Event{ .window = WindowEvent.fromNative(raw.window) },
             c.SDL_SYSWMEVENT => Event{ .sys_wm = raw.syswm },
-            c.SDL_KEYDOWN => Event{ .key_down = raw.key },
-            c.SDL_KEYUP => Event{ .key_up = raw.key },
+            c.SDL_KEYDOWN => Event{ .key_down = KeyboardEvent.fromNative(raw.key) },
+            c.SDL_KEYUP => Event{ .key_up = KeyboardEvent.fromNative(raw.key) },
             c.SDL_TEXTEDITING => Event{ .text_editing = raw.edit },
             c.SDL_TEXTINPUT => Event{ .text_input = raw.text },
             c.SDL_KEYMAPCHANGED => Event{ .key_map_changed = raw.common },
