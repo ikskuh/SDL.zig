@@ -1797,3 +1797,77 @@ pub fn openAudioDevice(options: OpenAudioDeviceOptions) !OpenAudioDeviceResult {
         },
     }
 }
+
+pub const SystemCursor = enum(c_uint) {
+    arrow = c.SDL_SYSTEM_CURSOR_ARROW,
+    ibeam = c.SDL_SYSTEM_CURSOR_IBEAM,
+    wait = c.SDL_SYSTEM_CURSOR_WAIT,
+    crosshair = c.SDL_SYSTEM_CURSOR_CROSSHAIR,
+    wait_arrow = c.SDL_SYSTEM_CURSOR_WAITARROW,
+    size_nwse = c.SDL_SYSTEM_CURSOR_SIZENWSE,
+    size_nesw = c.SDL_SYSTEM_CURSOR_SIZENESW,
+    size_we = c.SDL_SYSTEM_CURSOR_SIZEWE,
+    size_ns = c.SDL_SYSTEM_CURSOR_SIZENS,
+    size_all = c.SDL_SYSTEM_CURSOR_SIZEALL,
+    size_no = c.SDL_SYSTEM_CURSOR_NO,
+    hand = c.SDL_SYSTEM_CURSOR_HAND,
+};
+
+pub const Cursor = struct {
+    ptr: *c.SDL_Cursor,
+
+    pub fn destroy(self: *Cursor) void {
+        c.SDL_FreeCursor(self.ptr);
+    }
+};
+
+pub fn createCursor(data: []const u8, mask: []const u8, width: u32, height: u32, hot_x: i32, hot_y: i32) !Cursor {
+    std.debug.assert(data.len >= width * height);
+    std.debug.assert(mask.len >= width * height);
+    return Cursor{
+        .ptr = c.SDL_CreateCursor(
+            data.ptr,
+            mask.ptr,
+            @intCast(c_int, width),
+            @intCast(c_int, height),
+            hot_x,
+            hot_y,
+        ) orelse return makeError(),
+    };
+}
+
+pub fn createColorCursor(surface: Surface, hot_x: i32, hot_y: i32) !Cursor {
+    return Cursor{
+        .ptr = c.SDL_CreateColorCursor(surface.ptr, hot_x, hot_y) orelse return makeError(),
+    };
+}
+
+pub fn createSystemCursor(id: SystemCursor) !Cursor {
+    return Cursor{
+        .ptr = c.SDL_CreateSystemCursor(@enumToInt(id)) orelse return makeError(),
+    };
+}
+
+pub fn setCursor(cursor: ?Cursor) void {
+    c.SDL_SetCursor(if (cursor) |cur| cur.ptr else null);
+}
+
+pub fn getCursor() !Cursor {
+    return Cursor{
+        .ptr = c.SDL_GetCursor() orelse return makeError(),
+    };
+}
+
+pub fn getDefaultCursor() !Cursor {
+    return Cursor{
+        .ptr = c.SDL_GetDefaultCursor() orelse return makeError(),
+    };
+}
+
+pub fn showCursor(toggle: ?bool) !bool {
+    const t = if (toggle) |show| @boolToInt(show) else c.SDL_QUERY;
+    const ret = c.SDL_ShowCursor(t);
+    if (ret < 0) {
+        return makeError();
+    } else return ret == c.SDL_ENABLE;
+}
