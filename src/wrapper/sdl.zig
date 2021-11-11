@@ -461,6 +461,22 @@ pub const Renderer = struct {
         if (c.SDL_SetRenderDrawBlendMode(ren.ptr, blendMode) < 0)
             return makeError();
     }
+
+    pub const OutputSize = struct { width_pixels: c_int, height_pixels: c_int };
+    pub fn getOutputSize(ren: Renderer) !OutputSize {
+        var width_pixels: c_int = undefined;
+        var height_pixels: c_int = undefined;
+        if (c.SDL_GetRendererOutputSize(ren.ptr, &width_pixels, &height_pixels) < 0)
+            return makeError();
+        return OutputSize{ .width_pixels = width_pixels, .height_pixels = height_pixels };
+    }
+
+    pub fn getInfo(ren: Renderer) !c.SDL_RendererInfo {
+        var result: c.SDL_RendererInfo = undefined;
+        if (c.SDL_GetRendererInfo(ren.ptr, &result) < 0)
+            return makeError();
+        return result;
+    }
 };
 
 pub const RendererFlags = struct {
