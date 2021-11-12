@@ -29,9 +29,9 @@ pub fn main() !void {
                     break :mainLoop;
                 },
                 .key_down => |key| {
-                    switch (key.keysym.scancode) {
-                        SDL.c.SDL_SCANCODE_ESCAPE => break :mainLoop,
-                        else => std.debug.warn("key pressed: {}\n", .{key.keysym.scancode}),
+                    switch (key.scancode) {
+                        .escape => break :mainLoop,
+                        else => std.debug.warn("key pressed: {}\n", .{key.scancode}),
                     }
                 },
 
