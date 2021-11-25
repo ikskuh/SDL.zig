@@ -944,6 +944,10 @@ pub const Event = union(enum) {
     }
 };
 
+pub fn pumpEvents() void {
+    c.SDL_PumpEvents();
+}
+
 pub fn pollEvent() ?Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_PollEvent(&ev) != 0)
@@ -955,6 +959,24 @@ pub fn pollNativeEvent() ?c.SDL_Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_PollEvent(&ev) != 0)
         return ev;
+    return null;
+}
+
+/// Waits indefinetly until a new event is pumped into the queue
+/// Does not conserve energy
+pub fn waitEvent() ?Event {
+    var ev: c.SDL_Event = undefined;
+    if (c.SDL_WaitEvent(&ev) != 0)
+        return Event.from(ev);
+    return null;
+}
+
+/// Waits `timeout` milliseconds for the next available event to be pumped
+/// Does not conserve energy
+pub fn waitEventTimeout(timeout: usize) ?Event {
+    var ev: c.SDL_Event = undefined;
+    if (c.SDL_WaitEventTimeout(&ev, timeout) != 0)
+        return Event.from(ev);
     return null;
 }
 
