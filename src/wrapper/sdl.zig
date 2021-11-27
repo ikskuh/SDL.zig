@@ -417,7 +417,7 @@ pub const Renderer = struct {
         c.SDL_RenderPresent(ren.ptr);
     }
 
-    pub fn copy(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle) !void {
+    pub fn copy(ren: Renderer, tex: Texture, srcRect: ?Rectangle, dstRect: ?Rectangle) !void {
         if (c.SDL_RenderCopy(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null) < 0)
             return makeError();
     }
