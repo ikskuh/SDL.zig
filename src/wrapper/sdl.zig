@@ -950,7 +950,18 @@ pub fn pollEvent() ?Event {
         return Event.from(ev);
     return null;
 }
-
+pub fn waitEvent() ?Event {
+    var ev: c.SDL_Event = undefined;
+    if (c.SDL_WaitEvent(&ev) != 0)
+        return Event.from(ev);
+    return null;
+}
+pub fn waitEventTimeout(timeout: c_int) ?Event {
+    var ev: c.SDL_EVENT = undefined;
+    if (c.SDL_WaitEventTimeout(ev, timeout) != 0)
+        return Event.from(ev);
+    return null;
+}
 pub fn pollNativeEvent() ?c.SDL_Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_PollEvent(&ev) != 0)
