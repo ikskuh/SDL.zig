@@ -944,6 +944,8 @@ pub const Event = union(enum) {
     }
 };
 
+/// This function should only be called from
+/// the thread that initialized the video subsystem.
 pub fn pumpEvents() void {
     c.SDL_PumpEvents();
 }
@@ -962,17 +964,22 @@ pub fn pollNativeEvent() ?c.SDL_Event {
     return null;
 }
 
-/// Waits indefinetly until a new event is pumped into the queue
-/// Does not conserve energy
-pub fn waitEvent() ?Event {
+/// Waits indefinitely to pump a new event into the queue.
+/// May not conserve energy on some systems, in some versions/situations.
+/// This function should only be called from
+/// the thread that initialized the video subsystem.
+pub fn waitEvent() !Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_WaitEvent(&ev) != 0)
         return Event.from(ev);
-    return null;
+    return makeError();
 }
 
-/// Waits `timeout` milliseconds for the next available event to be pumped
-/// Does not conserve energy
+/// Waits `timeout` milliseconds
+/// to pump the next available event into the queue.
+/// May not conserve energy on some systems, in some versions/situations.
+/// This function should only be called from
+/// the thread that initialized the video subsystem.
 pub fn waitEventTimeout(timeout: usize) ?Event {
     var ev: c.SDL_Event = undefined;
     if (c.SDL_WaitEventTimeout(&ev, timeout) != 0)
