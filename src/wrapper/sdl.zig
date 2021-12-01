@@ -401,6 +401,15 @@ pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_
     ) < 0) return error.SdlError;
 }
 
+pub const BlendMode = enum(c.SDL_BlendMode) {
+    none = c.SDL_BLENDMODE_NONE,
+    blend = c.SDL_BLENDMODE_BLEND,
+    add = c.SDL_BLENDMODE_ADD,
+    mod = c.SDL_BLENDMODE_MOD,
+    multiply = c.SDL_BLENDMODE_MUL,
+    _, // additional values may be obtained from c.SDL_ComposeCustomBlendMode (though not supported by all renderers)
+};
+
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
 
@@ -462,8 +471,15 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn setDrawBlendMode(ren: Renderer, blendMode: c.SDL_BlendMode) !void {
-        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, blendMode) < 0)
+    pub fn getDrawBlendMode(ren: Renderer) !BlendMode {
+        var blend_mode: c.SDL_BlendMode = undefined;
+        if (c.SDL_GetRenderDrawBlendMode(ren.ptr, &blend_mode) < 0)
+            return makeError();
+        return @intToEnum(BlendMode, blend_mode);
+    }
+
+    pub fn setDrawBlendMode(ren: Renderer, blend_mode: BlendMode) !void {
+        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, @enumToInt(blend_mode)) < 0)
             return makeError();
     }
 
