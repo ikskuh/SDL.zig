@@ -817,15 +817,169 @@ pub const KeyboardEvent = struct {
     }
 };
 
+pub const MouseButton = enum(u3) {
+    left = c.SDL_BUTTON_LEFT,
+    middle = c.SDL_BUTTON_MIDDLE,
+    right = c.SDL_BUTTON_RIGHT,
+    extra_1 = c.SDL_BUTTON_X1,
+    extra_2 = c.SDL_BUTTON_X2,
+};
+pub const MouseButtonState = struct {
+    pub const NativeBitField = u32;
+    // All known values would fit in a u5,
+    // do we want to truncate it to that?
+    pub const Storage = NativeBitField;
+
+    storage: Storage,
+
+    fn maskForButton(button_id: MouseButton) Storage {
+        const mask = c.SDL_BUTTON(@enumToInt(button_id));
+        const mask_unsigned = @bitCast(NativeBitField, mask);
+        return @intCast(Storage, mask_unsigned);
+    }
+
+    pub fn getPressed(self: MouseButtonState, button_id: MouseButton) bool {
+        return (self.storage & maskForButton(button_id)) != 0;
+    }
+    pub fn setPressed(self: MouseButtonState, button_id: MouseButton) void {
+        self.storage |= maskForButton(button_id);
+    }
+    pub fn setUnpressed(self: *MouseButtonState, button_id: MouseButton) void {
+        self.storage &= ~maskForButton(button_id);
+    }
+
+    pub fn fromNative(native: NativeBitField) MouseButtonState {
+        return .{ .storage = @intCast(Storage, native) };
+    }
+    pub fn toNative(self: MouseButtonState) NativeBitField {
+        return self.storage;
+    }
+};
+pub const MouseMotionEvent = struct {
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`;
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    /// from original field named `state`
+    button_state: MouseButtonState,
+    x: i32,
+    y: i32,
+    /// originally named `xrel`,
+    /// difference of position since last reported MouseMotionEvent,
+    /// ignores screen boundaries if relative mouse mode is enabled
+    /// (see c.SDL_SetRelativeMouseMode)
+    delta_x: i32,
+    /// originally named `yrel`,
+    /// difference of position since last reported MouseMotionEvent,
+    /// ignores screen boundaries if relative mouse mode is enabled
+    /// (see c.SDL_SetRelativeMouseMode)
+    delta_y: i32,
+
+    pub fn fromNative(native: c.SDL_MouseMotionEvent) MouseMotionEvent {
+        std.debug.assert(native.type == c.SDL_MOUSEMOTION);
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .button_state = MouseButtonState.fromNative(native.state),
+            .x = native.x,
+            .y = native.y,
+            .delta_x = native.xrel,
+            .delta_y = native.yrel,
+        };
+    }
+};
+pub const MouseButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`,
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    button: MouseButton,
+    state: ButtonState,
+    clicks: u8,
+    x: i32,
+    y: i32,
+
+    pub fn fromNative(native: c.SDL_MouseButtonEvent) MouseButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_MOUSEBUTTONDOWN, c.SDL_MOUSEBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .button = @intToEnum(MouseButton, native.button),
+            .state = @intToEnum(ButtonState, native.state),
+            .clicks = native.clicks,
+            .x = native.x,
+            .y = native.y,
+        };
+    }
+};
+pub const MouseWheelEvent = struct {
+    pub const Direction = enum(u8) {
+        normal = c.SDL_MOUSEWHEEL_NORMAL,
+        flipped = c.SDL_MOUSEWHEEL_FLIPPED,
+    };
+
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`,
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    /// originally named `x`,
+    /// the amount scrolled horizontally,
+    /// positive to the right and negative to the left,
+    /// unless field `direction` has value `.flipped`,
+    /// in which case the signs are reversed.
+    delta_x: i32,
+    /// originally named `y`,
+    /// the amount scrolled vertically,
+    /// positive away from the user and negative towards the user,
+    /// unless field `direction` has value `.flipped`,
+    /// in which case the signs are reversed.
+    delta_y: i32,
+    /// On macOS, devices are often by default configured to have
+    /// "natural" scrolling direction, which flips the sign of both delta values.
+    /// In this case, this field will have value `.flipped` instead of `.normal`.
+    direction: Direction,
+
+    pub fn fromNative(native: c.SDL_MouseWheelEvent) MouseWheelEvent {
+        std.debug.assert(native.type == c.SDL_MOUSEWHEEL);
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .delta_x = native.x,
+            .delta_y = native.y,
+            .direction = @intToEnum(Direction, @intCast(u8, native.direction)),
+        };
+    }
+};
+
 pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
-    pub const MouseMotionEvent = c.SDL_MouseMotionEvent;
-    pub const MouseButtonEvent = c.SDL_MouseButtonEvent;
-    pub const MouseWheelEvent = c.SDL_MouseWheelEvent;
     pub const JoyAxisEvent = c.SDL_JoyAxisEvent;
     pub const JoyBallEvent = c.SDL_JoyBallEvent;
     pub const JoyHatEvent = c.SDL_JoyHatEvent;
@@ -911,10 +1065,10 @@ pub const Event = union(enum) {
             c.SDL_TEXTEDITING => Event{ .text_editing = raw.edit },
             c.SDL_TEXTINPUT => Event{ .text_input = raw.text },
             c.SDL_KEYMAPCHANGED => Event{ .key_map_changed = raw.common },
-            c.SDL_MOUSEMOTION => Event{ .mouse_motion = raw.motion },
-            c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = raw.button },
-            c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = raw.button },
-            c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = raw.wheel },
+            c.SDL_MOUSEMOTION => Event{ .mouse_motion = MouseMotionEvent.fromNative(raw.motion) },
+            c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = MouseButtonEvent.fromNative(raw.button) },
+            c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = MouseButtonEvent.fromNative(raw.button) },
+            c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = MouseWheelEvent.fromNative(raw.wheel) },
             c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = raw.jaxis },
             c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = raw.jball },
             c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = raw.jhat },
@@ -995,21 +1149,13 @@ pub fn waitEventTimeout(timeout: usize) ?Event {
 pub const MouseState = struct {
     x: c_int,
     y: c_int,
-    left: bool,
-    right: bool,
-    middle: bool,
-    extra1: bool,
-    extra2: bool,
+    buttons: MouseButtonState,
 };
 
 pub fn getMouseState() MouseState {
     var ms: MouseState = undefined;
     const buttons = c.SDL_GetMouseState(&ms.x, &ms.y);
-    ms.left = ((buttons & 1) != 0);
-    ms.right = ((buttons & 4) != 0);
-    ms.middle = ((buttons & 2) != 0);
-    ms.extra1 = ((buttons & 8) != 0);
-    ms.extra2 = ((buttons & 16) != 0);
+    ms.buttons = MouseButtonState.fromNative(buttons);
     return ms;
 }
 
