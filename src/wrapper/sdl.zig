@@ -1430,6 +1430,10 @@ pub fn getKeyboardState() KeyboardState {
         .states = slice[0..@intCast(usize, len)],
     };
 }
+pub const getModState = getKeyboardModifierState;
+pub fn getKeyboardModifierState() KeyModifierSet {
+    return KeyModifierSet.fromNative(@intCast(u16, c.SDL_GetModState()));
+}
 
 pub const Keycode = enum(c.SDL_Keycode) {
     unknown = c.SDLK_UNKNOWN,
