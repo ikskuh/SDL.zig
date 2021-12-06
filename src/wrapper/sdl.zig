@@ -422,6 +422,11 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn setScale(ren: Renderer, x: f32, y: f32) !void {
+        if (c.SDL_RenderSetScale(ren.ptr, x, y) > 0)
+            return makeError();
+    }
+
     pub fn drawLine(ren: Renderer, x0: i32, y0: i32, x1: i32, y1: i32) !void {
         if (c.SDL_RenderDrawLine(ren.ptr, x0, y0, x1, y1) < 0)
             return makeError();
