@@ -368,7 +368,7 @@ const PrepareStubSourceStep = struct {
     }
 };
 
-fn tripleName(allocator: *std.mem.Allocator, target_local: std.Target) ![]u8 {
+fn tripleName(allocator: std.mem.Allocator, target_local: std.Target) ![]u8 {
     const arch_name = @tagName(target_local.cpu.arch);
     const os_name = @tagName(target_local.os.tag);
     const abi_name = @tagName(target_local.abi);

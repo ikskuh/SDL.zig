@@ -31,7 +31,7 @@ pub fn main() !void {
                 .key_down => |key| {
                     switch (key.scancode) {
                         .escape => break :mainLoop,
-                        else => std.debug.warn("key pressed: {}\n", .{key.scancode}),
+                        else => std.log.info("key pressed: {}\n", .{key.scancode}),
                     }
                 },
 
