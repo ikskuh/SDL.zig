@@ -209,7 +209,7 @@ pub fn quit() void {
 
 pub fn getError() ?[]const u8 {
     if (c.SDL_GetError()) |err| {
-        return std.mem.spanZ(err);
+        return std.mem.span(err);
     } else {
         return null;
     }
@@ -533,7 +533,7 @@ pub const Texture = struct {
     }
 
     pub fn lock(tex: Texture, rectangle: ?Rectangle) !PixelData {
-        var ptr: ?*c_void = undefined;
+        var ptr: ?*anyopaque = undefined;
         var pitch: c_int = undefined;
         if (c.SDL_LockTexture(
             tex.ptr,
@@ -1570,7 +1570,7 @@ pub const GameController = struct {
     }
 
     pub fn nameForIndex(joystick_index: u31) ?[:0]const u8 {
-        return std.mem.spanZ(c.SDL_GameControllerNameForIndex(joystick_index));
+        return std.mem.span(c.SDL_GameControllerNameForIndex(joystick_index));
     }
 
     pub const Button = enum(i32) {
@@ -1728,7 +1728,7 @@ pub const AudioSpecRequest = struct {
     ///may be null for use in queueing mode (call c.SDL_QueueAudio periodically)
     callback: c.SDL_AudioCallback,
     ///passed to .callback
-    userdata: ?*c_void,
+    userdata: ?*anyopaque,
 };
 pub const AudioSpecResponse = struct {
     ///in Hz, values <= 0 are not sane
