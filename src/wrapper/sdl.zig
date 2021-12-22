@@ -987,7 +987,7 @@ pub fn waitEvent() !Event {
 /// the thread that initialized the video subsystem.
 pub fn waitEventTimeout(timeout: usize) ?Event {
     var ev: c.SDL_Event = undefined;
-    if (c.SDL_WaitEventTimeout(&ev, timeout) != 0)
+    if (c.SDL_WaitEventTimeout(&ev, @intCast(c_int, timeout)) != 0)
         return Event.from(ev);
     return null;
 }
