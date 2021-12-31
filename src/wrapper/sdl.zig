@@ -1579,8 +1579,8 @@ pub const GameController = struct {
         x = c.SDL_CONTROLLER_BUTTON_X,
         y = c.SDL_CONTROLLER_BUTTON_Y,
         back = c.SDL_CONTROLLER_BUTTON_BACK,
-        start = c.SDL_CONTROLLER_BUTTON_START,
         guide = c.SDL_CONTROLLER_BUTTON_GUIDE,
+        start = c.SDL_CONTROLLER_BUTTON_START,
         left_stick = c.SDL_CONTROLLER_BUTTON_LEFTSTICK,
         right_stick = c.SDL_CONTROLLER_BUTTON_RIGHTSTICK,
         left_shoulder = c.SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
@@ -1589,6 +1589,18 @@ pub const GameController = struct {
         dpad_down = c.SDL_CONTROLLER_BUTTON_DPAD_DOWN,
         dpad_left = c.SDL_CONTROLLER_BUTTON_DPAD_LEFT,
         dpad_right = c.SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+        /// Xbox Series X share button, PS5 microphone button, Nintendo Switch Pro capture button, Amazon Luna microphone button
+        misc_1 = c.SDL_CONTROLLER_BUTTON_MISC1,
+        /// Xbox Elite paddle P1
+        paddle_1 = c.SDL_CONTROLLER_BUTTON_PADDLE1,
+        /// Xbox Elite paddle P2
+        paddle_2 = c.SDL_CONTROLLER_BUTTON_PADDLE2,
+        /// Xbox Elite paddle P3
+        paddle_3 = c.SDL_CONTROLLER_BUTTON_PADDLE3,
+        /// Xbox Elite paddle P4
+        paddle_4 = c.SDL_CONTROLLER_BUTTON_PADDLE4,
+        /// PS4/PS5 touchpad button
+        touchpad = c.SDL_CONTROLLER_BUTTON_TOUCHPAD,
     };
 
     pub const Axis = enum(i32) {
