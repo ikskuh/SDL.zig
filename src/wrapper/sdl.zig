@@ -2027,6 +2027,14 @@ pub const AudioDevice = struct {
     pub fn pause(self: AudioDevice, do_pause: bool) void {
         c.SDL_PauseAudioDevice(self.id, @boolToInt(do_pause));
     }
+
+    pub fn lock(self: AudioDevice) void {
+        c.SDL_LockAudioDevice(self.id);
+    }
+
+    pub fn unlock(self: AudioDevice) void {
+        c.SDL_UnlockAudioDevice(self.id);
+    }
 };
 
 const is_little_endian = @import("builtin").target.cpu.arch.endian() == .Little;
@@ -2276,4 +2284,37 @@ pub fn showCursor(toggle: ?bool) !bool {
     if (ret < 0) {
         return makeError();
     } else return ret == c.SDL_ENABLE;
+}
+
+pub const Wav = struct {
+    format: AudioSpecResponse,
+    buffer: []u8,
+
+    pub fn destroy(self: Wav) void {
+        c.SDL_FreeWAV(self.buffer.ptr);
+    }
+};
+
+pub fn loadWav(file: [:0]const u8) !Wav {
+    if (c.SDL_RWFromFile(file, "rb")) |rwops| {
+        var spec: c.SDL_AudioSpec = undefined;
+        var buffer: [*c]u8 = undefined;
+        var bufferlen: u32 = undefined;
+
+        if (c.SDL_LoadWAV_RW(rwops, 1, &spec, &buffer, &bufferlen)) |obtainedSpec| {
+            const format = AudioSpecResponse{
+                .sample_rate = obtainedSpec.*.freq,
+                .buffer_format = AudioFormat.fromNative(obtainedSpec.*.format),
+                .channel_count = obtainedSpec.*.channels,
+                .buffer_size_in_frames = obtainedSpec.*.samples,
+                .buffer_size_in_bytes = obtainedSpec.*.size,
+            };
+            return Wav{
+                .buffer = buffer[0..bufferlen],
+                .format = format,
+            };
+        }
+    }
+
+    return makeError();
 }
