@@ -974,19 +974,173 @@ pub const MouseWheelEvent = struct {
     }
 };
 
+pub const JoyAxisEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    axis: u8,
+    value: i16,
+
+    pub fn fromNative(native: c.SDL_JoyAxisEvent) JoyAxisEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYAXISMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .axis = native.axis,
+            .value = native.value,
+        };
+    }
+
+    pub fn normalizedValue(self: JoyAxisEvent, comptime FloatType: type) FloatType {
+        const denominator = if (self.value > 0)
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+        else
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+    }
+};
+
+pub const JoyHatEvent = struct {
+    pub const HatValue = enum(u8) {
+        centered = c.SDL_HAT_CENTERED,
+        up = c.SDL_HAT_UP,
+        right = c.SDL_HAT_RIGHT,
+        down = c.SDL_HAT_DOWN,
+        left = c.SDL_HAT_LEFT,
+        right_up = c.SDL_HAT_RIGHTUP,
+        right_down = c.SDL_HAT_RIGHTDOWN,
+        left_up = c.SDL_HAT_LEFTUP,
+        left_down = c.SDL_HAT_LEFTDOWN,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    hat: u8,
+    value: HatValue,
+
+    pub fn fromNative(native: c.SDL_JoyHatEvent) JoyHatEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYHATMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .hat = native.hat,
+            .value = @intToEnum(HatValue, native.value),
+        };
+    }
+};
+
+pub const JoyBallEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    ball: u8,
+    relative_x: i16,
+    relative_y: i16,
+
+    pub fn fromNative(native: c.SDL_JoyBallEvent) JoyBallEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYBALLMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .ball = native.ball,
+            .relative_x = native.xrel,
+            .relative_y = native.yrel,
+        };
+    }
+};
+
+pub const JoyButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    button: u8,
+    button_state: ButtonState,
+
+    pub fn fromNative(native: c.SDL_JoyButtonEvent) JoyButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYBUTTONDOWN, c.SDL_JOYBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .button = native.button,
+            .button_state = @intToEnum(ButtonState, native.state),
+        };
+    }
+};
+
+pub const ControllerAxisEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    axis: GameController.Axis,
+    value: i16,
+
+    pub fn fromNative(native: c.SDL_ControllerAxisEvent) ControllerAxisEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_CONTROLLERAXISMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .axis = @intToEnum(GameController.Axis, native.axis),
+            .value = native.value,
+        };
+    }
+
+    pub fn normalizedValue(self: ControllerAxisEvent, comptime FloatType: type) FloatType {
+        const denominator = if (self.value > 0)
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+        else
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+    }
+};
+
+pub const ControllerButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    button: GameController.Button,
+    button_state: ButtonState,
+
+    pub fn fromNative(native: c.SDL_ControllerButtonEvent) ControllerButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_CONTROLLERBUTTONDOWN, c.SDL_CONTROLLERBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .button = @intToEnum(GameController.Button, native.button),
+            .button_state = @intToEnum(ButtonState, native.state),
+        };
+    }
+};
+
 pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
-    pub const JoyAxisEvent = c.SDL_JoyAxisEvent;
-    pub const JoyBallEvent = c.SDL_JoyBallEvent;
-    pub const JoyHatEvent = c.SDL_JoyHatEvent;
-    pub const JoyButtonEvent = c.SDL_JoyButtonEvent;
     pub const JoyDeviceEvent = c.SDL_JoyDeviceEvent;
-    pub const ControllerAxisEvent = c.SDL_ControllerAxisEvent;
-    pub const ControllerButtonEvent = c.SDL_ControllerButtonEvent;
     pub const ControllerDeviceEvent = c.SDL_ControllerDeviceEvent;
     pub const AudioDeviceEvent = c.SDL_AudioDeviceEvent;
     pub const SensorEvent = c.SDL_SensorEvent;
@@ -1069,16 +1223,16 @@ pub const Event = union(enum) {
             c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = MouseButtonEvent.fromNative(raw.button) },
             c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = MouseButtonEvent.fromNative(raw.button) },
             c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = MouseWheelEvent.fromNative(raw.wheel) },
-            c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = raw.jaxis },
-            c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = raw.jball },
-            c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = raw.jhat },
-            c.SDL_JOYBUTTONDOWN => Event{ .joy_button_down = raw.jbutton },
-            c.SDL_JOYBUTTONUP => Event{ .joy_button_up = raw.jbutton },
+            c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = JoyAxisEvent.fromNative(raw.jaxis) },
+            c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = JoyBallEvent.fromNative(raw.jball) },
+            c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = JoyHatEvent.fromNative(raw.jhat) },
+            c.SDL_JOYBUTTONDOWN => Event{ .joy_button_down = JoyButtonEvent.fromNative(raw.jbutton) },
+            c.SDL_JOYBUTTONUP => Event{ .joy_button_up = JoyButtonEvent.fromNative(raw.jbutton) },
             c.SDL_JOYDEVICEADDED => Event{ .joy_device_added = raw.jdevice },
             c.SDL_JOYDEVICEREMOVED => Event{ .joy_device_removed = raw.jdevice },
-            c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = raw.caxis },
-            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = raw.cbutton },
-            c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = raw.cbutton },
+            c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = ControllerAxisEvent.fromNative(raw.caxis) },
+            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = ControllerButtonEvent.fromNative(raw.cbutton) },
+            c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = ControllerButtonEvent.fromNative(raw.cbutton) },
             c.SDL_CONTROLLERDEVICEADDED => Event{ .controller_device_added = raw.cdevice },
             c.SDL_CONTROLLERDEVICEREMOVED => Event{ .controller_device_removed = raw.cdevice },
             c.SDL_CONTROLLERDEVICEREMAPPED => Event{ .controller_device_remapped = raw.cdevice },
