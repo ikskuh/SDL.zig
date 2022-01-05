@@ -482,6 +482,11 @@ pub const Renderer = struct {
             return makeError();
         return result;
     }
+
+    pub fn setClipRect(ren: Renderer, clip_rectangle: ?Rectangle) !void {
+        if (c.SDL_RenderSetClipRect(ren.ptr, if (clip_rectangle) |*r| r.getConstSdlPtr() else null) < 0)
+            return makeError();
+    }
 };
 
 pub const RendererFlags = struct {
