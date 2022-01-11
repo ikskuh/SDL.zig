@@ -845,7 +845,7 @@ pub const MouseButtonState = struct {
     pub fn getPressed(self: MouseButtonState, button_id: MouseButton) bool {
         return (self.storage & maskForButton(button_id)) != 0;
     }
-    pub fn setPressed(self: MouseButtonState, button_id: MouseButton) void {
+    pub fn setPressed(self: *MouseButtonState, button_id: MouseButton) void {
         self.storage |= maskForButton(button_id);
     }
     pub fn setUnpressed(self: *MouseButtonState, button_id: MouseButton) void {
