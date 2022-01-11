@@ -831,9 +831,7 @@ pub const MouseButton = enum(u3) {
 };
 pub const MouseButtonState = struct {
     pub const NativeBitField = u32;
-    // All known values would fit in a u5,
-    // do we want to truncate it to that?
-    pub const Storage = NativeBitField;
+    pub const Storage = u5;
 
     storage: Storage,
 
