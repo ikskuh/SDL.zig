@@ -838,9 +838,8 @@ pub const MouseButtonState = struct {
     storage: Storage,
 
     fn maskForButton(button_id: MouseButton) Storage {
-        const mask = c.SDL_BUTTON(@enumToInt(button_id));
-        const mask_unsigned = @bitCast(NativeBitField, mask);
-        return @intCast(Storage, mask_unsigned);
+        const mask = @as(NativeBitField, 1) << (@enumToInt(button_id) - 1);
+        return @intCast(Storage, mask);
     }
 
     pub fn getPressed(self: MouseButtonState, button_id: MouseButton) bool {
