@@ -3,7 +3,7 @@ const std = @import("std");
 /// Exports the C interface for SDL
 pub const c = @import("sdl-native");
 
-// pub const image = @import("image.zig");
+pub const image = @import("image.zig");
 pub const gl = @import("gl.zig");
 
 pub const Error = error{SdlError};

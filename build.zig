@@ -24,6 +24,7 @@ pub fn build(b: *Builder) !void {
                 null,
         });
         lib_test.addPackage(sdk.getNativePackage("sdl-native"));
+        lib_test.linkSystemLibrary("sdl2_image");
         sdk.link(lib_test, .dynamic);
 
         const test_lib_step = b.step("test", "Runs the library tests.");
