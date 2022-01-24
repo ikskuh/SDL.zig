@@ -417,6 +417,15 @@ pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_
     ) < 0) return error.SdlError;
 }
 
+pub const BlendMode = enum(c.SDL_BlendMode) {
+    none = c.SDL_BLENDMODE_NONE,
+    blend = c.SDL_BLENDMODE_BLEND,
+    add = c.SDL_BLENDMODE_ADD,
+    mod = c.SDL_BLENDMODE_MOD,
+    multiply = c.SDL_BLENDMODE_MUL,
+    _, // additional values may be obtained from c.SDL_ComposeCustomBlendMode (though not supported by all renderers)
+};
+
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
 
@@ -478,8 +487,15 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn setDrawBlendMode(ren: Renderer, blendMode: c.SDL_BlendMode) !void {
-        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, blendMode) < 0)
+    pub fn getDrawBlendMode(ren: Renderer) !BlendMode {
+        var blend_mode: c.SDL_BlendMode = undefined;
+        if (c.SDL_GetRenderDrawBlendMode(ren.ptr, &blend_mode) < 0)
+            return makeError();
+        return @intToEnum(BlendMode, blend_mode);
+    }
+
+    pub fn setDrawBlendMode(ren: Renderer, blend_mode: BlendMode) !void {
+        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, @enumToInt(blend_mode)) < 0)
             return makeError();
     }
 
@@ -513,6 +529,11 @@ pub const Renderer = struct {
     
     pub fn setLogicalSize(ren: Renderer, width_pixels: c_int, height_pixels: c_int) !void {
         if(c.SDL_RenderSetLogicalSize(ren.ptr, width_pixels, height_pixels) < 0)
+            return makeError();
+    }
+    
+    pub fn setClipRect(ren: Renderer, clip_rectangle: ?Rectangle) !void {
+        if (c.SDL_RenderSetClipRect(ren.ptr, if (clip_rectangle) |*r| r.getConstSdlPtr() else null) < 0)
             return makeError();
     }
 };
@@ -850,22 +871,327 @@ pub const KeyboardEvent = struct {
     }
 };
 
+pub const MouseButton = enum(u3) {
+    left = c.SDL_BUTTON_LEFT,
+    middle = c.SDL_BUTTON_MIDDLE,
+    right = c.SDL_BUTTON_RIGHT,
+    extra_1 = c.SDL_BUTTON_X1,
+    extra_2 = c.SDL_BUTTON_X2,
+};
+pub const MouseButtonState = struct {
+    pub const NativeBitField = u32;
+    pub const Storage = u5;
+
+    storage: Storage,
+
+    fn maskForButton(button_id: MouseButton) Storage {
+        const mask = @as(NativeBitField, 1) << (@enumToInt(button_id) - 1);
+        return @intCast(Storage, mask);
+    }
+
+    pub fn getPressed(self: MouseButtonState, button_id: MouseButton) bool {
+        return (self.storage & maskForButton(button_id)) != 0;
+    }
+    pub fn setPressed(self: *MouseButtonState, button_id: MouseButton) void {
+        self.storage |= maskForButton(button_id);
+    }
+    pub fn setUnpressed(self: *MouseButtonState, button_id: MouseButton) void {
+        self.storage &= ~maskForButton(button_id);
+    }
+
+    pub fn fromNative(native: NativeBitField) MouseButtonState {
+        return .{ .storage = @intCast(Storage, native) };
+    }
+    pub fn toNative(self: MouseButtonState) NativeBitField {
+        return self.storage;
+    }
+};
+pub const MouseMotionEvent = struct {
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`;
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    /// from original field named `state`
+    button_state: MouseButtonState,
+    x: i32,
+    y: i32,
+    /// originally named `xrel`,
+    /// difference of position since last reported MouseMotionEvent,
+    /// ignores screen boundaries if relative mouse mode is enabled
+    /// (see c.SDL_SetRelativeMouseMode)
+    delta_x: i32,
+    /// originally named `yrel`,
+    /// difference of position since last reported MouseMotionEvent,
+    /// ignores screen boundaries if relative mouse mode is enabled
+    /// (see c.SDL_SetRelativeMouseMode)
+    delta_y: i32,
+
+    pub fn fromNative(native: c.SDL_MouseMotionEvent) MouseMotionEvent {
+        std.debug.assert(native.type == c.SDL_MOUSEMOTION);
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .button_state = MouseButtonState.fromNative(native.state),
+            .x = native.x,
+            .y = native.y,
+            .delta_x = native.xrel,
+            .delta_y = native.yrel,
+        };
+    }
+};
+pub const MouseButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`,
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    button: MouseButton,
+    state: ButtonState,
+    clicks: u8,
+    x: i32,
+    y: i32,
+
+    pub fn fromNative(native: c.SDL_MouseButtonEvent) MouseButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_MOUSEBUTTONDOWN, c.SDL_MOUSEBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .button = @intToEnum(MouseButton, native.button),
+            .state = @intToEnum(ButtonState, native.state),
+            .clicks = native.clicks,
+            .x = native.x,
+            .y = native.y,
+        };
+    }
+};
+pub const MouseWheelEvent = struct {
+    pub const Direction = enum(u8) {
+        normal = c.SDL_MOUSEWHEEL_NORMAL,
+        flipped = c.SDL_MOUSEWHEEL_FLIPPED,
+    };
+
+    timestamp: u32,
+    /// originally named `windowID`
+    window_id: u32,
+    /// originally named `which`,
+    /// if it comes from a touch input device,
+    /// the value is c.SDL_TOUCH_MOUSEID,
+    /// in which case a TouchFingerEvent was also generated.
+    mouse_instance_id: u32,
+    /// originally named `x`,
+    /// the amount scrolled horizontally,
+    /// positive to the right and negative to the left,
+    /// unless field `direction` has value `.flipped`,
+    /// in which case the signs are reversed.
+    delta_x: i32,
+    /// originally named `y`,
+    /// the amount scrolled vertically,
+    /// positive away from the user and negative towards the user,
+    /// unless field `direction` has value `.flipped`,
+    /// in which case the signs are reversed.
+    delta_y: i32,
+    /// On macOS, devices are often by default configured to have
+    /// "natural" scrolling direction, which flips the sign of both delta values.
+    /// In this case, this field will have value `.flipped` instead of `.normal`.
+    direction: Direction,
+
+    pub fn fromNative(native: c.SDL_MouseWheelEvent) MouseWheelEvent {
+        std.debug.assert(native.type == c.SDL_MOUSEWHEEL);
+        return .{
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .mouse_instance_id = native.which,
+            .delta_x = native.x,
+            .delta_y = native.y,
+            .direction = @intToEnum(Direction, @intCast(u8, native.direction)),
+        };
+    }
+};
+
+pub const JoyAxisEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    axis: u8,
+    value: i16,
+
+    pub fn fromNative(native: c.SDL_JoyAxisEvent) JoyAxisEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYAXISMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .axis = native.axis,
+            .value = native.value,
+        };
+    }
+
+    pub fn normalizedValue(self: JoyAxisEvent, comptime FloatType: type) FloatType {
+        const denominator = if (self.value > 0)
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+        else
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+    }
+};
+
+pub const JoyHatEvent = struct {
+    pub const HatValue = enum(u8) {
+        centered = c.SDL_HAT_CENTERED,
+        up = c.SDL_HAT_UP,
+        right = c.SDL_HAT_RIGHT,
+        down = c.SDL_HAT_DOWN,
+        left = c.SDL_HAT_LEFT,
+        right_up = c.SDL_HAT_RIGHTUP,
+        right_down = c.SDL_HAT_RIGHTDOWN,
+        left_up = c.SDL_HAT_LEFTUP,
+        left_down = c.SDL_HAT_LEFTDOWN,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    hat: u8,
+    value: HatValue,
+
+    pub fn fromNative(native: c.SDL_JoyHatEvent) JoyHatEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYHATMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .hat = native.hat,
+            .value = @intToEnum(HatValue, native.value),
+        };
+    }
+};
+
+pub const JoyBallEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    ball: u8,
+    relative_x: i16,
+    relative_y: i16,
+
+    pub fn fromNative(native: c.SDL_JoyBallEvent) JoyBallEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYBALLMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .ball = native.ball,
+            .relative_x = native.xrel,
+            .relative_y = native.yrel,
+        };
+    }
+};
+
+pub const JoyButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    button: u8,
+    button_state: ButtonState,
+
+    pub fn fromNative(native: c.SDL_JoyButtonEvent) JoyButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_JOYBUTTONDOWN, c.SDL_JOYBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .button = native.button,
+            .button_state = @intToEnum(ButtonState, native.state),
+        };
+    }
+};
+
+pub const ControllerAxisEvent = struct {
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    axis: GameController.Axis,
+    value: i16,
+
+    pub fn fromNative(native: c.SDL_ControllerAxisEvent) ControllerAxisEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_CONTROLLERAXISMOTION => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .axis = @intToEnum(GameController.Axis, native.axis),
+            .value = native.value,
+        };
+    }
+
+    pub fn normalizedValue(self: ControllerAxisEvent, comptime FloatType: type) FloatType {
+        const denominator = if (self.value > 0)
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+        else
+            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+    }
+};
+
+pub const ControllerButtonEvent = struct {
+    pub const ButtonState = enum(u8) {
+        released = c.SDL_RELEASED,
+        pressed = c.SDL_PRESSED,
+    };
+
+    timestamp: u32,
+    joystick_id: c.SDL_JoystickID,
+    button: GameController.Button,
+    button_state: ButtonState,
+
+    pub fn fromNative(native: c.SDL_ControllerButtonEvent) ControllerButtonEvent {
+        switch (native.type) {
+            else => unreachable,
+            c.SDL_CONTROLLERBUTTONDOWN, c.SDL_CONTROLLERBUTTONUP => {},
+        }
+        return .{
+            .timestamp = native.timestamp,
+            .joystick_id = native.which,
+            .button = @intToEnum(GameController.Button, native.button),
+            .button_state = @intToEnum(ButtonState, native.state),
+        };
+    }
+};
+
 pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
     pub const DisplayEvent = c.SDL_DisplayEvent;
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
-    pub const MouseMotionEvent = c.SDL_MouseMotionEvent;
-    pub const MouseButtonEvent = c.SDL_MouseButtonEvent;
-    pub const MouseWheelEvent = c.SDL_MouseWheelEvent;
-    pub const JoyAxisEvent = c.SDL_JoyAxisEvent;
-    pub const JoyBallEvent = c.SDL_JoyBallEvent;
-    pub const JoyHatEvent = c.SDL_JoyHatEvent;
-    pub const JoyButtonEvent = c.SDL_JoyButtonEvent;
     pub const JoyDeviceEvent = c.SDL_JoyDeviceEvent;
-    pub const ControllerAxisEvent = c.SDL_ControllerAxisEvent;
-    pub const ControllerButtonEvent = c.SDL_ControllerButtonEvent;
     pub const ControllerDeviceEvent = c.SDL_ControllerDeviceEvent;
     pub const AudioDeviceEvent = c.SDL_AudioDeviceEvent;
     pub const SensorEvent = c.SDL_SensorEvent;
@@ -944,20 +1270,20 @@ pub const Event = union(enum) {
             c.SDL_TEXTEDITING => Event{ .text_editing = raw.edit },
             c.SDL_TEXTINPUT => Event{ .text_input = raw.text },
             c.SDL_KEYMAPCHANGED => Event{ .key_map_changed = raw.common },
-            c.SDL_MOUSEMOTION => Event{ .mouse_motion = raw.motion },
-            c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = raw.button },
-            c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = raw.button },
-            c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = raw.wheel },
-            c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = raw.jaxis },
-            c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = raw.jball },
-            c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = raw.jhat },
-            c.SDL_JOYBUTTONDOWN => Event{ .joy_button_down = raw.jbutton },
-            c.SDL_JOYBUTTONUP => Event{ .joy_button_up = raw.jbutton },
+            c.SDL_MOUSEMOTION => Event{ .mouse_motion = MouseMotionEvent.fromNative(raw.motion) },
+            c.SDL_MOUSEBUTTONDOWN => Event{ .mouse_button_down = MouseButtonEvent.fromNative(raw.button) },
+            c.SDL_MOUSEBUTTONUP => Event{ .mouse_button_up = MouseButtonEvent.fromNative(raw.button) },
+            c.SDL_MOUSEWHEEL => Event{ .mouse_wheel = MouseWheelEvent.fromNative(raw.wheel) },
+            c.SDL_JOYAXISMOTION => Event{ .joy_axis_motion = JoyAxisEvent.fromNative(raw.jaxis) },
+            c.SDL_JOYBALLMOTION => Event{ .joy_ball_motion = JoyBallEvent.fromNative(raw.jball) },
+            c.SDL_JOYHATMOTION => Event{ .joy_hat_motion = JoyHatEvent.fromNative(raw.jhat) },
+            c.SDL_JOYBUTTONDOWN => Event{ .joy_button_down = JoyButtonEvent.fromNative(raw.jbutton) },
+            c.SDL_JOYBUTTONUP => Event{ .joy_button_up = JoyButtonEvent.fromNative(raw.jbutton) },
             c.SDL_JOYDEVICEADDED => Event{ .joy_device_added = raw.jdevice },
             c.SDL_JOYDEVICEREMOVED => Event{ .joy_device_removed = raw.jdevice },
-            c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = raw.caxis },
-            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = raw.cbutton },
-            c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = raw.cbutton },
+            c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = ControllerAxisEvent.fromNative(raw.caxis) },
+            c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = ControllerButtonEvent.fromNative(raw.cbutton) },
+            c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = ControllerButtonEvent.fromNative(raw.cbutton) },
             c.SDL_CONTROLLERDEVICEADDED => Event{ .controller_device_added = raw.cdevice },
             c.SDL_CONTROLLERDEVICEREMOVED => Event{ .controller_device_removed = raw.cdevice },
             c.SDL_CONTROLLERDEVICEREMAPPED => Event{ .controller_device_remapped = raw.cdevice },
@@ -1028,21 +1354,13 @@ pub fn waitEventTimeout(timeout: usize) ?Event {
 pub const MouseState = struct {
     x: c_int,
     y: c_int,
-    left: bool,
-    right: bool,
-    middle: bool,
-    extra1: bool,
-    extra2: bool,
+    buttons: MouseButtonState,
 };
 
 pub fn getMouseState() MouseState {
     var ms: MouseState = undefined;
     const buttons = c.SDL_GetMouseState(&ms.x, &ms.y);
-    ms.left = ((buttons & 1) != 0);
-    ms.right = ((buttons & 4) != 0);
-    ms.middle = ((buttons & 2) != 0);
-    ms.extra1 = ((buttons & 8) != 0);
-    ms.extra2 = ((buttons & 16) != 0);
+    ms.buttons = MouseButtonState.fromNative(buttons);
     return ms;
 }
 
@@ -1316,6 +1634,10 @@ pub fn getKeyboardState() KeyboardState {
     return KeyboardState{
         .states = slice[0..@intCast(usize, len)],
     };
+}
+pub const getModState = getKeyboardModifierState;
+pub fn getKeyboardModifierState() KeyModifierSet {
+    return KeyModifierSet.fromNative(@intCast(u16, c.SDL_GetModState()));
 }
 
 pub const Keycode = enum(c.SDL_Keycode) {
