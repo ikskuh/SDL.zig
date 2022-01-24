@@ -243,6 +243,22 @@ pub const Window = struct {
     pub fn updateSurface(w: Window) !void {
         if (c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
     }
+
+    pub fn getWindowPosition(w: Window) !Point {
+        var x: c_int = undefined;
+        var y: c_int = undefined;
+
+        c.SDL_GetWindowPosition(w.ptr, &x, &y);
+        
+        return Point {
+            .x = x,
+            .y = y
+        };
+    }
+
+    pub fn setWindowPosition(w: Window, p: Point) !void {
+        c.SDL_SetWindowPosition(w.ptr, p.x, p.y);
+    }
 };
 
 pub const WindowPosition = union(enum) {
@@ -481,6 +497,23 @@ pub const Renderer = struct {
         if (c.SDL_GetRendererInfo(ren.ptr, &result) < 0)
             return makeError();
         return result;
+    }
+
+    pub fn getLogicalSize(ren: Renderer) !Size {
+        var width_pixels: c_int = undefined;
+        var height_pixels: c_int = undefined;
+
+        if(c.SDL_RenderGetLogicalSize(ren.ptr, &width_pixels, &height_pixels) < 0)
+            return makeError();
+        return Size {
+            .width = width_pixels,
+            .height = height_pixels
+        };
+    }
+    
+    pub fn setLogicalSize(ren: Renderer, width_pixels: c_int, height_pixels: c_int) !void {
+        if(c.SDL_RenderSetLogicalSize(ren.ptr, width_pixels, height_pixels) < 0)
+            return makeError();
     }
 };
 
