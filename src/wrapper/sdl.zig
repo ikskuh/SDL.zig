@@ -33,6 +33,20 @@ pub const Rectangle = extern struct {
     }
 };
 
+pub const RectangleF = extern struct {
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+
+    fn getSdlPtr(r: *RectangleF) *c.SDL_FRect {
+        return @ptrCast(*c.SDL_FRect, r);
+    }
+    fn getConstSdlPtr(r: RectangleF) *const c.SDL_FRect {
+        return @ptrCast(*const c.SDL_FRect, &r);
+    }
+};
+
 pub const Point = extern struct {
     x: c_int,
     y: c_int,
@@ -447,6 +461,11 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn copyF(ren: Renderer, tex: Texture, dstRect: ?RectangleF, srcRect: ?Rectangle) !void {
+        if (c.SDL_RenderCopyF(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null) < 0)
+            return makeError();
+    }
+
     pub fn setScale(ren: Renderer, x: f32, y: f32) !void {
         if (c.SDL_RenderSetScale(ren.ptr, x, y) > 0)
             return makeError();
@@ -457,8 +476,18 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn drawLineF(ren: Renderer, x0: f32, y0: f32, x1: f32, y1: f32) !void {
+        if (c.SDL_RenderDrawLineF(ren.ptr, x0, y0, x1, y1) < 0)
+            return makeError();
+    }
+
     pub fn drawPoint(ren: Renderer, x: i32, y: i32) !void {
         if (c.SDL_RenderDrawPoint(ren.ptr, x, y) < 0)
+            return makeError();
+    }
+
+    pub fn drawPointF(ren: Renderer, x: f32, y: f32) !void {
+        if (c.SDL_RenderDrawPointF(ren.ptr, x, y) < 0)
             return makeError();
     }
 
@@ -467,8 +496,18 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn fillRectF(ren: Renderer, rect: RectangleF) !void {
+        if (c.SDL_RenderFillRectF(ren.ptr, rect.getConstSdlPtr()) < 0)
+            return makeError();
+    }
+
     pub fn drawRect(ren: Renderer, rect: Rectangle) !void {
         if (c.SDL_RenderDrawRect(ren.ptr, rect.getConstSdlPtr()) < 0)
+            return makeError();
+    }
+
+    pub fn drawRectF(ren: Renderer, rect: RectangleF) !void {
+        if (c.SDL_RenderDrawRectF(ren.ptr, rect.getConstSdlPtr()) < 0)
             return makeError();
     }
 
