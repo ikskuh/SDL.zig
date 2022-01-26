@@ -243,6 +243,22 @@ pub const Window = struct {
     pub fn updateSurface(w: Window) !void {
         if (c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
     }
+
+    pub fn getWindowPosition(w: Window) !Point {
+        var x: c_int = undefined;
+        var y: c_int = undefined;
+
+        c.SDL_GetWindowPosition(w.ptr, &x, &y);
+
+        return Point {
+            .x = x,
+            .y = y
+        };
+    }
+
+    pub fn setWindowPosition(w: Window, p: Point) !void {
+        c.SDL_SetWindowPosition(w.ptr, p.x, p.y);
+    }
 };
 
 pub const WindowPosition = union(enum) {
