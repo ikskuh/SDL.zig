@@ -258,20 +258,24 @@ pub const Window = struct {
         if (c.SDL_UpdateWindowSurface(w.ptr) < 0) return makeError();
     }
 
-    pub fn getWindowPosition(w: Window) !Point {
+    pub fn getPosition(w: Window) !Point {
         var x: c_int = undefined;
         var y: c_int = undefined;
 
         c.SDL_GetWindowPosition(w.ptr, &x, &y);
 
-        return Point {
+        return Point{
             .x = x,
-            .y = y
+            .y = y,
         };
     }
 
-    pub fn setWindowPosition(w: Window, p: Point) !void {
+    pub fn setPosition(w: Window, p: Point) !void {
         c.SDL_SetWindowPosition(w.ptr, p.x, p.y);
+    }
+
+    pub fn setMinimumSize(w: Window, width: c_int, height: c_int) void {
+        c.SDL_SetWindowMinimumSize(w.ptr, width, height);
     }
 };
 
@@ -563,16 +567,21 @@ pub const Renderer = struct {
         var width_pixels: c_int = undefined;
         var height_pixels: c_int = undefined;
 
-        if(c.SDL_RenderGetLogicalSize(ren.ptr, &width_pixels, &height_pixels) < 0)
+        if (c.SDL_RenderGetLogicalSize(ren.ptr, &width_pixels, &height_pixels) < 0)
             return makeError();
-        return Size {
+        return Size{
             .width = width_pixels,
-            .height = height_pixels
+            .height = height_pixels,
         };
     }
 
     pub fn setLogicalSize(ren: Renderer, width_pixels: c_int, height_pixels: c_int) !void {
-        if(c.SDL_RenderSetLogicalSize(ren.ptr, width_pixels, height_pixels) < 0)
+        if (c.SDL_RenderSetLogicalSize(ren.ptr, width_pixels, height_pixels) < 0)
+            return makeError();
+    }
+
+    pub fn setTarget(ren: Renderer, tex: ?Texture) !void {
+        if (c.SDL_SetRenderTarget(ren.ptr, if (tex) |t| t.ptr else null) < 0)
             return makeError();
     }
 };
@@ -653,7 +662,7 @@ pub const Texture = struct {
             return makeError();
     }
 
-    const Info = struct {
+    pub const Info = struct {
         width: usize,
         height: usize,
         access: Access,
