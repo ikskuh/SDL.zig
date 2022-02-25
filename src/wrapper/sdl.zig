@@ -1941,8 +1941,12 @@ pub const Keycode = enum(c.SDL_Keycode) {
     _,
 };
 
-pub fn getTicks() usize {
+pub fn getTicks() u32 {
     return c.SDL_GetTicks();
+}
+
+pub fn getTicks64() u64 {
+    return c.SDL_GetTicks64();
 }
 
 pub fn delay(ms: u32) void {

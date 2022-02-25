@@ -778,6 +778,7 @@ pub extern fn SDL_OpenURL(url: [*c]const u8) c_int;
 pub extern fn SDL_GetBasePath() [*c]u8;
 pub extern fn SDL_GetPrefPath(org: [*c]const u8, app: [*c]const u8) [*c]u8;
 pub extern fn SDL_GetTicks() u32;
+pub extern fn SDL_GetTicks64() u64;
 pub extern fn SDL_GetPerformanceCounter() u64;
 pub extern fn SDL_GetPerformanceFrequency() u64;
 pub extern fn SDL_Delay(ms: u32) void;
