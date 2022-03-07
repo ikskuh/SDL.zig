@@ -702,6 +702,18 @@ pub const Texture = struct {
         try tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
+    pub fn getBlendMode(tex: Texture) !BlendMode {
+        var blend_mode: c.SDL_BlendMode = undefined;
+        if (c.SDL_GetTextureBlendMode(tex.ptr, &blend_mode) < 0)
+            return makeError();
+        return @intToEnum(BlendMode, blend_mode);
+    }
+
+    pub fn setBlendMode(tex: Texture, blend_mode: BlendMode) !void {
+        if (c.SDL_SetTextureBlendMode(tex.ptr, @enumToInt(blend_mode)) < 0)
+            return makeError();
+    }
+
     pub const Format = PixelFormatEnum;
 
     pub const Access = enum(c_int) {
