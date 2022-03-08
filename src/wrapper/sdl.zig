@@ -563,6 +563,13 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn getClipRect(ren: Renderer) !?Rectangle {
+        if (c.SDL_RenderIsClipEnabled(ren.ptr) == c.SDL_FALSE) return null;
+        var clip_rectangle: Rectangle = undefined;
+        c.SDL_RenderGetClipRect(ren.ptr, clip_rectangle.getSdlPtr());
+        return clip_rectangle;
+    }
+
     pub fn getLogicalSize(ren: Renderer) !Size {
         var width_pixels: c_int = undefined;
         var height_pixels: c_int = undefined;
