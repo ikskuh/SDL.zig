@@ -2372,3 +2372,80 @@ pub fn loadWav(file: [:0]const u8) !Wav {
 
     return makeError();
 }
+
+pub const AudioStream = struct {
+    stream: *c.SDL_AudioStream,
+
+    const Self = @This();
+
+    pub fn put(self: *Self, buffer: []u8) !void {
+        const res = c.SDL_AudioStreamPut(self.stream, buffer.ptr, @intCast(c_int, buffer.len));
+        if (res == -1) {
+            return error.SdlError;
+        }
+    }
+
+    pub fn get(self: *Self, buffer: []u8) ![]u8 {
+        const res = c.SDL_AudioStreamGet(self.stream, buffer.ptr, @intCast(c_int, buffer.len));
+        if (res == -1) {
+            return error.SdlError;
+        }
+        return buffer[0..@intCast(usize, res)];
+    }
+
+    pub fn available(self: *Self) usize {
+        const res = c.SDL_AudioStreamAvailable(self.stream);
+        return @intCast(usize, res);
+    }
+
+    pub fn flush(self: *Self) !void {
+        if (c.SDL_AudioStreamFlush(self.stream) != 0) {
+            return error.SdlError;
+        }
+    }
+
+    pub fn clear(self: *Self) !void {
+        c.SDL_AudioStreamClear(self.stream);
+    }
+
+    pub fn free(self: *Self) void {
+        c.SDL_FreeAudioStream(self.stream);
+    }
+};
+
+pub fn newAudioStream(
+    src_format: AudioFormat,
+    src_channels: u8,
+    src_rate: i32,
+    dst_format: AudioFormat,
+    dst_channels: u8,
+    dst_rate: i32,
+) !AudioStream {
+    var stream = c.SDL_NewAudioStream(
+        src_format.toNative(),
+        src_channels,
+        @intCast(c_int, src_rate),
+        dst_format.toNative(),
+        dst_channels,
+        @intCast(c_int, dst_rate),
+    );
+    if (stream) |s| {
+        return AudioStream{
+            .stream = s,
+        };
+    } else {
+        return error.SdlError;
+    }
+}
+
+pub const mix_maxvolume = c.SDL_MIX_MAXVOLUME;
+
+pub fn mixAudioFormat(dst: []u8, src: []const u8, format: AudioFormat, volume: c_int) void {
+    c.SDL_MixAudioFormat(
+        @ptrCast([*c]u8, dst),
+        @ptrCast([*c]const u8, src),
+        format.toNative(),
+        @intCast(u32, std.math.min(dst.len, src.len)),
+        volume,
+    );
+}
