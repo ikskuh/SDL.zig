@@ -429,6 +429,7 @@ pub extern fn SDL_ComposeCustomBlendMode(srcColorFactor: SDL_BlendFactor, dstCol
 pub extern fn SDL_SetClipboardText(text: [*c]const u8) c_int;
 pub extern fn SDL_GetClipboardText() [*c]u8;
 pub extern fn SDL_HasClipboardText() SDL_bool;
+pub extern fn SDL_free(data: [*c]const u8) void;
 pub const SDL_AudioFormat = u16;
 pub const SDL_AudioCallback = ?fn (?*anyopaque, [*c]u8, c_int) callconv(.C) void;
 pub const SDL_AudioSpec = extern struct {

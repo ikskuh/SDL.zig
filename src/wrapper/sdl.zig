@@ -1960,6 +1960,28 @@ pub const Keycode = enum(c.SDL_Keycode) {
     _,
 };
 
+pub const Clipboard = struct {
+    pub fn get() !?[]const u8 {
+        if (c.SDL_HasClipboardText() == c.SDL_FALSE)
+            return null;
+        const c_string = c.SDL_GetClipboardText();
+        const txt = std.mem.sliceTo(c_string, 0);
+        if (txt.len == 0) {
+            c.SDL_free(c_string);
+            return makeError();
+        }
+        return txt;
+    }
+    /// free is to be called with a previously fetched clipboard content
+    pub fn free(txt: []const u8) void {
+        c.SDL_free(@ptrCast([*c]const u8, txt));
+    }
+    pub fn set(txt: []const u8) !void {
+        if (c.SDL_SetClipboardText(@ptrCast([*c]const u8, txt)) != 0)
+            return makeError();
+    }
+};
+
 pub fn getTicks() u32 {
     return c.SDL_GetTicks();
 }
