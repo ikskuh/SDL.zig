@@ -32,25 +32,6 @@ pub fn loadSurface(file: [:0]const u8) !SDL.Surface {
     };
 }
 
-pub fn loadSurfaceRW(file: [:0]const u8) !SDL.Surface {
-    return SDL.Surface{
-        .ptr = c.IMG_Load_RW(file) orelse return SDL.makeError(),
-    };
-}
-
-//pub fn loadPngSurface(rw: *SDL.c.SDL_RWops) !SDL.Surface {
-//    return SDL.Surface{
-//        .ptr = c.IMG_LoadPNG_RW(rw) orelse return SDL.makeError(),
-//    };
-//}
-//
-//pub fn loadJpgSurface(rw: *SDL.c.SDL_RWops) !SDL.Surface {
-//    return SDL.Surface{
-//        .ptr = c.IMG_LoadJPG_RW(rw) orelse return SDL.makeError(),
-//    };
-//}
-
-
 test "platform independent declarations" {
     std.testing.refAllDecls(@This());
 }
