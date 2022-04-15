@@ -13,8 +13,8 @@ pub extern fn IMG_Load(file: [*:0]const u8) ?*sdl.SDL_Surface;
 // https://www.libsdl.org/projects/SDL_image/docs/SDL_image_10.html#SEC10
 // Automagic Loading
 // - [X] IMG_Load	  	Load from a file
-// - [ ] IMG_Load_RW	  	Load using a SDL_RWop
-// - [ ] IMG_LoadTyped_RW	  	Load more format specifically with a SDL_RWop
+// - [X] IMG_Load_RW	  	Load using a SDL_RWop
+// - [X] IMG_LoadTyped_RW	  	Load more format specifically with a SDL_RWop
 // Specific Loaders
 // - [X] IMG_LoadBMP_RW	  	Load BMP using a SDL_RWop
 // - [ ] IMG_LoadCUR_RW	  	Load CUR using a SDL_RWop
@@ -32,6 +32,7 @@ pub extern fn IMG_Load(file: [*:0]const u8) ?*sdl.SDL_Surface;
 // - [ ] IMG_LoadXV_RW	  	Load XV using a SDL_RWop
 // Array Loaders
 // - [ ] IMG_ReadXPMFromArray	  	Load XPM from compiled XPM data
+pub extern fn IMG_IMG_LoadTyped_RW(rw:*sdl.SDL_RWops, freesrc: c_int, type: [*:0]const u8) ?*sdl.SDL_Surface;
 pub extern fn IMG_Load_RW(rw:*sdl.SDL_RWops, freesrc: c_int) ?*sdl.SDL_Surface; 
 pub extern fn IMG_LoadBMP_RW(rw: *sdl.SDL_RWops) ?*sdl.SDL_Surface;
 pub extern fn IMG_LoadCUR_RW(rw: *sdl.SDL_RWops) ?*sdl.SDL_Surface;
