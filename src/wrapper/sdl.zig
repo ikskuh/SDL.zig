@@ -412,8 +412,14 @@ pub const Surface = struct {
         c.SDL_FreeSurface(s.ptr);
     }
 
-    pub fn setColorKey(s: Surface, flag: c_int, color: Color) !void {
-        if (c.SDL_SetColorKey(s.ptr, flag, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+    pub fn setColorKey(s: Surface, enabled: bool, color: Color) !void {
+        if (c.SDL_SetColorKey(s.ptr, if (enabled) c.SDL_TRUE else c.SDL_FALSE, c.SDL_MapRGBA(
+            s.ptr.*.format,
+            color.r,
+            color.g,
+            color.b,
+            color.a,
+        )) < 0) return makeError();
     }
 
     pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
@@ -421,6 +427,25 @@ pub const Surface = struct {
         if (c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
     }
 };
+
+pub fn loadBmpFromConstMem(data: []const u8) !Surface {
+    const sptr = c.SDL_LoadBMP_RW(c.SDL_RWFromConstMem(data.ptr, @intCast(c_int, data.len)), 1) orelse return makeError();
+    return Surface{
+        .ptr = sptr,
+    };
+}
+
+pub fn loadBmp(filename: [:0]const u8) !Surface {
+    if (c.SDL_RWFromFile(filename, "rb")) |rwops| {
+        if (c.SDL_LoadBMP_RW(rwops, 1)) |sptr| {
+            return Surface{
+                .ptr = sptr,
+            };
+        }
+    }
+
+    return makeError();
+}
 
 pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
     return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
@@ -707,6 +732,11 @@ pub const Texture = struct {
 
     pub fn setColorModRGBA(tex: Texture, r: u8, g: u8, b: u8, a: u8) !void {
         try tex.setColorMod(Color.rgba(r, g, b, a));
+    }
+
+    pub fn setAlphaMod(tex: Texture, a: u8) !void {
+        if (c.SDL_SetTextureAlphaMod(tex.ptr, a) < 0)
+            return makeError();
     }
 
     pub fn getBlendMode(tex: Texture) !BlendMode {
@@ -2448,4 +2478,25 @@ pub fn mixAudioFormat(dst: []u8, src: []const u8, format: AudioFormat, volume: c
         @intCast(u32, std.math.min(dst.len, src.len)),
         volume,
     );
+}
+
+pub const MessageBoxFlags = struct {
+    @"error": bool = false,
+    warning: bool = false,
+    information: bool = false,
+
+    pub fn toNative(self: MessageBoxFlags) u32 {
+        var val: u32 = 0;
+        if (self.@"error") val |= c.SDL_MESSAGEBOX_ERROR;
+        if (self.warning) val |= c.SDL_MESSAGEBOX_WARNING;
+        if (self.information) val |= c.SDL_MESSAGEBOX_INFORMATION;
+        return val;
+    }
+};
+
+pub fn showSimpleMessageBox(flags: MessageBoxFlags, title: [:0]const u8, message: [:0]const u8, window: ?Window) !void {
+    if (c.SDL_ShowSimpleMessageBox(flags.toNative(), title, message, if (window) |w| w.ptr else null) != 0) {
+        log.debug("Message box failed! title: {s}, message: {s}", .{ title, message });
+        return makeError();
+    }
 }
