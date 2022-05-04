@@ -19,6 +19,21 @@ pub fn main() !void {
     var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyRenderer(renderer);
 
+    const vertices = [_]SDL.SDL_Vertex{
+        .{
+            .position = .{ .x = 400, .y = 150 },
+            .color = .{ .r = 255, .g = 0, .b = 0, .a = 255 },
+        },
+        .{
+            .position = .{ .x = 350, .y = 200 },
+            .color = .{ .r = 0, .g = 0, .b = 255, .a = 255 },
+        },
+        .{
+            .position = .{ .x = 450, .y = 200 },
+            .color = .{ .r = 0, .g = 255, .b = 0, .a = 255 },
+        },
+    };
+
     mainLoop: while (true) {
         var ev: SDL.SDL_Event = undefined;
         while (SDL.SDL_PollEvent(&ev) != 0) {
@@ -45,6 +60,15 @@ pub fn main() !void {
             .w = 100,
             .h = 50,
         });
+
+        _ = SDL.SDL_RenderGeometry(
+            renderer,
+            null,
+            &vertices,
+            3,
+            null,
+            0,
+        );
 
         SDL.SDL_RenderPresent(renderer);
     }

@@ -52,6 +52,11 @@ pub const Point = extern struct {
     y: c_int,
 };
 
+pub const PointF = extern struct {
+    x: f32,
+    y: f32,
+};
+
 pub const Size = extern struct {
     width: c_int,
     height: c_int,
@@ -161,6 +166,12 @@ pub const Color = extern struct {
             else => return error.UnknownFormat,
         }
     }
+};
+
+pub const Vertex = extern struct {
+    position: PointF,
+    color: Color,
+    tex_coord: PointF = undefined,
 };
 
 pub const InitFlags = struct {
@@ -537,6 +548,18 @@ pub const Renderer = struct {
 
     pub fn drawRectF(ren: Renderer, rect: RectangleF) !void {
         if (c.SDL_RenderDrawRectF(ren.ptr, rect.getConstSdlPtr()) < 0)
+            return makeError();
+    }
+
+    pub fn drawGeometry(ren: Renderer, tex: ?*Texture, vertices: []const Vertex, indices: ?[]const u32) !void {
+        if (c.SDL_RenderGeometry(
+            ren.ptr,
+            if (tex) |t| t.ptr else null,
+            @ptrCast([*c]const c.SDL_Vertex, vertices.ptr),
+            @intCast(c_int, vertices.len),
+            if (indices) |idx| @ptrCast([*]const c_int, idx.ptr) else null,
+            if (indices) |idx| @intCast(c_int, idx.len) else 0,
+        ) < 0)
             return makeError();
     }
 

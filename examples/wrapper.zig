@@ -50,6 +50,25 @@ pub fn main() !void {
             .height = 50,
         });
 
+        try renderer.drawGeometry(
+            null,
+            &[_]SDL.Vertex{
+                .{
+                    .position = .{ .x = 400, .y = 150 },
+                    .color = SDL.Color.rgb(255, 0, 0),
+                },
+                .{
+                    .position = .{ .x = 350, .y = 200 },
+                    .color = SDL.Color.rgb(0, 0, 255),
+                },
+                .{
+                    .position = .{ .x = 450, .y = 200 },
+                    .color = SDL.Color.rgb(0, 255, 0),
+                },
+            },
+            null,
+        );
+
         renderer.present();
     }
 }
