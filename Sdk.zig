@@ -86,6 +86,18 @@ pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     });
 }
 
+/// Returns the smart wrapper with Vulkan support. The Vulkan package provided by `vulkan-zig` must be
+/// provided as an argument.
+pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
+    return sdk.builder.dupePkg(std.build.Pkg{
+        .name = sdk.builder.dupe(package_name),
+        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            sdk.getNativePackageVulkan("sdl-native", vulkan),
+        },
+    });
+}
+
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void {

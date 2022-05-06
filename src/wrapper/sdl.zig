@@ -306,6 +306,9 @@ pub const WindowFlags = struct {
     /// window usable with OpenGL context
     opengl: bool = false, //  SDL_WINDOW_OPENGL,
 
+    /// window usable with Vulkan context
+    vulkan: bool = false, //  SDL_WINDOW_VULKAN,
+
     /// window is visible,
     shown: bool = false, //  SDL_WINDOW_SHOWN,
 
@@ -367,6 +370,7 @@ pub const WindowFlags = struct {
         if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
         if (wf.fullscreen_desktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
         if (wf.opengl) val |= c.SDL_WINDOW_OPENGL;
+        if (wf.vulkan) val |= c.SDL_WINDOW_VULKAN;
         if (wf.shown) val |= c.SDL_WINDOW_SHOWN;
         if (wf.hidden) val |= c.SDL_WINDOW_HIDDEN;
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
