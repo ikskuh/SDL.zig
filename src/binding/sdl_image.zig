@@ -11,8 +11,8 @@ pub extern fn IMG_Quit() void;
 pub extern fn IMG_LoadTexture(renderer: ?*sdl.SDL_Renderer, file: [*c]const u8) ?*sdl.SDL_Texture;
 pub extern fn IMG_Load(file: [*:0]const u8) ?*sdl.SDL_Surface;
 
-pub extern fn IMG_LoadTyped_RW(rw:*sdl.SDL_RWops, freesrc: c_int, type: [*:0]const u8) ?*sdl.SDL_Surface;
-pub extern fn IMG_Load_RW(rw:*sdl.SDL_RWops, freesrc: c_int) ?*sdl.SDL_Surface; 
+pub extern fn IMG_LoadTyped_RW(rw: *sdl.SDL_RWops, freesrc: c_int, type: [*:0]const u8) ?*sdl.SDL_Surface;
+pub extern fn IMG_Load_RW(rw: *sdl.SDL_RWops, freesrc: c_int) ?*sdl.SDL_Surface;
 pub extern fn IMG_LoadBMP_RW(rw: *sdl.SDL_RWops) ?*sdl.SDL_Surface;
 pub extern fn IMG_LoadCUR_RW(rw: *sdl.SDL_RWops) ?*sdl.SDL_Surface;
 pub extern fn IMG_LoadGIF_RW(rw: *sdl.SDL_RWops) ?*sdl.SDL_Surface;
