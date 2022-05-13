@@ -484,6 +484,12 @@ pub const BlendMode = enum(c.SDL_BlendMode) {
     _, // additional values may be obtained from c.SDL_ComposeCustomBlendMode (though not supported by all renderers)
 };
 
+pub const ScaleMode = enum(c.SDL_ScaleMode) {
+    nearest = c.SDL_ScaleModeNearest,
+    linear = c.SDL_ScaleModeLinear,
+    best = c.SDL_ScaleModeBest,
+};
+
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
 
@@ -775,6 +781,18 @@ pub const Texture = struct {
 
     pub fn setBlendMode(tex: Texture, blend_mode: BlendMode) !void {
         if (c.SDL_SetTextureBlendMode(tex.ptr, @enumToInt(blend_mode)) < 0)
+            return makeError();
+    }
+
+    pub fn getScaleMode(tex: Texture) !ScaleMode {
+        var scale_mode: c.SDL_ScaleMode = undefined;
+        if (c.SDL_GetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
+            return makeError();
+        return @intToEnum(ScaleMode, scale_mode);
+    }
+
+    pub fn setScaleMode(tex: Texture, scale_mode: ScaleMode) !void {
+        if (c.SDL_SetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
             return makeError();
     }
 
