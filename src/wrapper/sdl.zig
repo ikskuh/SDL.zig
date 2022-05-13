@@ -462,7 +462,7 @@ pub fn loadBmp(filename: [:0]const u8) !Surface {
     return makeError();
 }
 
-pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
+pub fn createRgbSurfaceWithFormat(width: u32, height: u32, bit_depth: u32, format: PixelFormatEnum) !Surface {
     return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
 }
 
@@ -667,7 +667,7 @@ pub const RendererFlags = struct {
     }
 };
 
-pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Renderer {
+pub fn createRenderer(window: Window, index: ?u32, flags: RendererFlags) !Renderer {
     return Renderer{
         .ptr = c.SDL_CreateRenderer(
             window.ptr,
@@ -2073,16 +2073,16 @@ test "platform independent declarations" {
     std.testing.refAllDecls(@This());
 }
 
-pub fn numJoysticks() !u31 {
+pub fn numJoysticks() !u32 {
     const num = c.SDL_NumJoysticks();
     if (num < 0) return error.SdlError;
-    return @intCast(u31, num);
+    return @intCast(u32, num);
 }
 
 pub const GameController = struct {
     ptr: *c.SDL_GameController,
 
-    pub fn open(joystick_index: u31) !GameController {
+    pub fn open(joystick_index: u32) !GameController {
         return GameController{
             .ptr = c.SDL_GameControllerOpen(joystick_index) orelse return error.SdlError,
         };
@@ -2092,7 +2092,7 @@ pub const GameController = struct {
         c.SDL_GameControllerClose(self.ptr);
     }
 
-    pub fn nameForIndex(joystick_index: u31) ?[:0]const u8 {
+    pub fn nameForIndex(joystick_index: u32) ?[:0]const u8 {
         return std.mem.span(c.SDL_GameControllerNameForIndex(joystick_index));
     }
 
