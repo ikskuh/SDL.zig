@@ -561,7 +561,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawGeometry(ren: Renderer, tex: ?*Texture, vertices: []const Vertex, indices: ?[]const u32) !void {
+    pub fn drawGeometry(ren: Renderer, tex: ?Texture, vertices: []const Vertex, indices: ?[]const u32) !void {
         if (c.SDL_RenderGeometry(
             ren.ptr,
             if (tex) |t| t.ptr else null,
