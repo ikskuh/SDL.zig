@@ -645,6 +645,18 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn getViewport(ren: Renderer) Rectangle {
+        var result: Rectangle = undefined;
+        c.SDL_RenderGetViewport(ren.ptr, result.getSdlPtr());
+        return result;
+    }
+
+    pub fn setViewport(ren: Renderer, rect: Rectangle) !void {
+        var vp = rect;
+        if (c.SDL_RenderSetViewport(ren.ptr, vp.getSdlPtr()) < 0)
+            return makeError();
+    }
+
     pub fn setTarget(ren: Renderer, tex: ?Texture) !void {
         if (c.SDL_SetRenderTarget(ren.ptr, if (tex) |t| t.ptr else null) < 0)
             return makeError();
