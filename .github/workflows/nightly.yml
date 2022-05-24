@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [master]
   schedule:
-    - cron: "0 5 * * *" # run at 5 AM UTC
+    - cron: '0 5 * * *' # run at 5 AM UTC
 
 jobs:
   build-linux:
@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Install dependencies
         run: |
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Install dependencies
         run: brew install sdl2 sdl2_image
@@ -75,7 +75,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
@@ -100,7 +100,7 @@ jobs:
         uses: carlosperate/download-file-action@v1.0.3
         if: ${{ matrix.target == 'i386-windows-gnu' || matrix.target == 'x86_64-windows-gnu' }}
         with:
-          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
+          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-mingw.tar.gz
           file-name: SDL2.tar.gz
           location: .
 
@@ -108,7 +108,7 @@ jobs:
         uses: carlosperate/download-file-action@v1.0.3
         if: ${{ matrix.target == 'i386-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
         with:
-          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip
+          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-VC.zip
           file-name: SDL2.tar.gz
           location: .
 
@@ -116,7 +116,7 @@ jobs:
         uses: brunoborges/justextract@v1
         with:
           file: SDL2.tar.gz
-    
+
       - name: Create SDK file
         uses: DamianReeves/write-file-action@v1.0
         with:
@@ -124,24 +124,24 @@ jobs:
           contents: |
             {
               "i386-windows-gnu": {
-                "include": "SDL2-2.0.14/i686-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/i686-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/i686-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/i686-w64-mingw32/bin"
               },
               "x86_64-windows-gnu": {
-                "include": "SDL2-2.0.14/x86_64-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/x86_64-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/x86_64-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/x86_64-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/x86_64-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/x86_64-w64-mingw32/bin"
               },
               "i386-windows-msvc": {
-                "include": "SDL2-2.0.14/include",
-                "libs": "SDL2-2.0.14/lib/x86",
-                "bin": "SDL2-2.0.14/lib/x86"
+                "include": "SDL2-2.0.18/include",
+                "libs": "SDL2-2.0.18/lib/x86",
+                "bin": "SDL2-2.0.18/lib/x86"
               },
               "x86_64-windows-msvc": {
-                "include": "SDL2-2.0.14/include",
-                "libs": "SDL2-2.0.14/lib/x64",
-                "bin": "SDL2-2.0.14/lib/x64"
+                "include": "SDL2-2.0.18/include",
+                "libs": "SDL2-2.0.18/lib/x64",
+                "bin": "SDL2-2.0.18/lib/x64"
               }
             }
           write-mode: overwrite
@@ -153,18 +153,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          [
-            i386-windows-gnu,
-            x86_64-windows-gnu,
-          ]
+        target: [i386-windows-gnu, x86_64-windows-gnu]
 
     runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
@@ -174,7 +170,7 @@ jobs:
       - name: Download SDL2 (MinGW)
         uses: carlosperate/download-file-action@v1.0.3
         with:
-          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
+          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-mingw.tar.gz
           file-name: SDL2.tar.gz
           location: .
 
@@ -182,7 +178,7 @@ jobs:
         uses: brunoborges/justextract@v1
         with:
           file: SDL2.tar.gz
-    
+
       - name: Create SDK file
         uses: DamianReeves/write-file-action@v1.0
         with:
@@ -190,14 +186,14 @@ jobs:
           contents: |
             {
               "i386-windows-gnu": {
-                "include": "SDL2-2.0.14/i686-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/i686-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/i686-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/i686-w64-mingw32/bin"
               },
               "x86_64-windows-gnu": {
-                "include": "SDL2-2.0.14/x86_64-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/x86_64-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/x86_64-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/x86_64-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/x86_64-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/x86_64-w64-mingw32/bin"
               }
             }
           write-mode: overwrite
@@ -205,33 +201,20 @@ jobs:
       - name: Build
         run: zig build -Dtarget=${{matrix.target}} -Dlink=static
 
-
   build-cross-windows:
     strategy:
       fail-fast: false
       matrix:
-        host:
-          [
-            ubuntu-latest,
-            macos-latest
-          ]
-        target:
-          [
-            i386-windows-gnu,
-            x86_64-windows-gnu,
-          ]
-        linkage:
-          [
-            static,
-            dynamic
-          ]
+        host: [ubuntu-latest, macos-latest]
+        target: [i386-windows-gnu, x86_64-windows-gnu]
+        linkage: [static, dynamic]
 
     runs-on: ${{matrix.host}}
 
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
@@ -241,7 +224,7 @@ jobs:
       - name: Download SDL2 (MinGW)
         uses: carlosperate/download-file-action@v1.0.3
         with:
-          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.14-mingw.tar.gz
+          file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-mingw.tar.gz
           file-name: SDL2.tar.gz
           location: .
 
@@ -249,7 +232,7 @@ jobs:
         uses: brunoborges/justextract@v1
         with:
           file: SDL2.tar.gz
-    
+
       - name: Create SDK file
         uses: DamianReeves/write-file-action@v1.0
         with:
@@ -257,44 +240,34 @@ jobs:
           contents: |
             {
               "i386-windows-gnu": {
-                "include": "SDL2-2.0.14/i686-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/i686-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/i686-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/i686-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/i686-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/i686-w64-mingw32/bin"
               },
               "x86_64-windows-gnu": {
-                "include": "SDL2-2.0.14/x86_64-w64-mingw32/include",
-                "libs": "SDL2-2.0.14/x86_64-w64-mingw32/lib",
-                "bin": "SDL2-2.0.14/x86_64-w64-mingw32/bin"
+                "include": "SDL2-2.0.18/x86_64-w64-mingw32/include",
+                "libs": "SDL2-2.0.18/x86_64-w64-mingw32/lib",
+                "bin": "SDL2-2.0.18/x86_64-w64-mingw32/bin"
               }
             }
           write-mode: overwrite
 
       - name: Build
-        run: zig build -Dskip-test -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}} 
-
+        run: zig build -Dskip-test -Dtarget=${{matrix.target}} -Dlink=${{matrix.linkage}}
 
   build-cross-linux:
     strategy:
       fail-fast: false
       matrix:
-        host:
-          [
-            ubuntu-latest,
-            macos-latest,
-            windows-latest
-          ]
-        target:
-          [
-            x86_64-linux-gnu,
-            aarch64-linux-gnu,
-          ]
+        host: [ubuntu-latest, macos-latest, windows-latest]
+        target: [x86_64-linux-gnu, aarch64-linux-gnu]
 
     runs-on: ${{matrix.host}}
 
     steps:
       - uses: actions/checkout@v2
         with:
-          submodules: "recursive"
+          submodules: 'recursive'
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
