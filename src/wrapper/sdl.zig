@@ -590,7 +590,7 @@ pub const Renderer = struct {
 
     pub fn getColor(ren: Renderer) !Color {
         var color: Color = undefined;
-        if (c.SDL_GetRenderDrawColor(ren.ptr, color.r, color.g, color.b, color.a) < 0)
+        if (c.SDL_GetRenderDrawColor(ren.ptr, &color.r, &color.g, &color.b, &color.a) < 0)
             return makeError();
         return color;
     }
