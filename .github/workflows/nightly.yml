@@ -63,11 +63,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target:
-          [
+        target: [
             i386-windows-gnu,
             x86_64-windows-gnu,
-            i386-windows-msvc,
+            # i386-windows-msvc, # disabled for now as it seems like zig detects the wrong files
             x86_64-windows-msvc,
           ]
 
@@ -88,7 +87,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         with:
           uwp: false
-          arch: x86 # cross-compile from amd64 to x86
+          arch: amd64_x86 # cross-compile from amd64 to x86
 
       - name: Install VisualStudio (x64)
         if: ${{ matrix.target == 'x86_64-windows-msvc' }}
