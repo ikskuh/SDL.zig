@@ -588,6 +588,13 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn getColor(ren: Renderer) !Color {
+        var color: Color = undefined;
+        if (c.SDL_GetRenderDrawColor(ren.ptr, color.r, color.g, color.b, color.a) < 0)
+            return makeError();
+        return color;
+    }
+
     pub fn getDrawBlendMode(ren: Renderer) !BlendMode {
         var blend_mode: c.SDL_BlendMode = undefined;
         if (c.SDL_GetRenderDrawBlendMode(ren.ptr, &blend_mode) < 0)
