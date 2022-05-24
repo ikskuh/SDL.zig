@@ -28,7 +28,7 @@ pub fn build(b: *Builder) !void {
         if (lib_test.target.isDarwin()) {
             lib_test.linkSystemLibrary("jpeg");
             lib_test.linkSystemLibrary("libpng");
-            lib_test.linkSystemLibrary("libtiff");
+            lib_test.linkSystemLibrary("tiff");
             lib_test.linkSystemLibrary("sdl2");
             lib_test.linkSystemLibrary("webp");
         }
