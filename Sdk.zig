@@ -5,7 +5,7 @@
 //!
 //!
 const std = @import("std");
-const target = @import("builtin").target;
+const host_system = @import("builtin").target;
 
 const Builder = std.build.Builder;
 const Step = std.build.Step;
@@ -86,33 +86,71 @@ pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     });
 }
 
+/// Returns the smart wrapper with Vulkan support. The Vulkan package provided by `vulkan-zig` must be
+/// provided as an argument.
+pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
+    return sdk.builder.dupePkg(std.build.Pkg{
+        .name = sdk.builder.dupe(package_name),
+        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .dependencies = &[_]std.build.Pkg{
+            sdk.getNativePackageVulkan("sdl-native", vulkan),
+        },
+    });
+}
+
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void {
     // TODO: Implement
 
     const b = sdk.builder;
-    const detected_target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
+    const target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
+    const is_native = exe.target.isNative();
 
     // This is required on all platforms
     exe.linkLibC();
 
-    if (detected_target.os.tag == .windows) {
+    if (target.os.tag == .linux and !is_native) {
+        // for cross-compilation to Linux, we use a magic trick:
+        // we compile a stub .so file we will link against an SDL2.so even if that file
+        // doesn't exist on our system
+
+        const build_linux_sdl_stub = b.addSharedLibrary("SDL2", null, .unversioned);
+        build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
+        build_linux_sdl_stub.setTarget(exe.target);
+
+        // We need to link against libc
+        exe.linkLibC();
+
+        // link against the output of our stub
+        exe.linkLibrary(build_linux_sdl_stub);
+    } else if (target.os.tag == .linux) {
+        // on linux with compilation for native target,
+        // we should rely on the system libraries to "just work"
+        exe.linkSystemLibrary("sdl2");
+    } else if (target.os.tag == .windows) {
         // try linking with vcpkg
         // TODO: Implement proper vcpkg support
         exe.addVcpkgPaths(linkage) catch {};
         if (exe.vcpkg_bin_path) |path| {
-            exe.linkSystemLibrary("sdl2");
+
             // we found SDL2 in vcpkg, just install and use this variant
             const src_path = std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" }) catch @panic("out of memory");
-            b.installBinFile(src_path, "SDL2.dll");
-            return;
+
+            if (std.fs.cwd().access(src_path, .{})) {
+                // we found SDL2.dll, so just link via vcpkg:
+                exe.linkSystemLibrary("sdl2");
+                b.installBinFile(src_path, "SDL2.dll");
+                return;
+            } else |_| {
+                //
+            }
         }
 
-        const sdk_paths = sdk.getPaths(detected_target) catch |err| {
+        const sdk_paths = sdk.getPaths(target) catch |err| {
             const writer = std.io.getStdErr().writer();
 
-            const target_name = tripleName(sdk.builder.allocator, detected_target) catch @panic("out of memory");
+            const target_name = tripleName(sdk.builder.allocator, target) catch @panic("out of memory");
 
             switch (err) {
                 error.FileNotFound => {
@@ -232,26 +270,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
             }) catch @panic("out of memory");
             sdk.builder.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
-    } else if (target.os.tag == .linux) {
-        if (target.os.tag != .linux or target.cpu.arch != target.cpu.arch) {
-            // linux cross-compilation requires us to do some dirty hacks:
-            // we compile a stub .so file we will link against.
-            // This will allow us to work around the "SDL doesn't provide dev packages for linux"
-
-            const build_linux_sdl_stub = b.addSharedLibrary("SDL2", null, .unversioned);
-            build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
-            build_linux_sdl_stub.setTarget(exe.target);
-
-            // We need to link against libc
-            exe.linkLibC();
-
-            // link against the output of our stub
-            exe.linkLibrary(build_linux_sdl_stub);
-        } else {
-            // on linux, we should rely on the system libraries to "just work"
-            exe.linkSystemLibrary("sdl2");
-        }
     } else if (target.isDarwin()) {
+        // TODO: Implement cross-compilaton to macOS via system root provisioning
+        if (!host_system.os.tag.isDarwin())
+            @panic("Cannot cross-compile to macOS yet.");
+
         // on MacOS, we require a brew install
         // requires sdl2 and sdl2_image to be installed via brew
         exe.linkSystemLibrary("sdl2");
@@ -268,6 +291,9 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         exe.linkFramework("CoreHaptics");
         exe.linkSystemLibrary("iconv");
     } else {
+        const triple_string = target.zigTriple(b.allocator) catch "unkown-unkown-unkown";
+        std.log.warn("Linking SDL2 for {s} is not tested, linking might fail!", .{triple_string});
+
         // on all other platforms, just try the system way:
         exe.linkSystemLibrary("sdl2");
     }

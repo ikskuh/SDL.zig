@@ -1,5 +1,6 @@
 const std = @import("std");
 const SDL = @import("sdl2");
+const target_os = @import("builtin").os;
 
 pub fn main() !void {
     if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
@@ -18,6 +19,21 @@ pub fn main() !void {
 
     var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyRenderer(renderer);
+
+    const vertices = [_]SDL.SDL_Vertex{
+        .{
+            .position = .{ .x = 400, .y = 150 },
+            .color = .{ .r = 255, .g = 0, .b = 0, .a = 255 },
+        },
+        .{
+            .position = .{ .x = 350, .y = 200 },
+            .color = .{ .r = 0, .g = 0, .b = 255, .a = 255 },
+        },
+        .{
+            .position = .{ .x = 450, .y = 200 },
+            .color = .{ .r = 0, .g = 255, .b = 0, .a = 255 },
+        },
+    };
 
     mainLoop: while (true) {
         var ev: SDL.SDL_Event = undefined;
@@ -45,6 +61,18 @@ pub fn main() !void {
             .w = 100,
             .h = 50,
         });
+
+        if (target_os.tag != .linux) {
+            // Ubuntu CI doesn't have this function available yet
+            _ = SDL.SDL_RenderGeometry(
+                renderer,
+                null,
+                &vertices,
+                3,
+                null,
+                0,
+            );
+        }
 
         SDL.SDL_RenderPresent(renderer);
     }

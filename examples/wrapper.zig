@@ -1,5 +1,6 @@
 const std = @import("std");
 const SDL = @import("sdl2");
+const target_os = @import("builtin").os;
 
 pub fn main() !void {
     try SDL.init(.{
@@ -49,6 +50,28 @@ pub fn main() !void {
             .width = 100,
             .height = 50,
         });
+
+        if (target_os.tag != .linux) {
+            // Ubuntu CI doesn't have this function available yet
+            try renderer.drawGeometry(
+                null,
+                &[_]SDL.Vertex{
+                    .{
+                        .position = .{ .x = 400, .y = 150 },
+                        .color = SDL.Color.rgb(255, 0, 0),
+                    },
+                    .{
+                        .position = .{ .x = 350, .y = 200 },
+                        .color = SDL.Color.rgb(0, 0, 255),
+                    },
+                    .{
+                        .position = .{ .x = 450, .y = 200 },
+                        .color = SDL.Color.rgb(0, 255, 0),
+                    },
+                },
+                null,
+            );
+        }
 
         renderer.present();
     }

@@ -52,6 +52,11 @@ pub const Point = extern struct {
     y: c_int,
 };
 
+pub const PointF = extern struct {
+    x: f32,
+    y: f32,
+};
+
 pub const Size = extern struct {
     width: c_int,
     height: c_int,
@@ -161,6 +166,12 @@ pub const Color = extern struct {
             else => return error.UnknownFormat,
         }
     }
+};
+
+pub const Vertex = extern struct {
+    position: PointF,
+    color: Color,
+    tex_coord: PointF = undefined,
 };
 
 pub const InitFlags = struct {
@@ -295,6 +306,9 @@ pub const WindowFlags = struct {
     /// window usable with OpenGL context
     opengl: bool = false, //  SDL_WINDOW_OPENGL,
 
+    /// window usable with Vulkan context
+    vulkan: bool = false, //  SDL_WINDOW_VULKAN,
+
     /// window is visible,
     shown: bool = false, //  SDL_WINDOW_SHOWN,
 
@@ -356,6 +370,7 @@ pub const WindowFlags = struct {
         if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
         if (wf.fullscreen_desktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
         if (wf.opengl) val |= c.SDL_WINDOW_OPENGL;
+        if (wf.vulkan) val |= c.SDL_WINDOW_VULKAN;
         if (wf.shown) val |= c.SDL_WINDOW_SHOWN;
         if (wf.hidden) val |= c.SDL_WINDOW_HIDDEN;
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
@@ -412,8 +427,14 @@ pub const Surface = struct {
         c.SDL_FreeSurface(s.ptr);
     }
 
-    pub fn setColorKey(s: Surface, flag: c_int, color: Color) !void {
-        if (c.SDL_SetColorKey(s.ptr, flag, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
+    pub fn setColorKey(s: Surface, enabled: bool, color: Color) !void {
+        if (c.SDL_SetColorKey(s.ptr, if (enabled) c.SDL_TRUE else c.SDL_FALSE, c.SDL_MapRGBA(
+            s.ptr.*.format,
+            color.r,
+            color.g,
+            color.b,
+            color.a,
+        )) < 0) return makeError();
     }
 
     pub fn fillRect(s: *Surface, rect: ?*Rectangle, color: Color) !void {
@@ -421,6 +442,25 @@ pub const Surface = struct {
         if (c.SDL_FillRect(s.ptr, rect_ptr, c.SDL_MapRGBA(s.ptr.*.format, color.r, color.g, color.b, color.a)) < 0) return makeError();
     }
 };
+
+pub fn loadBmpFromConstMem(data: []const u8) !Surface {
+    const sptr = c.SDL_LoadBMP_RW(c.SDL_RWFromConstMem(data.ptr, @intCast(c_int, data.len)), 1) orelse return makeError();
+    return Surface{
+        .ptr = sptr,
+    };
+}
+
+pub fn loadBmp(filename: [:0]const u8) !Surface {
+    if (c.SDL_RWFromFile(filename, "rb")) |rwops| {
+        if (c.SDL_LoadBMP_RW(rwops, 1)) |sptr| {
+            return Surface{
+                .ptr = sptr,
+            };
+        }
+    }
+
+    return makeError();
+}
 
 pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
     return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
@@ -442,6 +482,12 @@ pub const BlendMode = enum(c.SDL_BlendMode) {
     mod = c.SDL_BLENDMODE_MOD,
     multiply = c.SDL_BLENDMODE_MUL,
     _, // additional values may be obtained from c.SDL_ComposeCustomBlendMode (though not supported by all renderers)
+};
+
+pub const ScaleMode = enum(c.SDL_ScaleMode) {
+    nearest = c.SDL_ScaleModeNearest,
+    linear = c.SDL_ScaleModeLinear,
+    best = c.SDL_ScaleModeBest,
 };
 
 pub const Renderer = struct {
@@ -515,6 +561,18 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn drawGeometry(ren: Renderer, tex: ?Texture, vertices: []const Vertex, indices: ?[]const u32) !void {
+        if (c.SDL_RenderGeometry(
+            ren.ptr,
+            if (tex) |t| t.ptr else null,
+            @ptrCast([*c]const c.SDL_Vertex, vertices.ptr),
+            @intCast(c_int, vertices.len),
+            if (indices) |idx| @ptrCast([*]const c_int, idx.ptr) else null,
+            if (indices) |idx| @intCast(c_int, idx.len) else 0,
+        ) < 0)
+            return makeError();
+    }
+
     pub fn setColor(ren: Renderer, color: Color) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, color.r, color.g, color.b, color.a) < 0)
             return makeError();
@@ -528,6 +586,13 @@ pub const Renderer = struct {
     pub fn setColorRGBA(ren: Renderer, r: u8, g: u8, b: u8, a: u8) !void {
         if (c.SDL_SetRenderDrawColor(ren.ptr, r, g, b, a) < 0)
             return makeError();
+    }
+
+    pub fn getColor(ren: Renderer) !Color {
+        var color: Color = undefined;
+        if (c.SDL_GetRenderDrawColor(ren.ptr, &color.r, &color.g, &color.b, &color.a) < 0)
+            return makeError();
+        return color;
     }
 
     pub fn getDrawBlendMode(ren: Renderer) !BlendMode {
@@ -584,6 +649,18 @@ pub const Renderer = struct {
 
     pub fn setLogicalSize(ren: Renderer, width_pixels: c_int, height_pixels: c_int) !void {
         if (c.SDL_RenderSetLogicalSize(ren.ptr, width_pixels, height_pixels) < 0)
+            return makeError();
+    }
+
+    pub fn getViewport(ren: Renderer) Rectangle {
+        var result: Rectangle = undefined;
+        c.SDL_RenderGetViewport(ren.ptr, result.getSdlPtr());
+        return result;
+    }
+
+    pub fn setViewport(ren: Renderer, rect: Rectangle) !void {
+        var vp = rect;
+        if (c.SDL_RenderSetViewport(ren.ptr, vp.getSdlPtr()) < 0)
             return makeError();
     }
 
@@ -709,6 +786,11 @@ pub const Texture = struct {
         try tex.setColorMod(Color.rgba(r, g, b, a));
     }
 
+    pub fn setAlphaMod(tex: Texture, a: u8) !void {
+        if (c.SDL_SetTextureAlphaMod(tex.ptr, a) < 0)
+            return makeError();
+    }
+
     pub fn getBlendMode(tex: Texture) !BlendMode {
         var blend_mode: c.SDL_BlendMode = undefined;
         if (c.SDL_GetTextureBlendMode(tex.ptr, &blend_mode) < 0)
@@ -718,6 +800,18 @@ pub const Texture = struct {
 
     pub fn setBlendMode(tex: Texture, blend_mode: BlendMode) !void {
         if (c.SDL_SetTextureBlendMode(tex.ptr, @enumToInt(blend_mode)) < 0)
+            return makeError();
+    }
+
+    pub fn getScaleMode(tex: Texture) !ScaleMode {
+        var scale_mode: c.SDL_ScaleMode = undefined;
+        if (c.SDL_GetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
+            return makeError();
+        return @intToEnum(ScaleMode, scale_mode);
+    }
+
+    pub fn setScaleMode(tex: Texture, scale_mode: ScaleMode) !void {
+        if (c.SDL_SetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
             return makeError();
     }
 
@@ -2448,4 +2542,25 @@ pub fn mixAudioFormat(dst: []u8, src: []const u8, format: AudioFormat, volume: c
         @intCast(u32, std.math.min(dst.len, src.len)),
         volume,
     );
+}
+
+pub const MessageBoxFlags = struct {
+    @"error": bool = false,
+    warning: bool = false,
+    information: bool = false,
+
+    pub fn toNative(self: MessageBoxFlags) u32 {
+        var val: u32 = 0;
+        if (self.@"error") val |= c.SDL_MESSAGEBOX_ERROR;
+        if (self.warning) val |= c.SDL_MESSAGEBOX_WARNING;
+        if (self.information) val |= c.SDL_MESSAGEBOX_INFORMATION;
+        return val;
+    }
+};
+
+pub fn showSimpleMessageBox(flags: MessageBoxFlags, title: [:0]const u8, message: [:0]const u8, window: ?Window) !void {
+    if (c.SDL_ShowSimpleMessageBox(flags.toNative(), title, message, if (window) |w| w.ptr else null) != 0) {
+        log.debug("Message box failed! title: {s}, message: {s}", .{ title, message });
+        return makeError();
+    }
 }
