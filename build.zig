@@ -25,6 +25,13 @@ pub fn build(b: *Builder) !void {
         });
         lib_test.addPackage(sdk.getNativePackage("sdl-native"));
         lib_test.linkSystemLibrary("sdl2_image");
+        if (lib_test.target.isDarwin()) {
+            lib_test.linkSystemLibrary("jpeg");
+            lib_test.linkSystemLibrary("libpng");
+            lib_test.linkSystemLibrary("tiff");
+            lib_test.linkSystemLibrary("sdl2");
+            lib_test.linkSystemLibrary("webp");
+        }
         sdk.link(lib_test, .dynamic);
 
         const test_lib_step = b.step("test", "Runs the library tests.");

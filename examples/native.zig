@@ -1,5 +1,6 @@
 const std = @import("std");
 const SDL = @import("sdl2");
+const target_os = @import("builtin").os;
 
 pub fn main() !void {
     if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
@@ -61,14 +62,17 @@ pub fn main() !void {
             .h = 50,
         });
 
-        _ = SDL.SDL_RenderGeometry(
-            renderer,
-            null,
-            &vertices,
-            3,
-            null,
-            0,
-        );
+        if (target_os.tag != .linux) {
+            // Ubuntu CI doesn't have this function available yet
+            _ = SDL.SDL_RenderGeometry(
+                renderer,
+                null,
+                &vertices,
+                3,
+                null,
+                0,
+            );
+        }
 
         SDL.SDL_RenderPresent(renderer);
     }
