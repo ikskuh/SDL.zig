@@ -51,7 +51,7 @@ pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     build_options.addOption(bool, "vulkan", false);
     return std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .path = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .source = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
         .dependencies = &[_]std.build.Pkg{
             build_options.getPackage("build_options"),
         },
@@ -67,7 +67,7 @@ pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.b
     build_options.addOption(bool, "vulkan", true);
     return std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .path = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .source = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
         .dependencies = &[_]std.build.Pkg{
             build_options.getPackage("build_options"),
             vulkan,
@@ -79,7 +79,7 @@ pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.b
 pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .source = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
         .dependencies = &[_]std.build.Pkg{
             sdk.getNativePackage("sdl-native"),
         },
@@ -91,7 +91,7 @@ pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
 pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
     return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .path = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .source = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
         .dependencies = &[_]std.build.Pkg{
             sdk.getNativePackageVulkan("sdl-native", vulkan),
         },
