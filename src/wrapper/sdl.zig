@@ -224,14 +224,17 @@ pub fn init(flags: InitFlags) !void {
         return makeError();
 }
 
-pub const initSubmodule = init;
+pub fn initSubSystem(flags: InitFlags) !void {
+    if(c.SDL_InitSubSystem(flags.as_u32()) < 0)
+        return makeError();
+}
 
 pub fn wasInit(flags: InitFlags) InitFlags {
     return InitFlags.from_u32(c.SDL_WasInit(flags.as_u32()));
 }
 
-pub fn quitSubsystem(flags: InitFlags) void {
-    c.SDL_QuitSubmodule(flags.as_u32());
+pub fn quitSubSystem(flags: InitFlags) void {
+    c.SDL_QuitSubSystem(flags.as_u32());
 }
 
 pub fn quit() void {
