@@ -227,8 +227,11 @@ pub fn init(flags: InitFlags) !void {
 }
 
 pub fn initSubSystem(flags: InitFlags) !void {
+<<<<<<< HEAD
     const empty_flags = InitFlags{};
     if(flags == empty_flags) return error.EmptyInitFlags;
+=======
+>>>>>>> 0eaf5ef9db9c83a276253ae2a452f819d95b4ee4
     if(c.SDL_InitSubSystem(flags.as_u32()) < 0)
         return makeError();
 }
