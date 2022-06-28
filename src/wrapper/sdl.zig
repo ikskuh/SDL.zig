@@ -220,11 +220,15 @@ pub const InitFlags = struct {
 };
 
 pub fn init(flags: InitFlags) !void {
+    const empty_flags = InitFlags{};
+    if(flags == empty_flags) return error.EmptyFlags;
     if (c.SDL_Init(flags.as_u32()) < 0)
         return makeError();
 }
 
 pub fn initSubSystem(flags: InitFlags) !void {
+    const empty_flags = InitFlags{};
+    if(flags == empty_flags) return error.EmptyFlags;
     if(c.SDL_InitSubSystem(flags.as_u32()) < 0)
         return makeError();
 }
