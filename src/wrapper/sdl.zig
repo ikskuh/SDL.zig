@@ -310,35 +310,20 @@ pub const WindowPosition = union(enum) {
 };
 
 pub const WindowFlags = struct {
-    /// fullscreen window
-    fullscreen: bool = false, // SDL_WINDOW_FULLSCREEN,
+    /// Window dimension
+    dim: Dimension = .default,
 
-    /// fullscreen window at the current desktop resolution,
-    fullscreen_desktop: bool = false, // SDL_WINDOW_FULLSCREEN_DESKTOP
+    /// Window context
+    context: Context = .default,
 
-    /// window usable with OpenGL context
-    opengl: bool = false, //  SDL_WINDOW_OPENGL,
-
-    /// window usable with Vulkan context
-    vulkan: bool = false, //  SDL_WINDOW_VULKAN,
-
-    /// window is visible,
-    shown: bool = false, //  SDL_WINDOW_SHOWN,
-
-    /// window is not visible
-    hidden: bool = false, //  SDL_WINDOW_HIDDEN,
+    /// Window visibility
+    vis: Visibility = .default,
 
     /// no window decoration
     borderless: bool = false, // SDL_WINDOW_BORDERLESS,
 
     /// window can be resized
     resizable: bool = false, // SDL_WINDOW_RESIZABLE,
-
-    /// window is minimized
-    minimized: bool = false, // SDL_WINDOW_MINIMIZED,
-
-    /// window is maximized
-    maximized: bool = false, // SDL_WINDOW_MAXIMIZED,
 
     ///  window has grabbed input focus
     input_grabbed: bool = false, // SDL_WINDOW_INPUT_GRABBED,
@@ -373,6 +358,31 @@ pub const WindowFlags = struct {
     /// window should be treated as a popup menu (X11 only, >= SDL 2.0.5)
     popup_menu: bool = false, //SDL_WINDOW_POPUP_MENU,
 
+    /// Context window should be usable with
+    pub const Context = enum {
+        opengl, //SDL_WINDOW_OPENGL
+        vulkan, //SDL_WINDOW_VULKAN
+        metal, // SDL_WINDOW_METAL
+        default
+    };
+
+    /// If window should be hidden or shown
+    pub const Visibility = enum {
+        shown, // SDL_WINDOW_SHOWN
+        hidden, // SDL_WINDOW_HIDDEN
+        default
+    };
+
+    /// Dimension with which the window is created with
+    pub const Dimension = enum {
+        fullscreen, // SDL_WINDOW_FULLSCREEN
+        /// Fullscreen window at current resolution
+        fullscreen_desktop, // SDL_WINDOW_FULLSCREEN_DESKTOP
+        maximized, // SDL_WINDOW_MAXIMIZED
+        minimized, // SDL_WINDOW_MINIMIZED
+        default
+    };
+
     // fn fromInteger(val: c_uint) WindowFlags {
     //     // TODO: Implement
     //     @panic("niy");
@@ -380,16 +390,26 @@ pub const WindowFlags = struct {
 
     fn toInteger(wf: WindowFlags) c_int {
         var val: c_int = 0;
-        if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
-        if (wf.fullscreen_desktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
-        if (wf.opengl) val |= c.SDL_WINDOW_OPENGL;
-        if (wf.vulkan) val |= c.SDL_WINDOW_VULKAN;
-        if (wf.shown) val |= c.SDL_WINDOW_SHOWN;
-        if (wf.hidden) val |= c.SDL_WINDOW_HIDDEN;
+        switch(wf.dim) {
+            .fullscreen => val |= c.SDL_WINDOW_FULLSCREEN,
+            .fullscreen_desktop => val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP,
+            .maximized => val |= c.SDL_WINDOW_MAXIMIZED,
+            .minimized => val |= c.SDL_WINDOW_MINIMIZED,
+            .default => {}
+        }
+        switch(wf.context) {
+            .vulkan => val |= c.SDL_WINDOW_VULKAN,
+            .opengl => val |= c.SDL_WINDOW_OPENGL,
+            .metal => val |= c.SDL_WINDOW_METAL,
+            .default => {}
+        }
+        switch(wf.vis) {
+            .shown => val |= c.SDL_WINDOW_SHOWN,
+            .hidden => val |= c.SDL_WINDOW_HIDDEN,
+            .default => {}
+        }
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
         if (wf.resizable) val |= c.SDL_WINDOW_RESIZABLE;
-        if (wf.minimized) val |= c.SDL_WINDOW_MINIMIZED;
-        if (wf.maximized) val |= c.SDL_WINDOW_MAXIMIZED;
         if (wf.input_grabbed) val |= c.SDL_WINDOW_INPUT_GRABBED;
         if (wf.input_focus) val |= c.SDL_WINDOW_INPUT_FOCUS;
         if (wf.mouse_focus) val |= c.SDL_WINDOW_MOUSE_FOCUS;
