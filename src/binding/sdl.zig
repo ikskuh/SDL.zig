@@ -3,6 +3,7 @@ const build_options = @import("build_options");
 usingnamespace if (build_options.vulkan) @import("vulkan.zig") else struct {};
 
 usingnamespace @import("sdl_image.zig");
+usingnamespace @import("sdl_ttf.zig");
 
 pub const SDL_INIT_TIMER: u32 = 0x00000001;
 pub const SDL_INIT_AUDIO: u32 = 0x00000010;
