@@ -6,7 +6,9 @@ pub fn init() !void {
         return makeError();
 }
 
-pub fn wasInit()
+pub fn wasInit() c_int {
+    return sdl.c.TTF_WasInit();
+}
 
 pub fn quit() void {
     sdl.c.TTF_Quit();
