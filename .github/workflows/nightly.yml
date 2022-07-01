@@ -46,7 +46,7 @@ jobs:
           submodules: 'recursive'
 
       - name: Install dependencies
-        run: brew install sdl2 sdl2_image
+        run: brew install sdl2 sdl2_image sdl2_ttf harfbuzz graphite2
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
