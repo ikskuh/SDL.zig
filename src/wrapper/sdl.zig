@@ -4,6 +4,7 @@ const std = @import("std");
 pub const c = @import("sdl-native");
 
 pub const image = @import("image.zig");
+pub const ttf = @import("ttf.zig");
 pub const gl = @import("gl.zig");
 
 pub const Error = error{SdlError};
