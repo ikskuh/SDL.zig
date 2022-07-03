@@ -279,6 +279,13 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         // requires sdl2 and sdl2_image to be installed via brew
         exe.linkSystemLibrary("sdl2");
 
+        exe.linkSystemLibrary("sdl2_ttf");
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("harfbuzz");
+        exe.linkSystemLibrary("bz2");
+        exe.linkSystemLibrary("zlib");
+        exe.linkSystemLibrary("graphite2");
+
         exe.linkFramework("IOKit");
         exe.linkFramework("Cocoa");
         exe.linkFramework("CoreAudio");
