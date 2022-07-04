@@ -494,8 +494,8 @@ pub fn loadBmp(filename: [:0]const u8) !Surface {
     return makeError();
 }
 
-pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
-    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
+pub fn createRgbSurfaceWithFormat(width: u31, height: u31, format: PixelFormatEnum) !Surface {
+    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(undefined, width, height, undefined, @enumToInt(format)) orelse return error.SdlError };
 }
 
 pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_rectangle: ?*Rectangle) !void {
