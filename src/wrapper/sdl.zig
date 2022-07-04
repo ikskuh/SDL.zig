@@ -29,8 +29,8 @@ pub const Rectangle = extern struct {
     fn getSdlPtr(r: *Rectangle) *c.SDL_Rect {
         return @ptrCast(*c.SDL_Rect, r);
     }
-    fn getConstSdlPtr(r: Rectangle) *const c.SDL_Rect {
-        return @ptrCast(*const c.SDL_Rect, &r);
+    fn getConstSdlPtr(r: *const Rectangle) *const c.SDL_Rect {
+        return @ptrCast(*const c.SDL_Rect, r);
     }
 };
 
