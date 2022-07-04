@@ -221,14 +221,14 @@ pub const InitFlags = struct {
 };
 
 pub fn init(flags: InitFlags) !void {
-    if(flags.as_u32() == 0) return error.EmptyInitFlags;
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
     if (c.SDL_Init(flags.as_u32()) < 0)
         return makeError();
 }
 
 pub fn initSubSystem(flags: InitFlags) !void {
-    if(flags.as_u32() == 0) return error.EmptyInitFlags;
-    if(c.SDL_InitSubSystem(flags.as_u32()) < 0)
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
+    if (c.SDL_InitSubSystem(flags.as_u32()) < 0)
         return makeError();
 }
 
@@ -362,14 +362,14 @@ pub const WindowFlags = struct {
         opengl, //SDL_WINDOW_OPENGL
         vulkan, //SDL_WINDOW_VULKAN
         metal, // SDL_WINDOW_METAL
-        default
+        default,
     };
 
     /// If window should be hidden or shown
     pub const Visibility = enum {
         shown, // SDL_WINDOW_SHOWN
         hidden, // SDL_WINDOW_HIDDEN
-        default
+        default,
     };
 
     /// Dimension with which the window is created with
@@ -379,7 +379,7 @@ pub const WindowFlags = struct {
         fullscreen_desktop, // SDL_WINDOW_FULLSCREEN_DESKTOP
         maximized, // SDL_WINDOW_MAXIMIZED
         minimized, // SDL_WINDOW_MINIMIZED
-        default
+        default,
     };
 
     // fn fromInteger(val: c_uint) WindowFlags {
@@ -389,23 +389,23 @@ pub const WindowFlags = struct {
 
     fn toInteger(wf: WindowFlags) c_int {
         var val: c_int = 0;
-        switch(wf.dim) {
+        switch (wf.dim) {
             .fullscreen => val |= c.SDL_WINDOW_FULLSCREEN,
             .fullscreen_desktop => val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP,
             .maximized => val |= c.SDL_WINDOW_MAXIMIZED,
             .minimized => val |= c.SDL_WINDOW_MINIMIZED,
-            .default => {}
+            .default => {},
         }
-        switch(wf.context) {
+        switch (wf.context) {
             .vulkan => val |= c.SDL_WINDOW_VULKAN,
             .opengl => val |= c.SDL_WINDOW_OPENGL,
             .metal => val |= c.SDL_WINDOW_METAL,
-            .default => {}
+            .default => {},
         }
-        switch(wf.vis) {
+        switch (wf.vis) {
             .shown => val |= c.SDL_WINDOW_SHOWN,
             .hidden => val |= c.SDL_WINDOW_HIDDEN,
-            .default => {}
+            .default => {},
         }
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
         if (wf.resizable) val |= c.SDL_WINDOW_RESIZABLE;

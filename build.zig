@@ -34,7 +34,7 @@ pub fn build(b: *Builder) !void {
             lib_test.linkSystemLibrary("zlib");
             lib_test.linkSystemLibrary("graphite2");
 
-            // SDL_IMAGE            
+            // SDL_IMAGE
             lib_test.linkSystemLibrary("jpeg");
             lib_test.linkSystemLibrary("libpng");
             lib_test.linkSystemLibrary("tiff");

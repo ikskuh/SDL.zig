@@ -30,11 +30,11 @@ pub extern fn TTF_RenderText_Shaded(
     font: *TTF_Font,
     text: [*c]const u8,
     foreground: sdl.SDL_Color,
-    background: sdl.SDL_Color
+    background: sdl.SDL_Color,
 ) ?*sdl.SDL_Surface;
 
 pub extern fn TTF_RenderText_Blended(
     font: *TTF_Font,
     text: [*c]const u8,
-    foreground: sdl.SDL_Color
+    foreground: sdl.SDL_Color,
 ) ?*sdl.SDL_Surface;

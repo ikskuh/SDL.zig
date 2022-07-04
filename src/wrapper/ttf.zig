@@ -2,7 +2,7 @@ const sdl = @import("sdl.zig");
 const std = @import("std");
 
 pub fn init() !void {
-    if(sdl.c.TTF_Init() == -1)
+    if (sdl.c.TTF_Init() == -1)
         return makeError();
 }
 
@@ -28,17 +28,17 @@ pub const Font = struct {
     pub fn getStyle(self: Font) Style {
         const value = sdl.c.TTF_GetFontStyle(self.ptr);
         var result = Style.normal;
-        if(value & sdl.c.TTF_STYLE_ITALIC) result.italic = true;
-        if(value & sdl.c.TTF_STYLE_BOLD) result.bold = true;
-        if(value & sdl.c.TTF_STYLE_UNDERLINE) result.underline = true;
-        return result; 
+        if (value & sdl.c.TTF_STYLE_ITALIC) result.italic = true;
+        if (value & sdl.c.TTF_STYLE_BOLD) result.bold = true;
+        if (value & sdl.c.TTF_STYLE_UNDERLINE) result.underline = true;
+        return result;
     }
 
     pub fn setStyle(self: Font, style: Style) void {
         var value: c_int = 0;
-        if(style.italic) value |= sdl.c.TTF_STYLE_ITALIC;
-        if(style.bold) value |= sdl.c.TTF_STYLE_BOLD;
-        if(style.underline) value |= sdl.c.TTF_STYLE_UNDERLINE;
+        if (style.italic) value |= sdl.c.TTF_STYLE_ITALIC;
+        if (style.bold) value |= sdl.c.TTF_STYLE_BOLD;
+        if (style.underline) value |= sdl.c.TTF_STYLE_UNDERLINE;
         sdl.c.TTF_SetFontStyle(self.ptr, value);
     }
 
@@ -49,17 +49,17 @@ pub const Font = struct {
     pub fn sizeText(self: Font, text: [:0]const u8) !sdl.Size {
         var w: c_int = undefined;
         var h: c_int = undefined;
-        if(sdl.c.TTF_SizeText(self.ptr, text, &w, &h) == -1) return makeError();
-        return sdl.Size {.width = w, .height = h};
+        if (sdl.c.TTF_SizeText(self.ptr, text, &w, &h) == -1) return makeError();
+        return sdl.Size{ .width = w, .height = h };
     }
 
     pub fn renderTextSolid(self: Font, text: [:0]const u8, foreground: sdl.Color) !sdl.Surface {
-        return sdl.Surface {
+        return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Solid(
                 self.ptr,
                 text,
-                .{.r=foreground.r, .g=foreground.g, .b=foreground.b, .a=foreground.a}
-            ) orelse return makeError()
+                .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
+            ) orelse return makeError(),
         };
     }
 
@@ -67,25 +67,25 @@ pub const Font = struct {
         self: Font,
         text: [:0]const u8,
         foreground: sdl.Color,
-        background: sdl.Color
+        background: sdl.Color,
     ) !sdl.Surface {
-        return sdl.Surface {
+        return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Shaded(
                 self.ptr,
                 text,
-                .{.r = foreground.r, .g=foreground.g, .b=foreground.b, .a = foreground.a},
-                .{.r = background.r, .g=background.g, .b=background.b, .a = background.a}
-            ) orelse return makeError()
+                .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
+                .{ .r = background.r, .g = background.g, .b = background.b, .a = background.a },
+            ) orelse return makeError(),
         };
     }
 
     pub fn renderTextBlended(self: Font, text: [:0]const u8, foreground: sdl.Color) !sdl.Surface {
-        return sdl.Surface {
+        return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Blended(
                 self.ptr,
                 text,
-                .{.r=foreground.r, .g=foreground.g, .b=foreground.b, .a=foreground.a}
-            ) orelse return makeError()
+                .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
+            ) orelse return makeError(),
         };
     }
 
@@ -104,16 +104,16 @@ pub fn makeError() error{TtfError} {
 }
 
 pub fn openFont(file: [:0]const u8, point_size: c_int) !Font {
-    if(sdl.c.TTF_OpenFont(file, point_size)) |value| {
-        return Font {.ptr = value};
+    if (sdl.c.TTF_OpenFont(file, point_size)) |value| {
+        return Font{ .ptr = value };
     } else {
         return makeError();
     }
 }
 
 pub fn openFontRw(src: *sdl.c.RWops, free: bool, point_size: c_int) !Font {
-    if(sdl.c.TTF_OpenFontRW(src, @boolToInt(free), point_size)) |value| {
-        return Font {.ptr = value};
+    if (sdl.c.TTF_OpenFontRW(src, @boolToInt(free), point_size)) |value| {
+        return Font{ .ptr = value };
     } else {
         return makeError();
     }
