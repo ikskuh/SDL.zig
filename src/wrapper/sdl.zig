@@ -2466,6 +2466,25 @@ pub fn showCursor(toggle: ?bool) !bool {
     } else return ret == c.SDL_ENABLE;
 }
 
+/// Starts text input if not already active.
+/// On Windows and X11, calling this function also clears any saved "dead" keys
+/// (combinatory keys that trigger on the next key press, like ^, ´, etc.).
+/// Otherwise does not directly interact with ongoing text input / IME state.
+pub fn startTextInput() void {
+    c.SDL_StartTextInput();
+}
+/// Stops text input if currently active, discarding any current composition.
+/// On Windows and X11, calling this function also clears any saved "dead" keys
+/// (combinatory keys that trigger on the next key press, like ^, ´, etc.).
+pub fn stopTextInput() void {
+    c.SDL_StopTextInput();
+}
+/// Sets the text input rectangle in which to next start text input,
+/// and (on some platforms) moves a currently active text input rect + composition window.
+pub fn setTextInputRect(text_input_rectangle: Rectangle) void {
+    c.SDL_SetTextInputRect(text_input_rectangle.getConstSdlPtr());
+}
+
 pub const Wav = struct {
     format: AudioSpecResponse,
     buffer: []u8,

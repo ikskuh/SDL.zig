@@ -1492,7 +1492,7 @@ pub extern fn SDL_GetKeyFromName(name: [*c]const u8) SDL_Keycode;
 pub extern fn SDL_StartTextInput() void;
 pub extern fn SDL_IsTextInputActive() SDL_bool;
 pub extern fn SDL_StopTextInput() void;
-pub extern fn SDL_SetTextInputRect(rect: [*c]SDL_Rect) void;
+pub extern fn SDL_SetTextInputRect(rect: ?*const SDL_Rect) void;
 pub extern fn SDL_HasScreenKeyboardSupport() SDL_bool;
 pub extern fn SDL_IsScreenKeyboardShown(window: ?*SDL_Window) SDL_bool;
 pub const SDL_Joystick = opaque {};
