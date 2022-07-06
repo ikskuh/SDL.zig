@@ -1,5 +1,8 @@
 const std = @import("std");
 
+const expectEqual = std.testing.expectEqual;
+const expectError = std.testing.expectError;
+
 /// Exports the C interface for SDL
 pub const c = @import("sdl-native");
 
@@ -88,6 +91,12 @@ pub const Color = extern struct {
         return Color{ .r = r, .g = g, .b = b, .a = a };
     }
 
+    pub const ParseError = error{
+        UnknownFormat,
+        InvalidCharacter,
+        Overflow,
+    };
+
     /// parses a hex string color literal.
     /// allowed formats are:
     /// - `RGB`
@@ -98,11 +107,7 @@ pub const Color = extern struct {
     /// - `#RRGGBB`
     /// - `RRGGBBAA`
     /// - `#RRGGBBAA`
-    pub fn parse(str: []const u8) error{
-        UnknownFormat,
-        InvalidCharacter,
-        Overflow,
-    }!Color {
+    pub fn parse(str: []const u8) ParseError!Color {
         switch (str.len) {
             // RGB
             3 => {
@@ -166,6 +171,21 @@ pub const Color = extern struct {
 
             else => return error.UnknownFormat,
         }
+    }
+
+    test "Color.parse" {
+        const expected_color = rgba(0x00, 0xAA, 0xFF, 0xFF);
+
+        try expectEqual(expected_color, try parse("0AF"));
+        try expectEqual(expected_color, try parse("#0AF"));
+        try expectEqual(expected_color, try parse("00AAFF"));
+        try expectEqual(expected_color, try parse("#00AAFF"));
+        try expectEqual(expected_color, try parse("0AFF"));
+        try expectEqual(expected_color, try parse("00AAFFFF"));
+        try expectEqual(expected_color, try parse("#00AAFFFF"));
+
+        try expectError(ParseError.InvalidCharacter, parse("GGG"));
+        try expectError(ParseError.UnknownFormat, parse("F"));
     }
 };
 
