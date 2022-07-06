@@ -1,5 +1,8 @@
 const std = @import("std");
 
+const expectEqual = std.testing.expectEqual;
+const expectError = std.testing.expectError;
+
 /// Exports the C interface for SDL
 pub const c = @import("sdl-native");
 
@@ -88,6 +91,12 @@ pub const Color = extern struct {
         return Color{ .r = r, .g = g, .b = b, .a = a };
     }
 
+    pub const ParseError = error{
+        UnknownFormat,
+        InvalidCharacter,
+        Overflow,
+    };
+
     /// parses a hex string color literal.
     /// allowed formats are:
     /// - `RGB`
@@ -98,11 +107,7 @@ pub const Color = extern struct {
     /// - `#RRGGBB`
     /// - `RRGGBBAA`
     /// - `#RRGGBBAA`
-    pub fn parse(str: []const u8) error{
-        UnknownFormat,
-        InvalidCharacter,
-        Overflow,
-    }!Color {
+    pub fn parse(str: []const u8) ParseError!Color {
         switch (str.len) {
             // RGB
             3 => {
@@ -167,6 +172,21 @@ pub const Color = extern struct {
             else => return error.UnknownFormat,
         }
     }
+
+    test "Color.parse" {
+        const expected_color = rgba(0x00, 0xAA, 0xFF, 0xFF);
+
+        try expectEqual(expected_color, try parse("0AF"));
+        try expectEqual(expected_color, try parse("#0AF"));
+        try expectEqual(expected_color, try parse("00AAFF"));
+        try expectEqual(expected_color, try parse("#00AAFF"));
+        try expectEqual(expected_color, try parse("0AFF"));
+        try expectEqual(expected_color, try parse("00AAFFFF"));
+        try expectEqual(expected_color, try parse("#00AAFFFF"));
+
+        try expectError(ParseError.InvalidCharacter, parse("GGG"));
+        try expectError(ParseError.UnknownFormat, parse("F"));
+    }
 };
 
 pub const Vertex = extern struct {
@@ -221,14 +241,14 @@ pub const InitFlags = struct {
 };
 
 pub fn init(flags: InitFlags) !void {
-    if(flags.as_u32() == 0) return error.EmptyInitFlags;
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
     if (c.SDL_Init(flags.as_u32()) < 0)
         return makeError();
 }
 
 pub fn initSubSystem(flags: InitFlags) !void {
-    if(flags.as_u32() == 0) return error.EmptyInitFlags;
-    if(c.SDL_InitSubSystem(flags.as_u32()) < 0)
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
+    if (c.SDL_InitSubSystem(flags.as_u32()) < 0)
         return makeError();
 }
 
@@ -362,14 +382,14 @@ pub const WindowFlags = struct {
         opengl, //SDL_WINDOW_OPENGL
         vulkan, //SDL_WINDOW_VULKAN
         metal, // SDL_WINDOW_METAL
-        default
+        default,
     };
 
     /// If window should be hidden or shown
     pub const Visibility = enum {
         shown, // SDL_WINDOW_SHOWN
         hidden, // SDL_WINDOW_HIDDEN
-        default
+        default,
     };
 
     /// Dimension with which the window is created with
@@ -379,7 +399,7 @@ pub const WindowFlags = struct {
         fullscreen_desktop, // SDL_WINDOW_FULLSCREEN_DESKTOP
         maximized, // SDL_WINDOW_MAXIMIZED
         minimized, // SDL_WINDOW_MINIMIZED
-        default
+        default,
     };
 
     // fn fromInteger(val: c_uint) WindowFlags {
@@ -389,23 +409,23 @@ pub const WindowFlags = struct {
 
     fn toInteger(wf: WindowFlags) c_int {
         var val: c_int = 0;
-        switch(wf.dim) {
+        switch (wf.dim) {
             .fullscreen => val |= c.SDL_WINDOW_FULLSCREEN,
             .fullscreen_desktop => val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP,
             .maximized => val |= c.SDL_WINDOW_MAXIMIZED,
             .minimized => val |= c.SDL_WINDOW_MINIMIZED,
-            .default => {}
+            .default => {},
         }
-        switch(wf.context) {
+        switch (wf.context) {
             .vulkan => val |= c.SDL_WINDOW_VULKAN,
             .opengl => val |= c.SDL_WINDOW_OPENGL,
             .metal => val |= c.SDL_WINDOW_METAL,
-            .default => {}
+            .default => {},
         }
-        switch(wf.vis) {
+        switch (wf.vis) {
             .shown => val |= c.SDL_WINDOW_SHOWN,
             .hidden => val |= c.SDL_WINDOW_HIDDEN,
-            .default => {}
+            .default => {},
         }
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
         if (wf.resizable) val |= c.SDL_WINDOW_RESIZABLE;
