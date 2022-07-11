@@ -99,7 +99,7 @@ pub fn main() !void {
         "SDL2 Wrapper Demo",
         .{ .centered = {} }, .{ .centered = {} },
         640, 480,
-        .{ .shown = true },
+        .{ .vis = .shown },
     );
     defer window.destroy();
 

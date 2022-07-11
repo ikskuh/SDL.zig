@@ -16,7 +16,7 @@ pub fn main() !void {
         .{ .centered = {} },
         640,
         480,
-        .{ .shown = true },
+        .{ .vis = .shown },
     );
     defer window.destroy();
 

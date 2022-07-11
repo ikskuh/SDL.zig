@@ -1,9 +1,13 @@
 const std = @import("std");
 
+const expectEqual = std.testing.expectEqual;
+const expectError = std.testing.expectError;
+
 /// Exports the C interface for SDL
 pub const c = @import("sdl-native");
 
 pub const image = @import("image.zig");
+pub const ttf = @import("ttf.zig");
 pub const gl = @import("gl.zig");
 
 pub const Error = error{SdlError};
@@ -28,8 +32,8 @@ pub const Rectangle = extern struct {
     fn getSdlPtr(r: *Rectangle) *c.SDL_Rect {
         return @ptrCast(*c.SDL_Rect, r);
     }
-    fn getConstSdlPtr(r: Rectangle) *const c.SDL_Rect {
-        return @ptrCast(*const c.SDL_Rect, &r);
+    fn getConstSdlPtr(r: *const Rectangle) *const c.SDL_Rect {
+        return @ptrCast(*const c.SDL_Rect, r);
     }
 };
 
@@ -87,6 +91,12 @@ pub const Color = extern struct {
         return Color{ .r = r, .g = g, .b = b, .a = a };
     }
 
+    pub const ParseError = error{
+        UnknownFormat,
+        InvalidCharacter,
+        Overflow,
+    };
+
     /// parses a hex string color literal.
     /// allowed formats are:
     /// - `RGB`
@@ -97,11 +107,7 @@ pub const Color = extern struct {
     /// - `#RRGGBB`
     /// - `RRGGBBAA`
     /// - `#RRGGBBAA`
-    pub fn parse(str: []const u8) error{
-        UnknownFormat,
-        InvalidCharacter,
-        Overflow,
-    }!Color {
+    pub fn parse(str: []const u8) ParseError!Color {
         switch (str.len) {
             // RGB
             3 => {
@@ -166,6 +172,21 @@ pub const Color = extern struct {
             else => return error.UnknownFormat,
         }
     }
+
+    test "Color.parse" {
+        const expected_color = rgba(0x00, 0xAA, 0xFF, 0xFF);
+
+        try expectEqual(expected_color, try parse("0AF"));
+        try expectEqual(expected_color, try parse("#0AF"));
+        try expectEqual(expected_color, try parse("00AAFF"));
+        try expectEqual(expected_color, try parse("#00AAFF"));
+        try expectEqual(expected_color, try parse("0AFF"));
+        try expectEqual(expected_color, try parse("00AAFFFF"));
+        try expectEqual(expected_color, try parse("#00AAFFFF"));
+
+        try expectError(ParseError.InvalidCharacter, parse("GGG"));
+        try expectError(ParseError.UnknownFormat, parse("F"));
+    }
 };
 
 pub const Vertex = extern struct {
@@ -220,12 +241,23 @@ pub const InitFlags = struct {
 };
 
 pub fn init(flags: InitFlags) !void {
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
     if (c.SDL_Init(flags.as_u32()) < 0)
+        return makeError();
+}
+
+pub fn initSubSystem(flags: InitFlags) !void {
+    if (flags.as_u32() == 0) return error.EmptyInitFlags;
+    if (c.SDL_InitSubSystem(flags.as_u32()) < 0)
         return makeError();
 }
 
 pub fn wasInit(flags: InitFlags) InitFlags {
     return InitFlags.from_u32(c.SDL_WasInit(flags.as_u32()));
+}
+
+pub fn quitSubSystem(flags: InitFlags) void {
+    c.SDL_QuitSubSystem(flags.as_u32());
 }
 
 pub fn quit() void {
@@ -297,35 +329,20 @@ pub const WindowPosition = union(enum) {
 };
 
 pub const WindowFlags = struct {
-    /// fullscreen window
-    fullscreen: bool = false, // SDL_WINDOW_FULLSCREEN,
+    /// Window dimension
+    dim: Dimension = .default,
 
-    /// fullscreen window at the current desktop resolution,
-    fullscreen_desktop: bool = false, // SDL_WINDOW_FULLSCREEN_DESKTOP
+    /// Window context
+    context: Context = .default,
 
-    /// window usable with OpenGL context
-    opengl: bool = false, //  SDL_WINDOW_OPENGL,
-
-    /// window usable with Vulkan context
-    vulkan: bool = false, //  SDL_WINDOW_VULKAN,
-
-    /// window is visible,
-    shown: bool = false, //  SDL_WINDOW_SHOWN,
-
-    /// window is not visible
-    hidden: bool = false, //  SDL_WINDOW_HIDDEN,
+    /// Window visibility
+    vis: Visibility = .default,
 
     /// no window decoration
     borderless: bool = false, // SDL_WINDOW_BORDERLESS,
 
     /// window can be resized
     resizable: bool = false, // SDL_WINDOW_RESIZABLE,
-
-    /// window is minimized
-    minimized: bool = false, // SDL_WINDOW_MINIMIZED,
-
-    /// window is maximized
-    maximized: bool = false, // SDL_WINDOW_MAXIMIZED,
 
     ///  window has grabbed input focus
     input_grabbed: bool = false, // SDL_WINDOW_INPUT_GRABBED,
@@ -360,6 +377,31 @@ pub const WindowFlags = struct {
     /// window should be treated as a popup menu (X11 only, >= SDL 2.0.5)
     popup_menu: bool = false, //SDL_WINDOW_POPUP_MENU,
 
+    /// Context window should be usable with
+    pub const Context = enum {
+        opengl, //SDL_WINDOW_OPENGL
+        vulkan, //SDL_WINDOW_VULKAN
+        metal, // SDL_WINDOW_METAL
+        default,
+    };
+
+    /// If window should be hidden or shown
+    pub const Visibility = enum {
+        shown, // SDL_WINDOW_SHOWN
+        hidden, // SDL_WINDOW_HIDDEN
+        default,
+    };
+
+    /// Dimension with which the window is created with
+    pub const Dimension = enum {
+        fullscreen, // SDL_WINDOW_FULLSCREEN
+        /// Fullscreen window at current resolution
+        fullscreen_desktop, // SDL_WINDOW_FULLSCREEN_DESKTOP
+        maximized, // SDL_WINDOW_MAXIMIZED
+        minimized, // SDL_WINDOW_MINIMIZED
+        default,
+    };
+
     // fn fromInteger(val: c_uint) WindowFlags {
     //     // TODO: Implement
     //     @panic("niy");
@@ -367,16 +409,26 @@ pub const WindowFlags = struct {
 
     fn toInteger(wf: WindowFlags) c_int {
         var val: c_int = 0;
-        if (wf.fullscreen) val |= c.SDL_WINDOW_FULLSCREEN;
-        if (wf.fullscreen_desktop) val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP;
-        if (wf.opengl) val |= c.SDL_WINDOW_OPENGL;
-        if (wf.vulkan) val |= c.SDL_WINDOW_VULKAN;
-        if (wf.shown) val |= c.SDL_WINDOW_SHOWN;
-        if (wf.hidden) val |= c.SDL_WINDOW_HIDDEN;
+        switch (wf.dim) {
+            .fullscreen => val |= c.SDL_WINDOW_FULLSCREEN,
+            .fullscreen_desktop => val |= c.SDL_WINDOW_FULLSCREEN_DESKTOP,
+            .maximized => val |= c.SDL_WINDOW_MAXIMIZED,
+            .minimized => val |= c.SDL_WINDOW_MINIMIZED,
+            .default => {},
+        }
+        switch (wf.context) {
+            .vulkan => val |= c.SDL_WINDOW_VULKAN,
+            .opengl => val |= c.SDL_WINDOW_OPENGL,
+            .metal => val |= c.SDL_WINDOW_METAL,
+            .default => {},
+        }
+        switch (wf.vis) {
+            .shown => val |= c.SDL_WINDOW_SHOWN,
+            .hidden => val |= c.SDL_WINDOW_HIDDEN,
+            .default => {},
+        }
         if (wf.borderless) val |= c.SDL_WINDOW_BORDERLESS;
         if (wf.resizable) val |= c.SDL_WINDOW_RESIZABLE;
-        if (wf.minimized) val |= c.SDL_WINDOW_MINIMIZED;
-        if (wf.maximized) val |= c.SDL_WINDOW_MAXIMIZED;
         if (wf.input_grabbed) val |= c.SDL_WINDOW_INPUT_GRABBED;
         if (wf.input_focus) val |= c.SDL_WINDOW_INPUT_FOCUS;
         if (wf.mouse_focus) val |= c.SDL_WINDOW_MOUSE_FOCUS;
@@ -462,8 +514,8 @@ pub fn loadBmp(filename: [:0]const u8) !Surface {
     return makeError();
 }
 
-pub fn createRgbSurfaceWithFormat(width: u31, height: u31, bit_depth: u31, format: PixelFormatEnum) !Surface {
-    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(0, width, height, bit_depth, @enumToInt(format)) orelse return error.SdlError };
+pub fn createRgbSurfaceWithFormat(width: u31, height: u31, format: PixelFormatEnum) !Surface {
+    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(undefined, width, height, undefined, @enumToInt(format)) orelse return error.SdlError };
 }
 
 pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_rectangle: ?*Rectangle) !void {
@@ -2432,6 +2484,25 @@ pub fn showCursor(toggle: ?bool) !bool {
     if (ret < 0) {
         return makeError();
     } else return ret == c.SDL_ENABLE;
+}
+
+/// Starts text input if not already active.
+/// On Windows and X11, calling this function also clears any saved "dead" keys
+/// (combinatory keys that trigger on the next key press, like ^, ´, etc.).
+/// Otherwise does not directly interact with ongoing text input / IME state.
+pub fn startTextInput() void {
+    c.SDL_StartTextInput();
+}
+/// Stops text input if currently active, discarding any current composition.
+/// On Windows and X11, calling this function also clears any saved "dead" keys
+/// (combinatory keys that trigger on the next key press, like ^, ´, etc.).
+pub fn stopTextInput() void {
+    c.SDL_StopTextInput();
+}
+/// Sets the text input rectangle in which to next start text input,
+/// and (on some platforms) moves a currently active text input rect + composition window.
+pub fn setTextInputRect(text_input_rectangle: Rectangle) void {
+    c.SDL_SetTextInputRect(text_input_rectangle.getConstSdlPtr());
 }
 
 pub const Wav = struct {

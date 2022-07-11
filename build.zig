@@ -25,7 +25,16 @@ pub fn build(b: *Builder) !void {
         });
         lib_test.addPackage(sdk.getNativePackage("sdl-native"));
         lib_test.linkSystemLibrary("sdl2_image");
+        lib_test.linkSystemLibrary("sdl2_ttf");
         if (lib_test.target.isDarwin()) {
+            // SDL_TTF
+            lib_test.linkSystemLibrary("freetype");
+            lib_test.linkSystemLibrary("harfbuzz");
+            lib_test.linkSystemLibrary("bz2");
+            lib_test.linkSystemLibrary("zlib");
+            lib_test.linkSystemLibrary("graphite2");
+
+            // SDL_IMAGE
             lib_test.linkSystemLibrary("jpeg");
             lib_test.linkSystemLibrary("libpng");
             lib_test.linkSystemLibrary("tiff");
