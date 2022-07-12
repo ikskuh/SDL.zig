@@ -1398,6 +1398,27 @@ pub const ControllerButtonEvent = struct {
     }
 };
 
+pub const UserEvent = struct {
+    /// from Event.registerEvents
+    type: u32,
+    timestamp: u32 = 0,
+    window_id: u32 = 0,
+    code: i32,
+    data1: ?*anyopaque = null,
+    data2: ?*anyopaque = null,
+
+    pub fn from(native: c.SDL_UserEvent) UserEvent {
+        return .{
+            .type = native.type,
+            .timestamp = native.timestamp,
+            .window_id = native.windowID,
+            .code = native.code,
+            .data1 = native.data1,
+            .data2 = native.data2,
+        };
+    }
+};
+
 pub const EventType = std.meta.Tag(Event);
 pub const Event = union(enum) {
     pub const CommonEvent = c.SDL_CommonEvent;
@@ -1409,7 +1430,6 @@ pub const Event = union(enum) {
     pub const AudioDeviceEvent = c.SDL_AudioDeviceEvent;
     pub const SensorEvent = c.SDL_SensorEvent;
     pub const QuitEvent = c.SDL_QuitEvent;
-    pub const UserEvent = c.SDL_UserEvent;
     pub const SysWMEvent = c.SDL_SysWMEvent;
     pub const TouchFingerEvent = c.SDL_TouchFingerEvent;
     pub const MultiGestureEvent = c.SDL_MultiGestureEvent;
@@ -1464,7 +1484,7 @@ pub const Event = union(enum) {
     drop_text: DropEvent,
     drop_begin: DropEvent,
     drop_complete: DropEvent,
-    // user: UserEvent,
+    user: UserEvent,
 
     pub fn from(raw: c.SDL_Event) Event {
         return switch (raw.type) {
@@ -1516,10 +1536,35 @@ pub const Event = union(enum) {
             c.SDL_SENSORUPDATE => Event{ .sensor_update = raw.sensor },
             c.SDL_RENDER_TARGETS_RESET => Event{ .render_targets_reset = raw.common },
             c.SDL_RENDER_DEVICE_RESET => Event{ .render_device_reset = raw.common },
+            c.SDL_USEREVENT => Event{ .user = UserEvent.from(raw.user) },
             else => @panic("Unsupported event type detected!"),
         };
     }
 };
+
+/// register `num` user events and return the corresponding type
+/// to be used when generating those.
+pub fn registerEvents(num: i32) !u32 {
+    const res = c.SDL_RegisterEvents(num);
+    if (res == std.math.maxInt(u32)) return error.CannotRegisterUserEvent;
+    return res;
+}
+
+/// push a new user event in the event queue. Safe for concurrent use.
+/// `ev_type` must be a value returned by `registerEvent`.
+pub fn pushEvent(ev_type: u32, code: i32, data1: ?*anyopaque, data2: ?*anyopaque) !void {
+    var sdl_ev = c.SDL_Event{
+        .user = .{
+            .type = ev_type,
+            .timestamp = 0,
+            .windowID = 0,
+            .code = code,
+            .data1 = data1,
+            .data2 = data2,
+        },
+    };
+    if (c.SDL_PushEvent(&sdl_ev) < 0) return makeError();
+}
 
 /// This function should only be called from
 /// the thread that initialized the video subsystem.
