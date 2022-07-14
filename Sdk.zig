@@ -98,6 +98,39 @@ pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.
     });
 }
 
+pub fn linkTtf(sdk: *Sdk, exe: *LibExeObjStep) void {
+    const b = sdk.builder;
+    const target = (
+        std.zig.system.NativeTargetInfo.detect(
+            b.allocator,
+            exe.target
+        ) catch @panic("failed to detect native target info!")
+    ).target;
+
+    // This is required on all platforms
+    exe.linkLibC();
+
+    if (target.os.tag == .linux) {
+        exe.linkSystemLibrary("sdl2_ttf");
+    } else if (target.os.tag == .windows) {
+        @compileError("Not implemented yet");
+    } else if (target.isDarwin()) {
+
+        // on MacOS, we require a brew install
+        // requires sdl_ttf to be installed via brew
+
+        exe.linkSystemLibrary("sdl2_ttf");
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("harfbuzz");
+        exe.linkSystemLibrary("bz2");
+        exe.linkSystemLibrary("zlib");
+        exe.linkSystemLibrary("graphite2");
+    } else {
+        // on all other platforms, just try the system way:
+        exe.linkSystemLibrary("sdl2_ttf");
+    }
+}
+
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void {
@@ -278,6 +311,13 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         // on MacOS, we require a brew install
         // requires sdl2 and sdl2_image to be installed via brew
         exe.linkSystemLibrary("sdl2");
+
+        exe.linkSystemLibrary("sdl2_ttf");
+        exe.linkSystemLibrary("freetype");
+        exe.linkSystemLibrary("harfbuzz");
+        exe.linkSystemLibrary("bz2");
+        exe.linkSystemLibrary("zlib");
+        exe.linkSystemLibrary("graphite2");
 
         exe.linkFramework("IOKit");
         exe.linkFramework("Cocoa");
