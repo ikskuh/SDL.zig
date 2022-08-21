@@ -15,10 +15,12 @@ const LibExeObjStep = std.build.LibExeObjStep;
 
 const Sdk = @This();
 
-inline fn sdkRoot() []const u8 {
-    comptime {
-        return std.fs.path.dirname(@src().file) orelse ".";
-    }
+fn sdkPath(comptime suffix: []const u8) []const u8 {
+    if (suffix[0] != '/') @compileError("relToPath requires an absolute path!");
+    return comptime blk: {
+        const root_dir = std.fs.path.dirname(@src().file) orelse ".";
+        break :blk root_dir ++ suffix;
+    };
 }
 
 const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
@@ -51,13 +53,13 @@ pub fn init(b: *Builder) *Sdk {
 pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     const build_options = sdk.builder.addOptions();
     build_options.addOption(bool, "vulkan", false);
-    return std.build.Pkg{
+    return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .source = .{ .path = sdkPath("/src/binding/sdl.zig") },
         .dependencies = &[_]std.build.Pkg{
             build_options.getPackage("build_options"),
         },
-    };
+    });
 }
 
 /// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
@@ -67,21 +69,21 @@ pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
 pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
     const build_options = sdk.builder.addOptions();
     build_options.addOption(bool, "vulkan", true);
-    return std.build.Pkg{
+    return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkRoot() ++ "/src/binding/sdl.zig" },
+        .source = .{ .path = sdkPath("/src/binding/sdl.zig") },
         .dependencies = &[_]std.build.Pkg{
             build_options.getPackage("build_options"),
             vulkan,
         },
-    };
+    });
 }
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
     return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .source = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
         .dependencies = &[_]std.build.Pkg{
             sdk.getNativePackage("sdl-native"),
         },
@@ -93,7 +95,7 @@ pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
 pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
     return sdk.builder.dupePkg(std.build.Pkg{
         .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkRoot() ++ "/src/wrapper/sdl.zig" },
+        .source = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
         .dependencies = &[_]std.build.Pkg{
             sdk.getNativePackageVulkan("sdl-native", vulkan),
         },
@@ -102,12 +104,7 @@ pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.
 
 pub fn linkTtf(sdk: *Sdk, exe: *LibExeObjStep) void {
     const b = sdk.builder;
-    const target = (
-        std.zig.system.NativeTargetInfo.detect(
-            b.allocator,
-            exe.target
-        ) catch @panic("failed to detect native target info!")
-    ).target;
+    const target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
 
     // This is required on all platforms
     exe.linkLibC();
@@ -254,9 +251,9 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
                 sdk_paths.include,
                 "SDL2",
             }) catch @panic("out of memory");
-            exe.addIncludeDir(include_path);
+            exe.addIncludePath(include_path);
         } else {
-            exe.addIncludeDir(sdk_paths.include);
+            exe.addIncludePath(sdk_paths.include);
         }
 
         // link the right libraries

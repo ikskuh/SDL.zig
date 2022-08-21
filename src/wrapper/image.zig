@@ -22,7 +22,7 @@ pub fn quit() void {
 
 pub fn loadTexture(ren: SDL.Renderer, file: [:0]const u8) !SDL.Texture {
     return SDL.Texture{
-        .ptr = c.IMG_LoadTexture(ren.ptr, file) orelse return SDL.makeError(),
+        .ptr = c.IMG_LoadTexture(ren.ptr, file.ptr) orelse return SDL.makeError(),
     };
 }
 

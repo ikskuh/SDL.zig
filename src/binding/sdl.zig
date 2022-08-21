@@ -1,9 +1,9 @@
 const build_options = @import("build_options");
 
-usingnamespace if (build_options.vulkan) @import("vulkan.zig") else struct {};
+pub usingnamespace if (build_options.vulkan) @import("vulkan.zig") else struct {};
 
-usingnamespace @import("sdl_image.zig");
-usingnamespace @import("sdl_ttf.zig");
+pub usingnamespace @import("sdl_image.zig");
+pub usingnamespace @import("sdl_ttf.zig");
 
 pub const SDL_INIT_TIMER: u32 = 0x00000001;
 pub const SDL_INIT_AUDIO: u32 = 0x00000010;
@@ -111,11 +111,11 @@ pub extern fn SDL_UnionRect(A: [*c]const SDL_Rect, B: [*c]const SDL_Rect, result
 pub extern fn SDL_EnclosePoints(points: [*c]const SDL_Point, count: c_int, clip: [*c]const SDL_Rect, result: [*c]SDL_Rect) SDL_bool;
 pub extern fn SDL_IntersectRectAndLine(rect: [*c]const SDL_Rect, X1: [*c]c_int, Y1: [*c]c_int, X2: [*c]c_int, Y2: [*c]c_int) SDL_bool;
 pub const SDL_RWops = extern struct {
-    size: ?fn ([*c]SDL_RWops) callconv(.C) i64,
-    seek: ?fn ([*c]SDL_RWops, i64, c_int) callconv(.C) i64,
-    read: ?fn ([*c]SDL_RWops, ?*anyopaque, usize, usize) callconv(.C) usize,
-    write: ?fn ([*c]SDL_RWops, ?*const anyopaque, usize, usize) callconv(.C) usize,
-    close: ?fn ([*c]SDL_RWops) callconv(.C) c_int,
+    size: ?*const fn ([*c]SDL_RWops) callconv(.C) i64,
+    seek: ?*const fn ([*c]SDL_RWops, i64, c_int) callconv(.C) i64,
+    read: ?*const fn ([*c]SDL_RWops, ?*anyopaque, usize, usize) callconv(.C) usize,
+    write: ?*const fn ([*c]SDL_RWops, ?*const anyopaque, usize, usize) callconv(.C) usize,
+    close: ?*const fn ([*c]SDL_RWops) callconv(.C) c_int,
 
     type: u32,
     hidden: Data,
@@ -365,47 +365,47 @@ pub const SDL_Surface = extern struct {
     map: ?*SDL_BlitMap,
     refcount: c_int,
 };
-pub const SDL_blit = ?fn ([*c]SDL_Surface, [*c]SDL_Rect, [*c]SDL_Surface, [*c]SDL_Rect) callconv(.C) c_int;
+pub const SDL_blit = ?*const fn (?*SDL_Surface, [*c]SDL_Rect, ?*SDL_Surface, [*c]SDL_Rect) callconv(.C) c_int;
 pub const SDL_YUV_CONVERSION_JPEG: c_int = 0;
 pub const SDL_YUV_CONVERSION_BT601: c_int = 1;
 pub const SDL_YUV_CONVERSION_BT709: c_int = 2;
 pub const SDL_YUV_CONVERSION_AUTOMATIC: c_int = 3;
 pub const SDL_YUV_CONVERSION_MODE = c_uint;
-pub extern fn SDL_CreateRGBSurface(flags: u32, width: c_int, height: c_int, depth: c_int, Rmask: u32, Gmask: u32, Bmask: u32, Amask: u32) [*c]SDL_Surface;
-pub extern fn SDL_CreateRGBSurfaceWithFormat(flags: u32, width: c_int, height: c_int, depth: c_int, format: u32) [*c]SDL_Surface;
-pub extern fn SDL_CreateRGBSurfaceFrom(pixels: ?*anyopaque, width: c_int, height: c_int, depth: c_int, pitch: c_int, Rmask: u32, Gmask: u32, Bmask: u32, Amask: u32) [*c]SDL_Surface;
-pub extern fn SDL_CreateRGBSurfaceWithFormatFrom(pixels: ?*anyopaque, width: c_int, height: c_int, depth: c_int, pitch: c_int, format: u32) [*c]SDL_Surface;
-pub extern fn SDL_FreeSurface(surface: [*c]SDL_Surface) void;
-pub extern fn SDL_SetSurfacePalette(surface: [*c]SDL_Surface, palette: [*c]SDL_Palette) c_int;
-pub extern fn SDL_LockSurface(surface: [*c]SDL_Surface) c_int;
-pub extern fn SDL_UnlockSurface(surface: [*c]SDL_Surface) void;
-pub extern fn SDL_LoadBMP_RW(src: [*c]SDL_RWops, freesrc: c_int) [*c]SDL_Surface;
-pub extern fn SDL_SaveBMP_RW(surface: [*c]SDL_Surface, dst: [*c]SDL_RWops, freedst: c_int) c_int;
-pub extern fn SDL_SetSurfaceRLE(surface: [*c]SDL_Surface, flag: c_int) c_int;
-pub extern fn SDL_HasSurfaceRLE(surface: [*c]SDL_Surface) SDL_bool;
-pub extern fn SDL_SetColorKey(surface: [*c]SDL_Surface, flag: c_int, key: u32) c_int;
-pub extern fn SDL_HasColorKey(surface: [*c]SDL_Surface) SDL_bool;
-pub extern fn SDL_GetColorKey(surface: [*c]SDL_Surface, key: [*c]u32) c_int;
-pub extern fn SDL_SetSurfaceColorMod(surface: [*c]SDL_Surface, r: u8, g: u8, b: u8) c_int;
-pub extern fn SDL_GetSurfaceColorMod(surface: [*c]SDL_Surface, r: [*c]u8, g: [*c]u8, b: [*c]u8) c_int;
-pub extern fn SDL_SetSurfaceAlphaMod(surface: [*c]SDL_Surface, alpha: u8) c_int;
-pub extern fn SDL_GetSurfaceAlphaMod(surface: [*c]SDL_Surface, alpha: [*c]u8) c_int;
-pub extern fn SDL_SetSurfaceBlendMode(surface: [*c]SDL_Surface, blendMode: SDL_BlendMode) c_int;
-pub extern fn SDL_GetSurfaceBlendMode(surface: [*c]SDL_Surface, blendMode: [*c]SDL_BlendMode) c_int;
-pub extern fn SDL_SetClipRect(surface: [*c]SDL_Surface, rect: [*c]const SDL_Rect) SDL_bool;
-pub extern fn SDL_GetClipRect(surface: [*c]SDL_Surface, rect: [*c]SDL_Rect) void;
-pub extern fn SDL_DuplicateSurface(surface: [*c]SDL_Surface) [*c]SDL_Surface;
-pub extern fn SDL_ConvertSurface(src: [*c]SDL_Surface, fmt: [*c]const SDL_PixelFormat, flags: u32) [*c]SDL_Surface;
-pub extern fn SDL_ConvertSurfaceFormat(src: [*c]SDL_Surface, pixel_format: u32, flags: u32) [*c]SDL_Surface;
+pub extern fn SDL_CreateRGBSurface(flags: u32, width: c_int, height: c_int, depth: c_int, Rmask: u32, Gmask: u32, Bmask: u32, Amask: u32) ?*SDL_Surface;
+pub extern fn SDL_CreateRGBSurfaceWithFormat(flags: u32, width: c_int, height: c_int, depth: c_int, format: u32) ?*SDL_Surface;
+pub extern fn SDL_CreateRGBSurfaceFrom(pixels: ?*anyopaque, width: c_int, height: c_int, depth: c_int, pitch: c_int, Rmask: u32, Gmask: u32, Bmask: u32, Amask: u32) ?*SDL_Surface;
+pub extern fn SDL_CreateRGBSurfaceWithFormatFrom(pixels: ?*anyopaque, width: c_int, height: c_int, depth: c_int, pitch: c_int, format: u32) ?*SDL_Surface;
+pub extern fn SDL_FreeSurface(surface: ?*SDL_Surface) void;
+pub extern fn SDL_SetSurfacePalette(surface: ?*SDL_Surface, palette: [*c]SDL_Palette) c_int;
+pub extern fn SDL_LockSurface(surface: ?*SDL_Surface) c_int;
+pub extern fn SDL_UnlockSurface(surface: ?*SDL_Surface) void;
+pub extern fn SDL_LoadBMP_RW(src: [*c]SDL_RWops, freesrc: c_int) ?*SDL_Surface;
+pub extern fn SDL_SaveBMP_RW(surface: ?*SDL_Surface, dst: [*c]SDL_RWops, freedst: c_int) c_int;
+pub extern fn SDL_SetSurfaceRLE(surface: ?*SDL_Surface, flag: c_int) c_int;
+pub extern fn SDL_HasSurfaceRLE(surface: ?*SDL_Surface) SDL_bool;
+pub extern fn SDL_SetColorKey(surface: ?*SDL_Surface, flag: c_int, key: u32) c_int;
+pub extern fn SDL_HasColorKey(surface: ?*SDL_Surface) SDL_bool;
+pub extern fn SDL_GetColorKey(surface: ?*SDL_Surface, key: [*c]u32) c_int;
+pub extern fn SDL_SetSurfaceColorMod(surface: ?*SDL_Surface, r: u8, g: u8, b: u8) c_int;
+pub extern fn SDL_GetSurfaceColorMod(surface: ?*SDL_Surface, r: [*c]u8, g: [*c]u8, b: [*c]u8) c_int;
+pub extern fn SDL_SetSurfaceAlphaMod(surface: ?*SDL_Surface, alpha: u8) c_int;
+pub extern fn SDL_GetSurfaceAlphaMod(surface: ?*SDL_Surface, alpha: [*c]u8) c_int;
+pub extern fn SDL_SetSurfaceBlendMode(surface: ?*SDL_Surface, blendMode: SDL_BlendMode) c_int;
+pub extern fn SDL_GetSurfaceBlendMode(surface: ?*SDL_Surface, blendMode: [*c]SDL_BlendMode) c_int;
+pub extern fn SDL_SetClipRect(surface: ?*SDL_Surface, rect: [*c]const SDL_Rect) SDL_bool;
+pub extern fn SDL_GetClipRect(surface: ?*SDL_Surface, rect: [*c]SDL_Rect) void;
+pub extern fn SDL_DuplicateSurface(surface: ?*SDL_Surface) ?*SDL_Surface;
+pub extern fn SDL_ConvertSurface(src: ?*SDL_Surface, fmt: [*c]const SDL_PixelFormat, flags: u32) ?*SDL_Surface;
+pub extern fn SDL_ConvertSurfaceFormat(src: ?*SDL_Surface, pixel_format: u32, flags: u32) ?*SDL_Surface;
 pub extern fn SDL_ConvertPixels(width: c_int, height: c_int, src_format: u32, src: ?*const anyopaque, src_pitch: c_int, dst_format: u32, dst: ?*anyopaque, dst_pitch: c_int) c_int;
-pub extern fn SDL_FillRect(dst: [*c]SDL_Surface, rect: [*c]const SDL_Rect, color: u32) c_int;
-pub extern fn SDL_FillRects(dst: [*c]SDL_Surface, rects: [*c]const SDL_Rect, count: c_int, color: u32) c_int;
-pub extern fn SDL_UpperBlit(src: [*c]SDL_Surface, srcrect: [*c]const SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
-pub extern fn SDL_LowerBlit(src: [*c]SDL_Surface, srcrect: [*c]SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
-pub extern fn SDL_SoftStretch(src: [*c]SDL_Surface, srcrect: [*c]const SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]const SDL_Rect) c_int;
-pub extern fn SDL_SoftStretchLinear(src: [*c]SDL_Surface, srcrect: [*c]const SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]const SDL_Rect) c_int;
-pub extern fn SDL_UpperBlitScaled(src: [*c]SDL_Surface, srcrect: [*c]const SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
-pub extern fn SDL_LowerBlitScaled(src: [*c]SDL_Surface, srcrect: [*c]SDL_Rect, dst: [*c]SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
+pub extern fn SDL_FillRect(dst: ?*SDL_Surface, rect: [*c]const SDL_Rect, color: u32) c_int;
+pub extern fn SDL_FillRects(dst: ?*SDL_Surface, rects: [*c]const SDL_Rect, count: c_int, color: u32) c_int;
+pub extern fn SDL_UpperBlit(src: ?*SDL_Surface, srcrect: [*c]const SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
+pub extern fn SDL_LowerBlit(src: ?*SDL_Surface, srcrect: [*c]SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
+pub extern fn SDL_SoftStretch(src: ?*SDL_Surface, srcrect: [*c]const SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]const SDL_Rect) c_int;
+pub extern fn SDL_SoftStretchLinear(src: ?*SDL_Surface, srcrect: [*c]const SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]const SDL_Rect) c_int;
+pub extern fn SDL_UpperBlitScaled(src: ?*SDL_Surface, srcrect: [*c]const SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
+pub extern fn SDL_LowerBlitScaled(src: ?*SDL_Surface, srcrect: [*c]SDL_Rect, dst: ?*SDL_Surface, dstrect: [*c]SDL_Rect) c_int;
 pub extern fn SDL_SetYUVConversionMode(mode: SDL_YUV_CONVERSION_MODE) void;
 pub extern fn SDL_GetYUVConversionMode() SDL_YUV_CONVERSION_MODE;
 pub extern fn SDL_GetYUVConversionModeForResolution(width: c_int, height: c_int) SDL_YUV_CONVERSION_MODE;
@@ -432,7 +432,7 @@ pub extern fn SDL_GetClipboardText() [*c]u8;
 pub extern fn SDL_HasClipboardText() SDL_bool;
 pub extern fn SDL_free(data: [*c]const u8) void;
 pub const SDL_AudioFormat = u16;
-pub const SDL_AudioCallback = ?fn (?*anyopaque, [*c]u8, c_int) callconv(.C) void;
+pub const SDL_AudioCallback = ?*const fn (?*anyopaque, [*c]u8, c_int) callconv(.C) void;
 pub const SDL_AudioSpec = extern struct {
     freq: c_int,
     format: SDL_AudioFormat,
@@ -444,7 +444,7 @@ pub const SDL_AudioSpec = extern struct {
     callback: SDL_AudioCallback,
     userdata: ?*anyopaque,
 };
-pub const SDL_AudioFilter = ?fn ([*c]SDL_AudioCVT, SDL_AudioFormat) callconv(.C) void;
+pub const SDL_AudioFilter = ?*const fn ([*c]SDL_AudioCVT, SDL_AudioFormat) callconv(.C) void;
 pub const SDL_AudioCVT = extern struct {
     needed: c_int,
     src_format: SDL_AudioFormat,
@@ -639,7 +639,7 @@ pub extern fn SDL_GetWindowFromID(id: u32) ?*SDL_Window;
 pub extern fn SDL_GetWindowFlags(window: ?*SDL_Window) u32;
 pub extern fn SDL_SetWindowTitle(window: ?*SDL_Window, title: [*c]const u8) void;
 pub extern fn SDL_GetWindowTitle(window: ?*SDL_Window) [*c]const u8;
-pub extern fn SDL_SetWindowIcon(window: ?*SDL_Window, icon: [*c]SDL_Surface) void;
+pub extern fn SDL_SetWindowIcon(window: ?*SDL_Window, icon: ?*SDL_Surface) void;
 pub extern fn SDL_SetWindowData(window: ?*SDL_Window, name: [*c]const u8, userdata: ?*anyopaque) ?*anyopaque;
 pub extern fn SDL_GetWindowData(window: ?*SDL_Window, name: [*c]const u8) ?*anyopaque;
 pub extern fn SDL_SetWindowPosition(window: ?*SDL_Window, x: c_int, y: c_int) void;
@@ -661,7 +661,7 @@ pub extern fn SDL_MaximizeWindow(window: ?*SDL_Window) void;
 pub extern fn SDL_MinimizeWindow(window: ?*SDL_Window) void;
 pub extern fn SDL_RestoreWindow(window: ?*SDL_Window) void;
 pub extern fn SDL_SetWindowFullscreen(window: ?*SDL_Window, flags: u32) c_int;
-pub extern fn SDL_GetWindowSurface(window: ?*SDL_Window) [*c]SDL_Surface;
+pub extern fn SDL_GetWindowSurface(window: ?*SDL_Window) ?*SDL_Surface;
 pub extern fn SDL_UpdateWindowSurface(window: ?*SDL_Window) c_int;
 pub extern fn SDL_UpdateWindowSurfaceRects(window: ?*SDL_Window, rects: [*c]const SDL_Rect, numrects: c_int) c_int;
 pub extern fn SDL_SetWindowGrab(window: ?*SDL_Window, grabbed: SDL_bool) void;
@@ -690,7 +690,7 @@ pub const SDL_HITTEST_RESIZE_BOTTOM: c_int = 7;
 pub const SDL_HITTEST_RESIZE_BOTTOMLEFT: c_int = 8;
 pub const SDL_HITTEST_RESIZE_LEFT: c_int = 9;
 pub const SDL_HitTestResult = c_uint;
-pub const SDL_HitTest = ?fn (?*SDL_Window, [*c]const SDL_Point, ?*anyopaque) callconv(.C) SDL_HitTestResult;
+pub const SDL_HitTest = ?*const fn (?*SDL_Window, [*c]const SDL_Point, ?*anyopaque) callconv(.C) SDL_HitTestResult;
 pub extern fn SDL_SetWindowHitTest(window: ?*SDL_Window, callback: SDL_HitTest, callback_data: ?*anyopaque) c_int;
 pub extern fn SDL_FlashWindow(window: ?*SDL_Window, operation: SDL_FlashOperation) c_int;
 pub extern fn SDL_DestroyWindow(window: ?*SDL_Window) void;
@@ -784,7 +784,7 @@ pub extern fn SDL_GetTicks64() u64;
 pub extern fn SDL_GetPerformanceCounter() u64;
 pub extern fn SDL_GetPerformanceFrequency() u64;
 pub extern fn SDL_Delay(ms: u32) void;
-pub const SDL_TimerCallback = ?fn (u32, ?*anyopaque) callconv(.C) u32;
+pub const SDL_TimerCallback = ?*const fn (u32, ?*anyopaque) callconv(.C) u32;
 pub const SDL_TimerID = c_int;
 pub extern fn SDL_AddTimer(interval: u32, callback: SDL_TimerCallback, param: ?*anyopaque) SDL_TimerID;
 pub extern fn SDL_RemoveTimer(id: SDL_TimerID) SDL_bool;
@@ -810,7 +810,7 @@ pub const SDL_WindowShapeMode = extern struct {
     mode: WindowShapeMode,
     parameters: SDL_WindowShapeParams,
 };
-pub extern fn SDL_SetWindowShape(window: ?*SDL_Window, shape: [*c]SDL_Surface, shape_mode: [*c]SDL_WindowShapeMode) c_int;
+pub extern fn SDL_SetWindowShape(window: ?*SDL_Window, shape: ?*SDL_Surface, shape_mode: [*c]SDL_WindowShapeMode) c_int;
 pub extern fn SDL_GetShapedWindowMode(window: ?*SDL_Window, shape_mode: [*c]SDL_WindowShapeMode) c_int;
 pub const _SDL_Sensor = opaque {};
 pub const SDL_Sensor = _SDL_Sensor;
@@ -1400,12 +1400,12 @@ pub extern fn SDL_GetNumRenderDrivers() c_int;
 pub extern fn SDL_GetRenderDriverInfo(index: c_int, info: [*c]SDL_RendererInfo) c_int;
 pub extern fn SDL_CreateWindowAndRenderer(width: c_int, height: c_int, window_flags: u32, window: [*c]?*SDL_Window, renderer: [*c]?*SDL_Renderer) c_int;
 pub extern fn SDL_CreateRenderer(window: ?*SDL_Window, index: c_int, flags: u32) ?*SDL_Renderer;
-pub extern fn SDL_CreateSoftwareRenderer(surface: [*c]SDL_Surface) ?*SDL_Renderer;
+pub extern fn SDL_CreateSoftwareRenderer(surface: ?*SDL_Surface) ?*SDL_Renderer;
 pub extern fn SDL_GetRenderer(window: ?*SDL_Window) ?*SDL_Renderer;
 pub extern fn SDL_GetRendererInfo(renderer: ?*SDL_Renderer, info: [*c]SDL_RendererInfo) c_int;
 pub extern fn SDL_GetRendererOutputSize(renderer: ?*SDL_Renderer, w: [*c]c_int, h: [*c]c_int) c_int;
 pub extern fn SDL_CreateTexture(renderer: ?*SDL_Renderer, format: u32, access: c_int, w: c_int, h: c_int) ?*SDL_Texture;
-pub extern fn SDL_CreateTextureFromSurface(renderer: ?*SDL_Renderer, surface: [*c]SDL_Surface) ?*SDL_Texture;
+pub extern fn SDL_CreateTextureFromSurface(renderer: ?*SDL_Renderer, surface: ?*SDL_Surface) ?*SDL_Texture;
 pub extern fn SDL_QueryTexture(texture: ?*SDL_Texture, format: [*c]u32, access: [*c]c_int, w: [*c]c_int, h: [*c]c_int) c_int;
 pub extern fn SDL_SetTextureColorMod(texture: ?*SDL_Texture, r: u8, g: u8, b: u8) c_int;
 pub extern fn SDL_GetTextureColorMod(texture: ?*SDL_Texture, r: [*c]u8, g: [*c]u8, b: [*c]u8) c_int;
@@ -1421,7 +1421,7 @@ pub extern fn SDL_UpdateTexture(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect
 pub extern fn SDL_UpdateYUVTexture(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect, Yplane: [*c]const u8, Ypitch: c_int, Uplane: [*c]const u8, Upitch: c_int, Vplane: [*c]const u8, Vpitch: c_int) c_int;
 pub extern fn SDL_UpdateNVTexture(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect, Yplane: [*c]const u8, Ypitch: c_int, UVplane: [*c]const u8, UVpitch: c_int) c_int;
 pub extern fn SDL_LockTexture(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect, pixels: [*c]?*anyopaque, pitch: [*c]c_int) c_int;
-pub extern fn SDL_LockTextureToSurface(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect, surface: [*c][*c]SDL_Surface) c_int;
+pub extern fn SDL_LockTextureToSurface(texture: ?*SDL_Texture, rect: [*c]const SDL_Rect, surface: [*c]?*SDL_Surface) c_int;
 pub extern fn SDL_UnlockTexture(texture: ?*SDL_Texture) void;
 pub extern fn SDL_RenderTargetSupported(renderer: ?*SDL_Renderer) SDL_bool;
 pub extern fn SDL_SetRenderTarget(renderer: ?*SDL_Renderer, texture: ?*SDL_Texture) c_int;
@@ -1598,7 +1598,7 @@ pub extern fn SDL_SetRelativeMouseMode(enabled: SDL_bool) c_int;
 pub extern fn SDL_CaptureMouse(enabled: SDL_bool) c_int;
 pub extern fn SDL_GetRelativeMouseMode() SDL_bool;
 pub extern fn SDL_CreateCursor(data: [*c]const u8, mask: [*c]const u8, w: c_int, h: c_int, hot_x: c_int, hot_y: c_int) ?*SDL_Cursor;
-pub extern fn SDL_CreateColorCursor(surface: [*c]SDL_Surface, hot_x: c_int, hot_y: c_int) ?*SDL_Cursor;
+pub extern fn SDL_CreateColorCursor(surface: ?*SDL_Surface, hot_x: c_int, hot_y: c_int) ?*SDL_Cursor;
 pub extern fn SDL_CreateSystemCursor(id: SDL_SystemCursor) ?*SDL_Cursor;
 pub extern fn SDL_SetCursor(cursor: ?*SDL_Cursor) void;
 pub extern fn SDL_GetCursor() ?*SDL_Cursor;
@@ -1977,7 +1977,7 @@ pub extern fn SDL_PollEvent(event: [*c]SDL_Event) c_int;
 pub extern fn SDL_WaitEvent(event: [*c]SDL_Event) c_int;
 pub extern fn SDL_WaitEventTimeout(event: [*c]SDL_Event, timeout: c_int) c_int;
 pub extern fn SDL_PushEvent(event: [*c]SDL_Event) c_int;
-pub const SDL_EventFilter = ?fn (?*anyopaque, [*c]SDL_Event) callconv(.C) c_int;
+pub const SDL_EventFilter = ?*const fn (?*anyopaque, [*c]SDL_Event) callconv(.C) c_int;
 pub extern fn SDL_SetEventFilter(filter: SDL_EventFilter, userdata: ?*anyopaque) void;
 pub extern fn SDL_GetEventFilter(filter: [*c]SDL_EventFilter, userdata: [*c]?*anyopaque) SDL_bool;
 pub extern fn SDL_AddEventWatch(filter: SDL_EventFilter, userdata: ?*anyopaque) void;
@@ -2026,7 +2026,7 @@ pub extern fn SDL_LogWarn(category: c_int, fmt: [*c]const u8, ...) void;
 pub extern fn SDL_LogError(category: c_int, fmt: [*c]const u8, ...) void;
 pub extern fn SDL_LogCritical(category: c_int, fmt: [*c]const u8, ...) void;
 pub extern fn SDL_LogMessage(category: c_int, priority: SDL_LogPriority, fmt: [*c]const u8, ...) void;
-pub const SDL_LogOutputFunction = ?fn (?*anyopaque, c_int, SDL_LogPriority, [*c]const u8) callconv(.C) void;
+pub const SDL_LogOutputFunction = ?*const fn (?*anyopaque, c_int, SDL_LogPriority, [*c]const u8) callconv(.C) void;
 pub extern fn SDL_LogGetOutputFunction(callback: [*c]SDL_LogOutputFunction, userdata: [*c]?*anyopaque) void;
 pub extern fn SDL_LogSetOutputFunction(callback: SDL_LogOutputFunction, userdata: ?*anyopaque) void;
 pub const _SDL_GameController = opaque {};
@@ -2277,7 +2277,7 @@ pub extern fn SDL_SetHintWithPriority(name: [*c]const u8, value: [*c]const u8, p
 pub extern fn SDL_SetHint(name: [*c]const u8, value: [*c]const u8) SDL_bool;
 pub extern fn SDL_GetHint(name: [*c]const u8) [*c]const u8;
 pub extern fn SDL_GetHintBoolean(name: [*c]const u8, default_value: SDL_bool) SDL_bool;
-pub const SDL_HintCallback = ?fn (?*anyopaque, [*c]const u8, [*c]const u8, [*c]const u8) callconv(.C) void;
+pub const SDL_HintCallback = ?*const fn (?*anyopaque, [*c]const u8, [*c]const u8, [*c]const u8) callconv(.C) void;
 pub extern fn SDL_AddHintCallback(name: [*c]const u8, callback: SDL_HintCallback, userdata: ?*anyopaque) void;
 pub extern fn SDL_DelHintCallback(name: [*c]const u8, callback: SDL_HintCallback, userdata: ?*anyopaque) void;
 pub extern fn SDL_ClearHints() void;

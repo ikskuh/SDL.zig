@@ -14,10 +14,15 @@ pub const Error = error{SdlError};
 
 const log = std.log.scoped(.sdl2);
 
+fn stringToSlice(ptr: *allowzero const u8) []const u8 {
+    const opt_ptr = @ptrCast(?[*:0]const u8, ptr) orelse return "";
+    return std.mem.sliceTo(opt_ptr, 0);
+}
+
 pub fn makeError() error{SdlError} {
     if (c.SDL_GetError()) |ptr| {
         log.debug("{s}\n", .{
-            std.mem.span(ptr),
+            stringToSlice(ptr),
         });
     }
     return error.SdlError;
@@ -266,7 +271,7 @@ pub fn quit() void {
 
 pub fn getError() ?[]const u8 {
     if (c.SDL_GetError()) |err| {
-        return std.mem.span(err);
+        return stringToSlice(err);
     } else {
         return null;
     }
@@ -454,7 +459,7 @@ pub fn createWindow(
 ) !Window {
     return Window{
         .ptr = c.SDL_CreateWindow(
-            title,
+            title.ptr,
             switch (x) {
                 .default => c.SDL_WINDOWPOS_UNDEFINED_MASK,
                 .centered => c.SDL_WINDOWPOS_CENTERED_MASK,
@@ -503,7 +508,7 @@ pub fn loadBmpFromConstMem(data: []const u8) !Surface {
 }
 
 pub fn loadBmp(filename: [:0]const u8) !Surface {
-    if (c.SDL_RWFromFile(filename, "rb")) |rwops| {
+    if (c.SDL_RWFromFile(filename.ptr, "rb")) |rwops| {
         if (c.SDL_LoadBMP_RW(rwops, 1)) |sptr| {
             return Surface{
                 .ptr = sptr,
@@ -2156,7 +2161,7 @@ pub const Clipboard = struct {
         if (c.SDL_HasClipboardText() == c.SDL_FALSE)
             return null;
         const c_string = c.SDL_GetClipboardText();
-        const txt = std.mem.sliceTo(c_string, 0);
+        const txt = stringToSlice(c_string);
         if (txt.len == 0) {
             c.SDL_free(c_string);
             return makeError();
@@ -2209,7 +2214,7 @@ pub const GameController = struct {
     }
 
     pub fn nameForIndex(joystick_index: u31) ?[:0]const u8 {
-        return std.mem.span(c.SDL_GameControllerNameForIndex(joystick_index));
+        return stringToSlice(c.SDL_GameControllerNameForIndex(joystick_index), 0);
     }
 
     pub const Button = enum(i32) {
@@ -2560,7 +2565,7 @@ pub const Wav = struct {
 };
 
 pub fn loadWav(file: [:0]const u8) !Wav {
-    if (c.SDL_RWFromFile(file, "rb")) |rwops| {
+    if (c.SDL_RWFromFile(file.ptr, "rb")) |rwops| {
         var spec: c.SDL_AudioSpec = undefined;
         var buffer: [*c]u8 = undefined;
         var bufferlen: u32 = undefined;
@@ -2675,7 +2680,7 @@ pub const MessageBoxFlags = struct {
 };
 
 pub fn showSimpleMessageBox(flags: MessageBoxFlags, title: [:0]const u8, message: [:0]const u8, window: ?Window) !void {
-    if (c.SDL_ShowSimpleMessageBox(flags.toNative(), title, message, if (window) |w| w.ptr else null) != 0) {
+    if (c.SDL_ShowSimpleMessageBox(flags.toNative(), title.ptr, message.ptr, if (window) |w| w.ptr else null) != 0) {
         log.debug("Message box failed! title: {s}, message: {s}", .{ title, message });
         return makeError();
     }
