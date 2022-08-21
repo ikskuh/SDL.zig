@@ -15,8 +15,10 @@ const LibExeObjStep = std.build.LibExeObjStep;
 
 const Sdk = @This();
 
-fn sdkRoot() []const u8 {
-    return std.fs.path.dirname(@src().file) orelse ".";
+inline fn sdkRoot() []const u8 {
+    comptime {
+        return std.fs.path.dirname(@src().file) orelse ".";
+    }
 }
 
 const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
