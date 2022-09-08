@@ -35,3 +35,26 @@ pub fn loadSurface(file: [:0]const u8) !SDL.Surface {
 test "platform independent declarations" {
     std.testing.refAllDecls(@This());
 }
+
+pub const ImgFormat = enum { png, jpg, bmp };
+
+pub fn loadTextureMem(ren: SDL.Renderer, img: [:0]const u8, format: ImgFormat) !SDL.Texture {
+    const rw = c.SDL_RWFromConstMem(
+        @ptrCast(*const anyopaque, &img[0]),
+        @intCast(c_int, img.len),
+    ) orelse return SDL.makeError();
+
+    defer std.debug.assert(c.SDL_RWclose(rw) == 0);
+
+    var surface: *c.SDL_Surface = undefined;
+    switch (format) {
+        .png => surface = c.IMG_LoadPNG_RW(rw) orelse return SDL.makeError(),
+        .jpg => surface = c.IMG_LoadJPG_RW(rw) orelse return SDL.makeError(),
+        .bmp => surface = c.IMG_LoadBMP_RW(rw) orelse return SDL.makeError(),
+    }
+    defer c.SDL_FreeSurface(surface);
+
+    return SDL.Texture{
+        .ptr = c.SDL_CreateTextureFromSurface(ren.ptr, surface) orelse return SDL.makeError(),
+    };
+}
