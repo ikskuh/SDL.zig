@@ -725,6 +725,18 @@ pub const Renderer = struct {
         if (c.SDL_SetRenderTarget(ren.ptr, if (tex) |t| t.ptr else null) < 0)
             return makeError();
     }
+
+    pub fn readPixels(ren: Renderer, rect: ?Rectangle, format: ?PixelFormatEnum, pixels: [*]u8, pitch: u32) !void {
+        var region = rect;
+        if (c.SDL_RenderReadPixels(
+            ren.ptr,
+            if (region) |r| r.getSdlPtr() else null,
+            if (format) |f| @enumToInt(f) orelse 0,
+            pixels,
+            @intCast(c_int, pitch),
+        ) < 0)
+            return makeError();
+    }
 };
 
 pub const RendererFlags = struct {
