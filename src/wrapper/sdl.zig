@@ -765,6 +765,12 @@ pub fn createRenderer(window: Window, index: ?u31, flags: RendererFlags) !Render
     };
 }
 
+pub fn createSoftwareRenderer(surface: Surface) !Renderer {
+    return Renderer{
+        .ptr = c.SDL_CreateSoftwareRenderer(surface.ptr) orelse return makeError(),
+    };
+}
+
 pub const Texture = struct {
     pub const PixelData = struct {
         texture: *c.SDL_Texture,
