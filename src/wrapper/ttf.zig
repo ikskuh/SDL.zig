@@ -57,7 +57,7 @@ pub const Font = struct {
         return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Solid(
                 self.ptr,
-                text,
+                text.ptr,
                 .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
             ) orelse return makeError(),
         };
@@ -72,7 +72,7 @@ pub const Font = struct {
         return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Shaded(
                 self.ptr,
-                text,
+                text.ptr,
                 .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
                 .{ .r = background.r, .g = background.g, .b = background.b, .a = background.a },
             ) orelse return makeError(),
@@ -83,7 +83,7 @@ pub const Font = struct {
         return sdl.Surface{
             .ptr = sdl.c.TTF_RenderText_Blended(
                 self.ptr,
-                text,
+                text.ptr,
                 .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
             ) orelse return makeError(),
         };
@@ -104,14 +104,23 @@ pub fn makeError() error{TtfError} {
 }
 
 pub fn openFont(file: [:0]const u8, point_size: c_int) !Font {
-    if (sdl.c.TTF_OpenFont(file, point_size)) |value| {
+    if (sdl.c.TTF_OpenFont(file.ptr, point_size)) |value| {
         return Font{ .ptr = value };
     } else {
         return makeError();
     }
 }
 
-pub fn openFontRw(src: *sdl.c.RWops, free: bool, point_size: c_int) !Font {
+pub fn openFontMem(file: [:0]const u8, free: bool, point_size: c_int) !Font {
+    const rw = sdl.c.SDL_RWFromConstMem(
+        @ptrCast(*const anyopaque, &file[0]),
+        @intCast(c_int, file.len),
+    ) orelse return makeError();
+
+    return openFontRw(rw, free, point_size);
+}
+
+pub fn openFontRw(src: *sdl.c.SDL_RWops, free: bool, point_size: c_int) !Font {
     if (sdl.c.TTF_OpenFontRW(src, @boolToInt(free), point_size)) |value| {
         return Font{ .ptr = value };
     } else {
