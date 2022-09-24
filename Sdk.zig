@@ -259,7 +259,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         // link the right libraries
         if (target.abi == .msvc) {
             // and links those as normal libraries
-            exe.addLibPath(sdk_paths.libs);
+            exe.addLibraryPath(sdk_paths.libs);
             exe.linkSystemLibraryName("SDL2");
         } else {
             const file_name = switch (linkage) {
