@@ -136,7 +136,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
     // TODO: Implement
 
     const b = sdk.builder;
-    const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
+    const target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
     const is_native = exe.target.isNative();
 
     // This is required on all platforms
@@ -354,7 +354,7 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
         const config_cross_target = std.zig.CrossTarget.parse(.{
             .arch_os_abi = entry.key_ptr.*,
         }) catch return error.InvalidTarget;
-        const config_target = (std.zig.system.NativeTargetInfo.detect(config_cross_target) catch @panic("out of memory")).target;
+        const config_target = (std.zig.system.NativeTargetInfo.detect(sdk.builder.allocator, config_cross_target) catch @panic("out of memory")).target;
 
         if (target_local.cpu.arch != config_target.cpu.arch)
             continue;
