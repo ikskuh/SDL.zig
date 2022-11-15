@@ -24,7 +24,7 @@ pub extern fn SDL_QuitSubSystem(flags: u32) void;
 pub extern fn SDL_WasInit(flags: u32) u32;
 pub extern fn SDL_Quit() void;
 
-const is_big_endian = @import("std").Target.current.endianess == .big;
+const is_big_endian = @import("builtin").target.cpu.arch.endian() == .Big;
 
 pub const SDL_VERSION = SDL_version{
     .major = SDL_MAJOR_VERSION,
