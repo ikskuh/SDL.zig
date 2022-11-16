@@ -104,7 +104,7 @@ pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.
 
 pub fn linkTtf(sdk: *Sdk, exe: *LibExeObjStep) void {
     const b = sdk.builder;
-    const target = (std.zig.system.NativeTargetInfo.detect(b.allocator, exe.target) catch @panic("failed to detect native target info!")).target;
+    const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
 
     // This is required on all platforms
     exe.linkLibC();
