@@ -54,7 +54,7 @@ pub fn build(b: *Builder) !void {
     demo_wrapper.addPackage(sdk.getWrapperPackage("sdl2"));
     demo_wrapper.install();
 
-    const demo_wrapper_image = b.addExecutable("demo-wrapper", "examples/wrapper-image.zig");
+    const demo_wrapper_image = b.addExecutable("demo-wrapper-image", "examples/wrapper-image.zig");
     demo_wrapper_image.setBuildMode(mode);
     demo_wrapper_image.setTarget(target);
     sdk.link(demo_wrapper_image, sdl_linkage);
@@ -74,13 +74,13 @@ pub fn build(b: *Builder) !void {
     demo_native.install();
 
     const run_demo_wrappr = demo_wrapper.run();
-    run_demo_wrappr.step.dependOn(b.getInstallStep());
+    run_demo_wrappr.step.dependOn(&demo_wrapper.install_step.?.step);
 
     const run_demo_wrappr_image = demo_wrapper_image.run();
-    run_demo_wrappr.step.dependOn(b.getInstallStep());
+    run_demo_wrappr_image.step.dependOn(&demo_wrapper_image.install_step.?.step);
 
-    const run_demo_native = demo_wrapper.run();
-    run_demo_native.step.dependOn(b.getInstallStep());
+    const run_demo_native = demo_native.run();
+    run_demo_native.step.dependOn(&demo_native.install_step.?.step);
 
     const run_demo_wrapper_step = b.step("run-wrapper", "Runs the demo for the SDL2 wrapper library");
     run_demo_wrapper_step.dependOn(&run_demo_wrappr.step);
