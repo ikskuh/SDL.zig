@@ -74,6 +74,18 @@ pub extern fn SDL_SIMDGetAlignment() usize;
 pub extern fn SDL_SIMDAlloc(len: usize) ?*anyopaque;
 pub extern fn SDL_SIMDRealloc(mem: ?*anyopaque, len: usize) ?*anyopaque;
 pub extern fn SDL_SIMDFree(ptr: ?*anyopaque) void;
+
+const SDL_malloc_func = *const fn (size: usize) callconv(.C) ?*anyopaque;
+const SDL_calloc_func = *const fn (nmemb: usize, size: usize) callconv(.C) ?*anyopaque;
+const SDL_realloc_func = *const fn (mem: *anyopaque, size: usize) callconv(.C) ?*anyopaque;
+const SDL_free_func = *const fn (mem: *anyopaque) callconv(.C) void;
+pub extern fn SDL_SetMemoryFunctions(
+    malloc_func: SDL_malloc_func,
+    calloc_func: SDL_calloc_func,
+    realloc_func: SDL_realloc_func,
+    free_func: SDL_free_func,
+) callconv(.C) void;
+
 pub const SDL_Point = extern struct {
     x: c_int,
     y: c_int,
