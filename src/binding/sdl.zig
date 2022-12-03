@@ -77,8 +77,8 @@ pub extern fn SDL_SIMDFree(ptr: ?*anyopaque) void;
 
 const SDL_malloc_func = *const fn (size: usize) callconv(.C) ?*anyopaque;
 const SDL_calloc_func = *const fn (nmemb: usize, size: usize) callconv(.C) ?*anyopaque;
-const SDL_realloc_func = *const fn (mem: *anyopaque, size: usize) callconv(.C) ?*anyopaque;
-const SDL_free_func = *const fn (mem: *anyopaque) callconv(.C) void;
+const SDL_realloc_func = *const fn (mem: ?*anyopaque, size: usize) callconv(.C) ?*anyopaque;
+const SDL_free_func = *const fn (mem: ?*anyopaque) callconv(.C) void;
 pub extern fn SDL_SetMemoryFunctions(
     malloc_func: SDL_malloc_func,
     calloc_func: SDL_calloc_func,
