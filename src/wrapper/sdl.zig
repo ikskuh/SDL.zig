@@ -52,7 +52,7 @@ pub const RectangleF = extern struct {
         return @ptrCast(*c.SDL_FRect, r);
     }
     fn getConstSdlPtr(r: *const RectangleF) *const c.SDL_FRect {
-        return @ptrCast(*const c.SDL_FRect, &r);
+        return @ptrCast(*const c.SDL_FRect, r);
     }
 };
 
