@@ -22,6 +22,10 @@ pub fn deleteContext(context: Context) void {
     _ = c.SDL_GL_DeleteContext(context.ptr);
 }
 
+pub fn getProcAddress(proc: [:0]const u8) ?*const anyopaque {
+    return c.SDL_GL_GetProcAddress(@ptrCast([*c]const u8, proc));
+}
+
 pub const SwapInterval = enum {
     immediate, // immediate updates
     vsync, // updates synchronized with the vertical retrace
@@ -40,6 +44,13 @@ pub fn setSwapInterval(interval: SwapInterval) !void {
 
 pub fn swapWindow(window: SDL.Window) void {
     c.SDL_GL_SwapWindow(window.ptr);
+}
+
+pub fn getDrawableSize(window: SDL.Window) struct { w: u32, h: u32 } {
+    var w: c_int = undefined;
+    var h: c_int = undefined;
+    c.SDL_GL_GetDrawableSize(window.ptr, &w, &h);
+    return .{ .w = @intCast(u32, w), .h = @intCast(u32, h) };
 }
 
 fn attribValueToInt(value: anytype) c_int {
@@ -91,7 +102,7 @@ pub const Attribute = union(AttributeName) {
     blue_size: usize,
     alpha_size: usize,
     buffer_size: usize,
-    doublebuffer: usize,
+    doublebuffer: bool,
     depth_size: usize,
     stencil_size: usize,
     accum_red_size: usize,
