@@ -23,7 +23,7 @@ pub fn deleteContext(context: Context) void {
 }
 
 pub fn getProcAddress(proc: [:0]const u8) ?*const anyopaque {
-    return c.SDL_GL_GetProcAddress(@ptrCast([*c]const u8, proc));
+    return c.SDL_GL_GetProcAddress(proc.ptr);
 }
 
 pub const SwapInterval = enum {
