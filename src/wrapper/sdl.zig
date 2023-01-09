@@ -277,6 +277,14 @@ pub fn getError() ?[]const u8 {
     }
 }
 
+pub fn getPerformanceCounter() u64 {
+    return c.SDL_GetPerformanceCounter();
+}
+
+pub fn getPerformanceFrequency() u64 {
+    return c.SDL_GetPerformanceFrequency();
+}
+
 pub const Window = struct {
     ptr: *c.SDL_Window,
 
