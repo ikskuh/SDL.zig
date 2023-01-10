@@ -90,4 +90,13 @@ pub fn build(b: *Builder) !void {
 
     const run_demo_native_step = b.step("run-native", "Runs the demo for the SDL2 native library");
     run_demo_native_step.dependOn(&run_demo_native.step);
+
+    const api_generator = b.addExecutable("generate-api", "src/generator/main.zig");
+
+    const gen_api = api_generator.run();
+    gen_api.addArg("api-conversion/sdl.json");
+    gen_api.addArg("src/binding/sdl.zig");
+
+    const gen_api_step = b.step("generate", "Generates the binding");
+    gen_api_step.dependOn(&gen_api.step);
 }

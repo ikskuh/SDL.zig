@@ -7,14 +7,14 @@ pub fn main() !void {
         sdlPanic();
     defer SDL.SDL_Quit();
 
-    var window = SDL.SDL_CreateWindow(
-        "SDL.zig Basic Demo",
-        SDL.SDL_WINDOWPOS_CENTERED,
-        SDL.SDL_WINDOWPOS_CENTERED,
-        640,
-        480,
-        SDL.SDL_WINDOW_SHOWN,
-    ) orelse sdlPanic();
+var window = SDL.CreateWindow(
+    "SDL.zig Basic Demo",
+    SDL.WINDOWPOS_CENTERED,
+    SDL.WINDOWPOS_CENTERED,
+    640,
+    480,
+    SDL.WINDOW_SHOWN,
+) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyWindow(window);
 
     var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
