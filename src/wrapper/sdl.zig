@@ -59,11 +59,25 @@ pub const RectangleF = extern struct {
 pub const Point = extern struct {
     x: c_int,
     y: c_int,
+
+    fn getSdlPtr(r: *Point) *c.SDL_Point {
+        return @ptrCast(*c.SDL_Point, r);
+    }
+    fn getConstSdlPtr(r: *const Point) *const c.SDL_Point {
+        return @ptrCast(*const c.SDL_Point, r);
+    }
 };
 
 pub const PointF = extern struct {
     x: f32,
     y: f32,
+
+    fn getSdlPtr(r: *PointF) *c.SDL_FPoint {
+        return @ptrCast(*c.SDL_FPoint, r);
+    }
+    fn getConstSdlPtr(r: *const PointF) *const c.SDL_FPoint {
+        return @ptrCast(*const c.SDL_FPoint, r);
+    }
 };
 
 pub const Size = extern struct {
@@ -555,6 +569,12 @@ pub const ScaleMode = enum(c.SDL_ScaleMode) {
     best = c.SDL_ScaleModeBest,
 };
 
+pub const RendererFlip = enum(c.SDL_RendererFlip) {
+    none = c.SDL_FLIP_NONE,
+    horizontal = c.SDL_FLIP_HORIZONTAL,
+    vertical = c.SDL_FLIP_VERTICAL,
+};
+
 pub const Renderer = struct {
     ptr: *c.SDL_Renderer,
 
@@ -578,6 +598,16 @@ pub const Renderer = struct {
 
     pub fn copyF(ren: Renderer, tex: Texture, dstRect: ?RectangleF, srcRect: ?Rectangle) !void {
         if (c.SDL_RenderCopyF(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null) < 0)
+            return makeError();
+    }
+
+    pub fn copyEx(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle, angle: f64, center: ?Point, flip: RendererFlip) !void {
+        if (c.SDL_RenderCopyEx(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @enumToInt(flip)) < 0)
+            return makeError();
+    }
+
+    pub fn copyExF(ren: Renderer, tex: Texture, dstRect: ?RectangleF, srcRect: ?Rectangle, angle: f64, center: ?PointF, flip: RendererFlip) !void {
+        if (c.SDL_RenderCopyExF(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @enumToInt(flip)) < 0)
             return makeError();
     }
 
