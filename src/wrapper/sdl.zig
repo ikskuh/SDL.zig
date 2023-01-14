@@ -49,7 +49,7 @@ pub fn hasIntersection(a: *Rectangle, b: *Rectangle) bool {
     return false;
 }
 
-pub fn intersectRect(a: *Rectangle, b: *Rectangle, result: Rectangle) bool {
+pub fn intersectRect(a: *Rectangle, b: *Rectangle, result: *Rectangle) bool {
     if (c.SDL_IntersectRect(a.getSdlPtr(), b.getSdlPtr(), result.getSdlPtr()) == 1) {
         return true;
     }
