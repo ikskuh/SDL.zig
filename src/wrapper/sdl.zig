@@ -42,6 +42,27 @@ pub const Rectangle = extern struct {
     }
 };
 
+pub fn hasIntersection(a: *Rectangle, b: *Rectangle) bool {
+    if (c.SDL_HasIntersection(a.getSdlPtr(), b.getSdlPtr()) == 1) {
+        return true;
+    }
+    return false;
+}
+
+pub fn intersectRect(a: *Rectangle, b: *Rectangle, result: *Rectangle) bool {
+    if (c.SDL_IntersectRect(a.getSdlPtr(), b.getSdlPtr(), result.getSdlPtr()) == 1) {
+        return true;
+    }
+    return false;
+}
+
+pub fn intersectRectAndLine(rect: Rectangle, x1: *c_int, y1: *c_int, x2: *c_int, y2: *c_int) bool {
+    if (c.SDL_IntersectRectAndLine(rect.getSdlPtr(), x1, y1, x2, y2) == 1) {
+        return true;
+    }
+    return false;
+}
+
 pub const RectangleF = extern struct {
     x: f32,
     y: f32,
