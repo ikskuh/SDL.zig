@@ -368,6 +368,19 @@ pub const Window = struct {
     pub fn setMinimumSize(w: Window, width: c_int, height: c_int) void {
         c.SDL_SetWindowMinimumSize(w.ptr, width, height);
     }
+
+    pub fn getDisplayMode(w: Window) !DisplayMode {
+        var dm: DisplayMode = undefined;
+        if (c.SDL_GetWindowDisplayMode(w.ptr, dm.getSdlPtr()) < 0) return makeError();
+        return dm;
+    }
+
+    /// If opt_dm is null, the window will use its dimensions and the desktop's format
+    /// and refresh rate.
+    pub fn setDisplayMode(w: Window, opt_dm: ?DisplayMode) !void {
+        const sdl_dm = if (opt_dm) |dm| dm.getConstSdlPtr() else null;
+        if (c.SDL_SetWindowDisplayMode(w.ptr, sdl_dm) < 0) return makeError();
+    }
 };
 
 pub const WindowPosition = union(enum) {
@@ -2762,3 +2775,49 @@ pub fn showSimpleMessageBox(flags: MessageBoxFlags, title: [:0]const u8, message
         return makeError();
     }
 }
+
+pub const DisplayMode = extern struct {
+    format: u32,
+    w: c_int,
+    h: c_int,
+    refresh_rate: c_int,
+    driver_data: ?*anyopaque,
+
+    pub fn getNumOfAvailable(display_index: c_int) !c_int {
+        const num = c.SDL_GetNumDisplayModes(display_index);
+        return if (num < 0) makeError() else num;
+    }
+
+    pub fn getInfo(display_index: c_int, mode_index: c_int) !DisplayMode {
+        var info: DisplayMode = undefined;
+        if (c.SDL_GetDisplayMode(display_index, mode_index, info.getSdlPtr()) < 0) return makeError();
+        return info;
+    }
+
+    pub fn getDesktopInfo(display_index: c_int) !DisplayMode {
+        var info: DisplayMode = undefined;
+        if (c.SDL_GetDesktopDisplayMode(display_index, info.getSdlPtr()) < 0) return makeError();
+        return info;
+    }
+
+    pub fn getCurrentInfo(display_index: c_int) !DisplayMode {
+        var info: DisplayMode = undefined;
+        if (c.SDL_GetCurrentDisplayMode(display_index, info.getSdlPtr()) < 0) return makeError();
+        return info;
+    }
+
+    pub fn getClosest(display_index: c_int, dm: DisplayMode) !DisplayMode {
+        var closest: DisplayMode = undefined;
+        if (c.SDL_GetClosestDisplayMode(display_index, dm.getConstSdlPtr(), closest.getSdlPtr()) < 0)
+            return makeError();
+        return closest;
+    }
+
+    pub fn getSdlPtr(dm: *DisplayMode) *c.SDL_DisplayMode {
+        return @ptrCast(*c.SDL_DisplayMode, dm);
+    }
+
+    pub fn getConstSdlPtr(dm: *const DisplayMode) *const c.SDL_DisplayMode {
+        return @ptrCast(*const c.SDL_DisplayMode, dm);
+    }
+};
