@@ -2307,6 +2307,18 @@ pub const GameController = struct {
         return stringToSlice(c.SDL_GameControllerNameForIndex(joystick_index), 0);
     }
 
+    pub fn getButton(self: GameController, button: Button) u8 {
+        return c.SDL_GameControllerGetButton(self.ptr, @enumToInt(button));
+    }
+
+    pub fn getAxis(self: GameController, axis: Axis) i16 {
+        return c.SDL_GameControllerGetAxis(self.ptr, @enumToInt(axis));
+    }
+
+    pub fn getAxisNormalized(self: GameController, axis: Axis) f32 {
+        return @intToFloat(f32, self.getAxis(axis)) / @intToFloat(f32, c.SDL_JOYSTICK_AXIS_MAX);
+    }
+
     pub const Button = enum(i32) {
         a = c.SDL_CONTROLLER_BUTTON_A,
         b = c.SDL_CONTROLLER_BUTTON_B,
