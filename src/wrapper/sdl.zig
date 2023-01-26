@@ -37,31 +37,32 @@ pub const Rectangle = extern struct {
     fn getSdlPtr(r: *Rectangle) *c.SDL_Rect {
         return @ptrCast(*c.SDL_Rect, r);
     }
+
     fn getConstSdlPtr(r: *const Rectangle) *const c.SDL_Rect {
         return @ptrCast(*const c.SDL_Rect, r);
     }
+
+    pub fn hasIntersection(r: Rectangle, b: Rectangle) bool {
+        if (c.SDL_HasIntersection(r.getConstSdlPtr(), b.getConstSdlPtr()) == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn intersectRect(r: Rectangle, b: Rectangle, result: *Rectangle) bool {
+        if (c.SDL_IntersectRect(r.getConstSdlPtr(), b.getConstSdlPtr(), result.getSdlPtr()) == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn intersectRectAndLine(rect: Rectangle, x1: *c_int, y1: *c_int, x2: *c_int, y2: *c_int) bool {
+        if (c.SDL_IntersectRectAndLine(rect.getConstSdlPtr(), x1, y1, x2, y2) == 1) {
+            return true;
+        }
+        return false;
+    }
 };
-
-pub fn hasIntersection(a: *Rectangle, b: *Rectangle) bool {
-    if (c.SDL_HasIntersection(a.getSdlPtr(), b.getSdlPtr()) == 1) {
-        return true;
-    }
-    return false;
-}
-
-pub fn intersectRect(a: *Rectangle, b: *Rectangle, result: *Rectangle) bool {
-    if (c.SDL_IntersectRect(a.getSdlPtr(), b.getSdlPtr(), result.getSdlPtr()) == 1) {
-        return true;
-    }
-    return false;
-}
-
-pub fn intersectRectAndLine(rect: Rectangle, x1: *c_int, y1: *c_int, x2: *c_int, y2: *c_int) bool {
-    if (c.SDL_IntersectRectAndLine(rect.getSdlPtr(), x1, y1, x2, y2) == 1) {
-        return true;
-    }
-    return false;
-}
 
 pub const RectangleF = extern struct {
     x: f32,
@@ -72,8 +73,31 @@ pub const RectangleF = extern struct {
     fn getSdlPtr(r: *RectangleF) *c.SDL_FRect {
         return @ptrCast(*c.SDL_FRect, r);
     }
+
     fn getConstSdlPtr(r: *const RectangleF) *const c.SDL_FRect {
         return @ptrCast(*const c.SDL_FRect, r);
+    }
+
+    pub fn hasIntersection(r: RectangleF, b: RectangleF) bool {
+        if (c.SDL_HasIntersectionF(r.getConstSdlPtr(), b.getConstSdlPtr()) == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    pub fn intersectRect(r: RectangleF, b: RectangleF) ?RectangleF {
+        var result: RectangleF = undefined;
+        if (c.SDL_IntersectFRect(r.getConstSdlPtr(), b.getConstSdlPtr(), result.getSdlPtr()) == 1) {
+            return result;
+        }
+        return null;
+    }
+
+    pub fn intersectRectAndLine(rect: RectangleF, x1: *f32, y1: *f32, x2: *f32, y2: *f32) bool {
+        if (c.SDL_IntersectFRectAndLine(rect.getConstSdlPtr(), x1, y1, x2, y2) == 1) {
+            return true;
+        }
+        return false;
     }
 };
 
