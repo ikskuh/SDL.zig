@@ -32,14 +32,11 @@ prepare_sources: *PrepareStubSourceStep,
 
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
-pub fn init(b: *Builder) *Sdk {
+pub fn init(b: *Builder, config_path: []const u8) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
     sdk.* = .{
         .builder = b,
-        .config_path = std.fs.path.join(b.allocator, &[_][]const u8{
-            b.pathFromRoot(".build_config"),
-            "sdl.json",
-        }) catch @panic("out of memory"),
+        .config_path = config_path,
         .prepare_sources = undefined,
     };
     sdk.prepare_sources = PrepareStubSourceStep.create(sdk);
