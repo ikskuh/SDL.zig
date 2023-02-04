@@ -146,9 +146,12 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         // we compile a stub .so file we will link against an SDL2.so even if that file
         // doesn't exist on our system
 
-        const build_linux_sdl_stub = b.addSharedLibrary("SDL2", null, .unversioned);
+        const build_linux_sdl_stub = b.addSharedLibrary(.{
+            .name = "SDL2",
+            .target = exe.target,
+            .optimize = exe.optimize,
+        });
         build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
-        build_linux_sdl_stub.setTarget(exe.target);
 
         // We need to link against libc
         exe.linkLibC();
