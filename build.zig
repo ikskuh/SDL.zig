@@ -5,13 +5,7 @@ const Sdk = @import("Sdk.zig");
 const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) !void {
-    const sdk = Sdk.init(
-        b,
-        try std.fs.path.join(b.allocator, &[_][]const u8{
-            b.pathFromRoot(".build_config"),
-            "sdl.json",
-        }),
-    );
+    const sdk = Sdk.init(b, null);
 
     const mode = b.standardReleaseOptions();
     const target = b.standardTargetOptions(.{});
