@@ -5,7 +5,7 @@ const Sdk = @import("Sdk.zig");
 const Builder = std.build.Builder;
 
 pub fn build(b: *Builder) !void {
-    const sdk = Sdk.init(b);
+    const sdk = Sdk.init(b, null);
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
