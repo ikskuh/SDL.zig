@@ -381,6 +381,14 @@ pub const Window = struct {
         const sdl_dm = if (opt_dm) |dm| dm.getConstSdlPtr() else null;
         if (c.SDL_SetWindowDisplayMode(w.ptr, sdl_dm) < 0) return makeError();
     }
+
+    pub fn getWMInfo(w: Window) !c.SDL_SysWMInfo {
+        var info: c.SDL_SysWMInfo = undefined;
+        if (c.SDL_GetWindowWMInfo(w.ptr, &info) != 0) {
+            return makeError();
+        }
+        return info;
+    }
 };
 
 pub const WindowPosition = union(enum) {
