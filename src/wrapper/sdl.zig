@@ -381,6 +381,14 @@ pub const Window = struct {
         const sdl_dm = if (opt_dm) |dm| dm.getConstSdlPtr() else null;
         if (c.SDL_SetWindowDisplayMode(w.ptr, sdl_dm) < 0) return makeError();
     }
+
+    pub fn getWMInfo(w: Window) !c.SDL_SysWMInfo {
+        var info: c.SDL_SysWMInfo = undefined;
+        if (c.SDL_GetWindowWMInfo(w.ptr, &info) != 0) {
+            return makeError();
+        }
+        return info;
+    }
 };
 
 pub const WindowPosition = union(enum) {
@@ -2833,3 +2841,131 @@ pub const DisplayMode = extern struct {
         return @ptrCast(*const c.SDL_DisplayMode, dm);
     }
 };
+
+pub const hint = struct {
+    pub const accelerometer_as_joystick = c.SDL_HINT_ACCELEROMETER_AS_JOYSTICK;
+    pub const allow_alt_tab_while_grabbed = c.SDL_HINT_ALLOW_ALT_TAB_WHILE_GRABBED;
+    pub const allow_topmost = c.SDL_HINT_ALLOW_TOPMOST;
+    pub const android_apk_expansion_main_file_version = c.SDL_HINT_ANDROID_APK_EXPANSION_MAIN_FILE_VERSION;
+    pub const android_apk_expansion_patch_file_version = c.SDL_HINT_ANDROID_APK_EXPANSION_PATCH_FILE_VERSION;
+    pub const android_block_on_pause = c.SDL_HINT_ANDROID_BLOCK_ON_PAUSE;
+    pub const android_block_on_pause_pauseaudio = c.SDL_HINT_ANDROID_BLOCK_ON_PAUSE_PAUSEAUDIO;
+    pub const android_trap_back_button = c.SDL_HINT_ANDROID_TRAP_BACK_BUTTON;
+    pub const apple_tv_controller_ui_events = c.SDL_HINT_APPLE_TV_CONTROLLER_UI_EVENTS;
+    pub const apple_tv_remote_allow_rotation = c.SDL_HINT_APPLE_TV_REMOTE_ALLOW_ROTATION;
+    pub const audio_category = c.SDL_HINT_AUDIO_CATEGORY;
+    pub const audio_device_app_name = c.SDL_HINT_AUDIO_DEVICE_APP_NAME;
+    pub const audio_device_stream_name = c.SDL_HINT_AUDIO_DEVICE_STREAM_NAME;
+    pub const audio_device_stream_role = c.SDL_HINT_AUDIO_DEVICE_STREAM_ROLE;
+    pub const audio_resampling_mode = c.SDL_HINT_AUDIO_RESAMPLING_MODE;
+    pub const auto_update_joysticks = c.SDL_HINT_AUTO_UPDATE_JOYSTICKS;
+    pub const auto_update_sensors = c.SDL_HINT_AUTO_UPDATE_SENSORS;
+    pub const bmp_save_legacy_format = c.SDL_HINT_BMP_SAVE_LEGACY_FORMAT;
+    pub const display_usable_bounds = c.SDL_HINT_DISPLAY_USABLE_BOUNDS;
+    pub const emscripten_asyncify = c.SDL_HINT_EMSCRIPTEN_ASYNCIFY;
+    pub const emscripten_keyboard_element = c.SDL_HINT_EMSCRIPTEN_KEYBOARD_ELEMENT;
+    pub const enable_steam_controllers = c.SDL_HINT_ENABLE_STEAM_CONTROLLERS;
+    pub const event_logging = c.SDL_HINT_EVENT_LOGGING;
+    pub const framebuffer_acceleration = c.SDL_HINT_FRAMEBUFFER_ACCELERATION;
+    pub const gamecontrollerconfig = c.SDL_HINT_GAMECONTROLLERCONFIG;
+    pub const gamecontrollerconfig_file = c.SDL_HINT_GAMECONTROLLERCONFIG_FILE;
+    pub const gamecontrollertype = c.SDL_HINT_GAMECONTROLLERTYPE;
+    pub const gamecontroller_ignore_devices = c.SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES;
+    pub const gamecontroller_ignore_devices_except = c.SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT;
+    pub const gamecontroller_use_button_labels = c.SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS;
+    pub const grab_keyboard = c.SDL_HINT_GRAB_KEYBOARD;
+    pub const idle_timer_disabled = c.SDL_HINT_IOS_IDLE_TIMER_DISABLED;
+    pub const ime_internal_editing = c.SDL_HINT_IME_INTERNAL_EDITING;
+    pub const ios_hide_home_indicator = c.SDL_HINT_IOS_HIDE_HOME_INDICATOR;
+    pub const joystick_allow_background_events = c.SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS;
+    pub const joystick_hidapi = c.SDL_HINT_JOYSTICK_HIDAPI;
+    pub const joystick_hidapi_gamecube = c.SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE;
+    pub const joystick_hidapi_joy_cons = c.SDL_HINT_JOYSTICK_HIDAPI_JOY_CONS;
+    pub const joystick_hidapi_luna = c.SDL_HINT_JOYSTICK_HIDAPI_LUNA;
+    pub const joystick_hidapi_ps4 = c.SDL_HINT_JOYSTICK_HIDAPI_PS4;
+    pub const joystick_hidapi_ps4_rumble = c.SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE;
+    pub const joystick_hidapi_ps5 = c.SDL_HINT_JOYSTICK_HIDAPI_PS5;
+    pub const joystick_hidapi_ps5_player_led = c.SDL_HINT_JOYSTICK_HIDAPI_PS5_PLAYER_LED;
+    pub const joystick_hidapi_ps5_rumble = c.SDL_HINT_JOYSTICK_HIDAPI_PS5_RUMBLE;
+    pub const joystick_hidapi_stadia = c.SDL_HINT_JOYSTICK_HIDAPI_STADIA;
+    pub const joystick_hidapi_steam = c.SDL_HINT_JOYSTICK_HIDAPI_STEAM;
+    pub const joystick_hidapi_switch = c.SDL_HINT_JOYSTICK_HIDAPI_SWITCH;
+    pub const joystick_hidapi_switch_home_led = c.SDL_HINT_JOYSTICK_HIDAPI_SWITCH_HOME_LED;
+    pub const joystick_hidapi_xbox = c.SDL_HINT_JOYSTICK_HIDAPI_XBOX;
+    pub const joystick_rawinput = c.SDL_HINT_JOYSTICK_RAWINPUT;
+    pub const joystick_rawinput_correlate_xinput = c.SDL_HINT_JOYSTICK_RAWINPUT_CORRELATE_XINPUT;
+    pub const joystick_thread = c.SDL_HINT_JOYSTICK_THREAD;
+    pub const kmsdrm_require_drm_master = c.SDL_HINT_KMSDRM_REQUIRE_DRM_MASTER;
+    pub const linux_joystick_deadzones = c.SDL_HINT_LINUX_JOYSTICK_DEADZONES;
+    pub const mac_background_app = c.SDL_HINT_MAC_BACKGROUND_APP;
+    pub const mac_ctrl_click_emulate_right_click = c.SDL_HINT_MAC_CTRL_CLICK_EMULATE_RIGHT_CLICK;
+    pub const mouse_double_click_radius = c.SDL_HINT_MOUSE_DOUBLE_CLICK_RADIUS;
+    pub const mouse_double_click_time = c.SDL_HINT_MOUSE_DOUBLE_CLICK_TIME;
+    pub const mouse_focus_clickthrough = c.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH;
+    pub const mouse_normal_speed_scale = c.SDL_HINT_MOUSE_NORMAL_SPEED_SCALE;
+    pub const mouse_relative_mode_warp = c.SDL_HINT_MOUSE_RELATIVE_MODE_WARP;
+    pub const mouse_relative_scaling = c.SDL_HINT_MOUSE_RELATIVE_SCALING;
+    pub const mouse_relative_speed_scale = c.SDL_HINT_MOUSE_RELATIVE_SPEED_SCALE;
+    pub const mouse_touch_events = c.SDL_HINT_MOUSE_TOUCH_EVENTS;
+    pub const no_signal_handlers = c.SDL_HINT_NO_SIGNAL_HANDLERS;
+    pub const opengl_es_driver = c.SDL_HINT_OPENGL_ES_DRIVER;
+    pub const orientations = c.SDL_HINT_IOS_ORIENTATIONS;
+    pub const preferred_locales = c.SDL_HINT_PREFERRED_LOCALES;
+    pub const qtwayland_content_orientation = c.SDL_HINT_QTWAYLAND_CONTENT_ORIENTATION;
+    pub const qtwayland_window_flags = c.SDL_HINT_QTWAYLAND_WINDOW_FLAGS;
+    pub const render_batching = c.SDL_HINT_RENDER_BATCHING;
+    pub const render_direct3d11_debug = c.SDL_HINT_RENDER_DIRECT3D11_DEBUG;
+    pub const render_direct3d_threadsafe = c.SDL_HINT_RENDER_DIRECT3D_THREADSAFE;
+    pub const render_driver = c.SDL_HINT_RENDER_DRIVER;
+    pub const render_logical_size_mode = c.SDL_HINT_RENDER_LOGICAL_SIZE_MODE;
+    pub const render_opengl_shaders = c.SDL_HINT_RENDER_OPENGL_SHADERS;
+    pub const render_scale_quality = c.SDL_HINT_RENDER_SCALE_QUALITY;
+    pub const render_vsync = c.SDL_HINT_RENDER_VSYNC;
+    pub const return_key_hides_ime = c.SDL_HINT_RETURN_KEY_HIDES_IME;
+    pub const rpi_video_layer = c.SDL_HINT_RPI_VIDEO_LAYER;
+    pub const thread_force_realtime_time_critical = c.SDL_HINT_THREAD_FORCE_REALTIME_TIME_CRITICAL;
+    pub const thread_priority_policy = c.SDL_HINT_THREAD_PRIORITY_POLICY;
+    pub const thread_stack_size = c.SDL_HINT_THREAD_STACK_SIZE;
+    pub const timer_resolution = c.SDL_HINT_TIMER_RESOLUTION;
+    pub const touch_mouse_events = c.SDL_HINT_TOUCH_MOUSE_EVENTS;
+    pub const tv_remote_as_joystick = c.SDL_HINT_TV_REMOTE_AS_JOYSTICK;
+    pub const video_allow_screensaver = c.SDL_HINT_VIDEO_ALLOW_SCREENSAVER;
+    pub const video_double_buffer = c.SDL_HINT_VIDEO_DOUBLE_BUFFER;
+    pub const video_external_context = c.SDL_HINT_VIDEO_EXTERNAL_CONTEXT;
+    pub const video_highdpi_disabled = c.SDL_HINT_VIDEO_HIGHDPI_DISABLED;
+    pub const video_mac_fullscreen_spaces = c.SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES;
+    pub const video_minimize_on_focus_loss = c.SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS;
+    pub const video_wayland_allow_libdecor = c.SDL_HINT_VIDEO_WAYLAND_ALLOW_LIBDECOR;
+    pub const video_window_share_pixel_format = c.SDL_HINT_VIDEO_WINDOW_SHARE_PIXEL_FORMAT;
+    pub const video_win_d3dcompiler = c.SDL_HINT_VIDEO_WIN_D3DCOMPILER;
+    pub const video_x11_force_egl = c.SDL_HINT_VIDEO_X11_FORCE_EGL;
+    pub const video_x11_net_wm_bypass_compositor = c.SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR;
+    pub const video_x11_net_wm_ping = c.SDL_HINT_VIDEO_X11_NET_WM_PING;
+    pub const video_x11_window_visualid = c.SDL_HINT_VIDEO_X11_WINDOW_VISUALID;
+    pub const video_x11_xinerama = c.SDL_HINT_VIDEO_X11_XINERAMA;
+    pub const video_x11_xrandr = c.SDL_HINT_VIDEO_X11_XRANDR;
+    pub const video_x11_xvidmode = c.SDL_HINT_VIDEO_X11_XVIDMODE;
+    pub const wave_fact_chunk = c.SDL_HINT_WAVE_FACT_CHUNK;
+    pub const wave_riff_chunk_size = c.SDL_HINT_WAVE_RIFF_CHUNK_SIZE;
+    pub const wave_truncation = c.SDL_HINT_WAVE_TRUNCATION;
+    pub const windows_disable_thread_naming = c.SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING;
+    pub const windows_enable_messageloop = c.SDL_HINT_WINDOWS_ENABLE_MESSAGELOOP;
+    pub const windows_force_mutex_critical_sections = c.SDL_HINT_WINDOWS_FORCE_MUTEX_CRITICAL_SECTIONS;
+    pub const windows_force_semaphore_kernel = c.SDL_HINT_WINDOWS_FORCE_SEMAPHORE_KERNEL;
+    pub const windows_intresource_icon = c.SDL_HINT_WINDOWS_INTRESOURCE_ICON;
+    pub const windows_intresource_icon_small = c.SDL_HINT_WINDOWS_INTRESOURCE_ICON_SMALL;
+    pub const windows_no_close_on_alt_f4 = c.SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4;
+    pub const windows_use_d3d9ex = c.SDL_HINT_WINDOWS_USE_D3D9EX;
+    pub const window_frame_usable_while_cursor_hidden = c.SDL_HINT_WINDOW_FRAME_USABLE_WHILE_CURSOR_HIDDEN;
+    pub const winrt_handle_back_button = c.SDL_HINT_WINRT_HANDLE_BACK_BUTTON;
+    pub const winrt_privacy_policy_label = c.SDL_HINT_WINRT_PRIVACY_POLICY_LABEL;
+    pub const winrt_privacy_policy_url = c.SDL_HINT_WINRT_PRIVACY_POLICY_URL;
+    pub const x11_force_override_redirect = c.SDL_HINT_X11_FORCE_OVERRIDE_REDIRECT;
+    pub const xinput_enabled = c.SDL_HINT_XINPUT_ENABLED;
+    pub const xinput_use_old_joystick_mapping = c.SDL_HINT_XINPUT_USE_OLD_JOYSTICK_MAPPING;
+    pub const audio_include_monitors = c.SDL_HINT_AUDIO_INCLUDE_MONITORS;
+};
+
+pub fn setHint(name: [:0]const u8, value: [:0]const u8) bool {
+    return c.SDL_SetHint(name.ptr, value.ptr) > 0;
+}

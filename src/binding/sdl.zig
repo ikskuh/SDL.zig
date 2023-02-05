@@ -2663,3 +2663,32 @@ pub const SDL_HINT_X11_FORCE_OVERRIDE_REDIRECT = "SDL_X11_FORCE_OVERRIDE_REDIREC
 pub const SDL_HINT_XINPUT_ENABLED = "SDL_XINPUT_ENABLED";
 pub const SDL_HINT_XINPUT_USE_OLD_JOYSTICK_MAPPING = "SDL_XINPUT_USE_OLD_JOYSTICK_MAPPING";
 pub const SDL_HINT_AUDIO_INCLUDE_MONITORS = "SDL_AUDIO_INCLUDE_MONITORS";
+
+pub const SDL_SYSWM_TYPE = enum(c_int) {
+    UNKNOWN,
+    WINDOWS,
+    X11,
+    DIRECTFB,
+    COCOA,
+    UIKIT,
+    WAYLAND,
+    MIR, // no longer available, left for API/ABI compatibility. Remove in 2.1!
+    WINRT,
+    ANDROID,
+    VIVANTE,
+    OS2,
+    HAIKU,
+};
+pub const SDL_SysWMInfo = extern struct {
+    version: SDL_version,
+    subsystem: SDL_SYSWM_TYPE,
+    u: extern union {
+        win: extern struct {
+            window: std.os.windows.HWND,
+            hdc: std.os.windows.HDC,
+            hinstance: std.os.windows.HINSTANCE,
+        },
+        // TODO: other variants
+    },
+};
+pub extern fn SDL_GetWindowWMInfo(window: *SDL_Window, info: *SDL_SysWMInfo) SDL_bool;
