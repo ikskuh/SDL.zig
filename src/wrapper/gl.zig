@@ -1,5 +1,8 @@
 const SDL = @import("sdl.zig");
-const c = @import("../binding/sdl.zig");
+
+/// Exports the C interface for SDL_image
+pub const c = @import("sdl-native");
+
 const std = @import("std");
 
 pub const Context = struct {
