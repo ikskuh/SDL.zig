@@ -1,17 +1,17 @@
 //! SDL2 Zig SDK
 //! ============
 //! This file provides a build api that allows you to link and use
-//! SDL2 from build.zig.
+//! SDL2 from zig.
 //!
 //!
 const std = @import("std");
 const host_system = @import("builtin").target;
 
-const Builder = std.build.Builder;
-const Step = std.build.Step;
-const FileSource = std.build.FileSource;
-const GeneratedFile = std.build.GeneratedFile;
-const LibExeObjStep = std.build.LibExeObjStep;
+const Build = std.Build;
+const Step = Build.Step;
+const FileSource = Build.FileSource;
+const GeneratedFile = Build.GeneratedFile;
+const LibExeObjStep = Build.LibExeObjStep;
 
 const Sdk = @This();
 
@@ -25,21 +25,26 @@ fn sdkPath(comptime suffix: []const u8) []const u8 {
 
 const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
 
-builder: *Builder,
+build: *Build,
 config_path: []const u8,
 
 prepare_sources: *PrepareStubSourceStep,
 
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
-pub fn init(b: *Builder) *Sdk {
+pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
-    sdk.* = .{
-        .builder = b,
-        .config_path = std.fs.path.join(b.allocator, &[_][]const u8{
+    const config_path = maybe_config_path orelse std.fs.path.join(
+        b.allocator,
+        &[_][]const u8{
             b.pathFromRoot(".build_config"),
             "sdl.json",
-        }) catch @panic("out of memory"),
+        },
+    ) catch @panic("out of memory");
+
+    sdk.* = .{
+        .build = b,
+        .config_path = config_path,
         .prepare_sources = undefined,
     };
     sdk.prepare_sources = PrepareStubSourceStep.create(sdk);
@@ -47,57 +52,68 @@ pub fn init(b: *Builder) *Sdk {
     return sdk;
 }
 
-/// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
+/// Returns a module with the raw SDL api with proper argument types, but no functional/logical changes
 /// for a more *ziggy* feeling.
 /// This is similar to the *C import* result.
-pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
-    const build_options = sdk.builder.addOptions();
+pub fn getNativeModule(sdk: *Sdk) *Build.Module {
+    const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", false);
-    return sdk.builder.dupePkg(std.build.Pkg{
-        .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkPath("/src/binding/sdl.zig") },
-        .dependencies = &[_]std.build.Pkg{
-            build_options.getPackage("build_options"),
+    return sdk.build.createModule(.{
+        .source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .dependencies = &.{
+            .{
+                .name = sdk.build.dupe("build_options"),
+                .module = build_options.createModule(),
+            },
         },
     });
 }
 
-/// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
-/// for a more *ziggy* feeling, with Vulkan support! The Vulkan package provided by `vulkan-zig` must be
+/// Returns a module with the raw SDL api with proper argument types, but no functional/logical changes
+/// for a more *ziggy* feeling, with Vulkan support! The Vulkan module provided by `vulkan-zig` must be
 /// provided as an argument.
 /// This is similar to the *C import* result.
-pub fn getNativePackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
-    const build_options = sdk.builder.addOptions();
+pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
+    const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", true);
-    return sdk.builder.dupePkg(std.build.Pkg{
-        .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkPath("/src/binding/sdl.zig") },
-        .dependencies = &[_]std.build.Pkg{
-            build_options.getPackage("build_options"),
-            vulkan,
+    return sdk.build.createModule(.{
+        .source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .dependencies = &.{
+            .{
+                .name = sdk.build.dupe("build_options"),
+                .module = build_options.createModule(),
+            },
+            .{
+                .name = sdk.build.dupe("vulkan"),
+                .module = vulkan,
+            },
         },
     });
 }
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
-pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg {
-    return sdk.builder.dupePkg(std.build.Pkg{
-        .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
-        .dependencies = &[_]std.build.Pkg{
-            sdk.getNativePackage("sdl-native"),
+pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
+    return sdk.build.createModule(.{
+        .source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .dependencies = &.{
+            .{
+                .name = sdk.build.dupe("sdl-native"),
+                .module = sdk.getNativeModule(),
+            },
         },
     });
 }
 
-/// Returns the smart wrapper with Vulkan support. The Vulkan package provided by `vulkan-zig` must be
+/// Returns the smart wrapper with Vulkan support. The Vulkan module provided by `vulkan-zig` must be
 /// provided as an argument.
-pub fn getWrapperPackageVulkan(sdk: *Sdk, package_name: []const u8, vulkan: std.build.Pkg) std.build.Pkg {
-    return sdk.builder.dupePkg(std.build.Pkg{
-        .name = sdk.builder.dupe(package_name),
-        .source = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
-        .dependencies = &[_]std.build.Pkg{
-            sdk.getNativePackageVulkan("sdl-native", vulkan),
+pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
+    return sdk.build.createModule(.{
+        .source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .dependencies = &.{
+            .{
+                .name = sdk.build.dupe("vulkan"),
+                .module = vulkan,
+            },
         },
     });
 }
@@ -131,10 +147,10 @@ pub fn linkTtf(_: *Sdk, exe: *LibExeObjStep) void {
 
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void {
+pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void {
     // TODO: Implement
 
-    const b = sdk.builder;
+    const b = sdk.build;
     const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
     const is_native = exe.target.isNative();
 
@@ -146,9 +162,12 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         // we compile a stub .so file we will link against an SDL2.so even if that file
         // doesn't exist on our system
 
-        const build_linux_sdl_stub = b.addSharedLibrary("SDL2", null, .unversioned);
+        const build_linux_sdl_stub = b.addSharedLibrary(.{
+            .name = "SDL2",
+            .target = exe.target,
+            .optimize = exe.optimize,
+        });
         build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
-        build_linux_sdl_stub.setTarget(exe.target);
 
         // We need to link against libc
         exe.linkLibC();
@@ -181,7 +200,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         const sdk_paths = sdk.getPaths(target) catch |err| {
             const writer = std.io.getStdErr().writer();
 
-            const target_name = tripleName(sdk.builder.allocator, target) catch @panic("out of memory");
+            const target_name = tripleName(sdk.build.allocator, target) catch @panic("out of memory");
 
             switch (err) {
                 error.FileNotFound => {
@@ -295,11 +314,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Lin
         if (linkage == .dynamic and exe.kind == .exe) {
             // On window, we need to copy SDL2.dll to the bin directory
             // for executables
-            const sdl2_dll_path = std.fs.path.join(sdk.builder.allocator, &[_][]const u8{
+            const sdl2_dll_path = std.fs.path.join(sdk.build.allocator, &[_][]const u8{
                 sdk_paths.bin,
                 "SDL2.dll",
             }) catch @panic("out of memory");
-            sdk.builder.installBinFile(sdl2_dll_path, "SDL2.dll");
+            sdk.build.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
     } else if (target.isDarwin()) {
         // TODO: Implement cross-compilaton to macOS via system root provisioning
@@ -337,12 +356,12 @@ const Paths = struct {
 };
 
 fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
-    const json_data = std.fs.cwd().readFileAlloc(sdk.builder.allocator, sdk.config_path, 1 << 20) catch |err| switch (err) {
+    const json_data = std.fs.cwd().readFileAlloc(sdk.build.allocator, sdk.config_path, 1 << 20) catch |err| switch (err) {
         error.FileNotFound => return error.FileNotFound,
         else => |e| @panic(@errorName(e)),
     };
 
-    var parser = std.json.Parser.init(sdk.builder.allocator, false);
+    var parser = std.json.Parser.init(sdk.build.allocator, false);
 
     var tree = parser.parse(json_data) catch return error.InvalidJson;
 
@@ -383,13 +402,13 @@ const PrepareStubSourceStep = struct {
     assembly_source: GeneratedFile,
 
     pub fn create(sdk: *Sdk) *PrepareStubSourceStep {
-        const psss = sdk.builder.allocator.create(Self) catch @panic("out of memory");
+        const psss = sdk.build.allocator.create(Self) catch @panic("out of memory");
 
         psss.* = .{
-            .step = std.build.Step.init(
+            .step = Step.init(
                 .custom,
                 "Prepare SDL2 stub sources",
-                sdk.builder.allocator,
+                sdk.build.allocator,
                 make,
             ),
             .sdk = sdk,
@@ -406,7 +425,7 @@ const PrepareStubSourceStep = struct {
     fn make(step: *Step) !void {
         const self = @fieldParentPtr(Self, "step", step);
 
-        var cache = CacheBuilder.init(self.sdk.builder, "sdl");
+        var cache = CacheBuilder.init(self.sdk.build, "sdl");
 
         cache.addBytes(sdl2_symbol_definitions);
 
@@ -430,7 +449,7 @@ const PrepareStubSourceStep = struct {
             try writer.writeAll("  .byte 0\n");
         }
 
-        self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
+        self.assembly_source.path = try std.fs.path.join(self.sdk.build.allocator, &[_][]const u8{
             dirpath.path,
             "sdl.S",
         });
@@ -448,16 +467,16 @@ fn tripleName(allocator: std.mem.Allocator, target_local: std.Target) ![]u8 {
 const CacheBuilder = struct {
     const Self = @This();
 
-    builder: *std.build.Builder,
+    build: *std.Build,
     hasher: std.crypto.hash.Sha1,
     subdir: ?[]const u8,
 
-    pub fn init(builder: *std.build.Builder, subdir: ?[]const u8) Self {
+    pub fn init(build: *std.Build, subdir: ?[]const u8) Self {
         return Self{
-            .builder = builder,
+            .build = build,
             .hasher = std.crypto.hash.Sha1.init(.{}),
             .subdir = if (subdir) |s|
-                builder.dupe(s)
+                build.dupe(s)
             else
                 null,
         };
@@ -467,11 +486,11 @@ const CacheBuilder = struct {
         self.hasher.update(bytes);
     }
 
-    pub fn addFile(self: *Self, file: std.build.FileSource) !void {
-        const path = file.getPath(self.builder);
+    pub fn addFile(self: *Self, file: FileSource) !void {
+        const path = file.getPath(self.build);
 
-        const data = try std.fs.cwd().readFileAlloc(self.builder.allocator, path, 1 << 32); // 4 GB
-        defer self.builder.allocator.free(data);
+        const data = try std.fs.cwd().readFileAlloc(self.build.allocator, path, 1 << 32); // 4 GB
+        defer self.build.allocator.free(data);
 
         self.addBytes(data);
     }
@@ -482,20 +501,20 @@ const CacheBuilder = struct {
 
         const path = if (self.subdir) |subdir|
             try std.fmt.allocPrint(
-                self.builder.allocator,
+                self.build.allocator,
                 "{s}/{s}/o/{}",
                 .{
-                    self.builder.cache_root,
+                    self.build.cache_root,
                     subdir,
                     std.fmt.fmtSliceHexLower(&hash),
                 },
             )
         else
             try std.fmt.allocPrint(
-                self.builder.allocator,
+                self.build.allocator,
                 "{s}/o/{}",
                 .{
-                    self.builder.cache_root,
+                    self.build.cache_root,
                     std.fmt.fmtSliceHexLower(&hash),
                 },
             );
