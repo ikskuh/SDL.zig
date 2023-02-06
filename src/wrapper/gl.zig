@@ -1,32 +1,28 @@
-const SDL = @import("sdl.zig");
-
-/// Exports the C interface for SDL_image
-pub const c = @import("sdl-native");
-
+const sdl = @import("sdl.zig");
 const std = @import("std");
 
 pub const Context = struct {
-    ptr: c.SDL_GLContext,
+    ptr: sdl.c.SDL_GLContext,
 };
 
-pub fn createContext(window: SDL.Window) !Context {
+pub fn createContext(window: sdl.Window) !Context {
     return Context{
-        .ptr = c.SDL_GL_CreateContext(window.ptr) orelse return SDL.makeError(),
+        .ptr = sdl.c.SDL_GL_CreateContext(window.ptr) orelse return sdl.makeError(),
     };
 }
 
-pub fn makeCurrent(context: Context, window: SDL.Window) !void {
-    if (c.SDL_GL_MakeCurrent(window.ptr, context.ptr) != 0) {
-        return SDL.makeError();
+pub fn makeCurrent(context: Context, window: sdl.Window) !void {
+    if (sdl.c.SDL_GL_MakeCurrent(window.ptr, context.ptr) != 0) {
+        return sdl.makeError();
     }
 }
 
 pub fn deleteContext(context: Context) void {
-    _ = c.SDL_GL_DeleteContext(context.ptr);
+    _ = sdl.c.SDL_GL_DeleteContext(context.ptr);
 }
 
 pub fn getProcAddress(proc: [:0]const u8) ?*const anyopaque {
-    return c.SDL_GL_GetProcAddress(proc.ptr);
+    return sdl.c.SDL_GL_GetProcAddress(proc.ptr);
 }
 
 pub const SwapInterval = enum {
@@ -36,23 +32,23 @@ pub const SwapInterval = enum {
 };
 
 pub fn setSwapInterval(interval: SwapInterval) !void {
-    if (c.SDL_GL_SetSwapInterval(switch (interval) {
+    if (sdl.c.SDL_GL_SetSwapInterval(switch (interval) {
         .immediate => 0,
         .vsync => 1,
         .adaptive_vsync => -1,
     }) != 0) {
-        return SDL.makeError();
+        return sdl.makeError();
     }
 }
 
-pub fn swapWindow(window: SDL.Window) void {
-    c.SDL_GL_SwapWindow(window.ptr);
+pub fn swapWindow(window: sdl.Window) void {
+    sdl.c.SDL_GL_SwapWindow(window.ptr);
 }
 
-pub fn getDrawableSize(window: SDL.Window) struct { w: u32, h: u32 } {
+pub fn getDrawableSize(window: sdl.Window) struct { w: u32, h: u32 } {
     var w: c_int = undefined;
     var h: c_int = undefined;
-    c.SDL_GL_GetDrawableSize(window.ptr, &w, &h);
+    sdl.c.SDL_GL_GetDrawableSize(window.ptr, &w, &h);
     return .{ .w = @intCast(u32, w), .h = @intCast(u32, h) };
 }
 
@@ -63,16 +59,16 @@ fn attribValueToInt(value: anytype) c_int {
         ContextFlags => blk: {
             var result: c_int = 0;
             if (value.debug) {
-                result |= c.SDL_GL_CONTEXT_DEBUG_FLAG;
+                result |= sdl.c.SDL_GL_CONTEXT_DEBUG_FLAG;
             }
             if (value.forward_compatible) {
-                result |= c.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+                result |= sdl.c.SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
             }
             if (value.robust_access) {
-                result |= c.SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG;
+                result |= sdl.c.SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG;
             }
             if (value.reset_isolation) {
-                result |= c.SDL_GL_CONTEXT_RESET_ISOLATION_FLAG;
+                result |= sdl.c.SDL_GL_CONTEXT_RESET_ISOLATION_FLAG;
             }
 
             break :blk result;
@@ -85,12 +81,12 @@ fn attribValueToInt(value: anytype) c_int {
 pub fn setAttribute(attrib: Attribute) !void {
     inline for (std.meta.fields(Attribute)) |fld| {
         if (attrib == @field(AttributeName, fld.name)) {
-            const res = c.SDL_GL_SetAttribute(
-                @intCast(c.SDL_GLattr, @enumToInt(attrib)),
+            const res = sdl.c.SDL_GL_SetAttribute(
+                @intCast(sdl.c.SDL_GLattr, @enumToInt(attrib)),
                 attribValueToInt(@field(attrib, fld.name)),
             );
             if (res != 0) {
-                return SDL.makeError();
+                return sdl.makeError();
             } else {
                 return;
             }
@@ -126,29 +122,29 @@ pub const Attribute = union(AttributeName) {
 };
 
 pub const AttributeName = enum(c_int) {
-    red_size = c.SDL_GL_RED_SIZE,
-    green_size = c.SDL_GL_GREEN_SIZE,
-    blue_size = c.SDL_GL_BLUE_SIZE,
-    alpha_size = c.SDL_GL_ALPHA_SIZE,
-    buffer_size = c.SDL_GL_BUFFER_SIZE,
-    doublebuffer = c.SDL_GL_DOUBLEBUFFER,
-    depth_size = c.SDL_GL_DEPTH_SIZE,
-    stencil_size = c.SDL_GL_STENCIL_SIZE,
-    accum_red_size = c.SDL_GL_ACCUM_RED_SIZE,
-    accum_green_size = c.SDL_GL_ACCUM_GREEN_SIZE,
-    accum_blue_size = c.SDL_GL_ACCUM_BLUE_SIZE,
-    accum_alpha_size = c.SDL_GL_ACCUM_ALPHA_SIZE,
-    stereo = c.SDL_GL_STEREO,
-    multisamplebuffers = c.SDL_GL_MULTISAMPLEBUFFERS,
-    multisamplesamples = c.SDL_GL_MULTISAMPLESAMPLES,
-    accelerated_visual = c.SDL_GL_ACCELERATED_VISUAL,
-    context_major_version = c.SDL_GL_CONTEXT_MAJOR_VERSION,
-    context_minor_version = c.SDL_GL_CONTEXT_MINOR_VERSION,
-    context_flags = c.SDL_GL_CONTEXT_FLAGS,
-    context_profile_mask = c.SDL_GL_CONTEXT_PROFILE_MASK,
-    share_with_current_context = c.SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
-    framebuffer_srgb_capable = c.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
-    context_release_behavior = c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
+    red_size = sdl.c.SDL_GL_RED_SIZE,
+    green_size = sdl.c.SDL_GL_GREEN_SIZE,
+    blue_size = sdl.c.SDL_GL_BLUE_SIZE,
+    alpha_size = sdl.c.SDL_GL_ALPHA_SIZE,
+    buffer_size = sdl.c.SDL_GL_BUFFER_SIZE,
+    doublebuffer = sdl.c.SDL_GL_DOUBLEBUFFER,
+    depth_size = sdl.c.SDL_GL_DEPTH_SIZE,
+    stencil_size = sdl.c.SDL_GL_STENCIL_SIZE,
+    accum_red_size = sdl.c.SDL_GL_ACCUM_RED_SIZE,
+    accum_green_size = sdl.c.SDL_GL_ACCUM_GREEN_SIZE,
+    accum_blue_size = sdl.c.SDL_GL_ACCUM_BLUE_SIZE,
+    accum_alpha_size = sdl.c.SDL_GL_ACCUM_ALPHA_SIZE,
+    stereo = sdl.c.SDL_GL_STEREO,
+    multisamplebuffers = sdl.c.SDL_GL_MULTISAMPLEBUFFERS,
+    multisamplesamples = sdl.c.SDL_GL_MULTISAMPLESAMPLES,
+    accelerated_visual = sdl.c.SDL_GL_ACCELERATED_VISUAL,
+    context_major_version = sdl.c.SDL_GL_CONTEXT_MAJOR_VERSION,
+    context_minor_version = sdl.c.SDL_GL_CONTEXT_MINOR_VERSION,
+    context_flags = sdl.c.SDL_GL_CONTEXT_FLAGS,
+    context_profile_mask = sdl.c.SDL_GL_CONTEXT_PROFILE_MASK,
+    share_with_current_context = sdl.c.SDL_GL_SHARE_WITH_CURRENT_CONTEXT,
+    framebuffer_srgb_capable = sdl.c.SDL_GL_FRAMEBUFFER_SRGB_CAPABLE,
+    context_release_behavior = sdl.c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR,
 };
 
 pub const ContextFlags = struct {
@@ -159,12 +155,12 @@ pub const ContextFlags = struct {
 };
 
 pub const Profile = enum(c_int) {
-    core = c.SDL_GL_CONTEXT_PROFILE_CORE,
-    compatibility = c.SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
-    es = c.SDL_GL_CONTEXT_PROFILE_ES,
+    core = sdl.c.SDL_GL_CONTEXT_PROFILE_CORE,
+    compatibility = sdl.c.SDL_GL_CONTEXT_PROFILE_COMPATIBILITY,
+    es = sdl.c.SDL_GL_CONTEXT_PROFILE_ES,
 };
 
 pub const ReleaseBehaviour = enum(c_int) {
-    none = c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR_NONE,
-    flush = c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH,
+    none = sdl.c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR_NONE,
+    flush = sdl.c.SDL_GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH,
 };

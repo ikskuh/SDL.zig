@@ -19,7 +19,7 @@ pub fn build(b: *Builder) !void {
             .root_source_file = .{ .path = "src/wrapper/sdl.zig" },
             .target = .{ .abi = if (target.isWindows()) target.abi else null },
         });
-        lib_test.addPackage(sdk.getNativePackage("sdl-native"));
+        lib_test.addModule("sdl-native", sdk.getNativeModule());
         lib_test.linkSystemLibrary("sdl2_image");
         lib_test.linkSystemLibrary("sdl2_ttf");
         if (lib_test.target.isDarwin()) {
@@ -50,7 +50,7 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_wrapper, sdl_linkage);
-    demo_wrapper.addPackage(sdk.getWrapperPackage("sdl2"));
+    demo_wrapper.addModule("sdl2", sdk.getWrapperModule());
     demo_wrapper.install();
 
     const demo_wrapper_image = b.addExecutable(.{
@@ -60,7 +60,7 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_wrapper_image, sdl_linkage);
-    demo_wrapper_image.addPackage(sdk.getWrapperPackage("sdl2"));
+    demo_wrapper_image.addModule("sdl2", sdk.getWrapperModule());
     demo_wrapper_image.linkSystemLibrary("sdl2_image");
     demo_wrapper_image.linkSystemLibrary("jpeg");
     demo_wrapper_image.linkSystemLibrary("libpng");
@@ -75,7 +75,7 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_native, sdl_linkage);
-    demo_native.addPackage(sdk.getNativePackage("sdl2"));
+    demo_native.addModule("sdl2", sdk.getNativeModule());
     demo_native.install();
 
     const run_demo_wrappr = demo_wrapper.run();
