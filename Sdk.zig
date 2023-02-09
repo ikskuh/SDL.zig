@@ -125,7 +125,7 @@ pub fn linkTtf(_: *Sdk, exe: *LibExeObjStep) void {
     exe.linkLibC();
 
     if (target.os.tag == .linux) {
-        exe.linkSystemLibrary("sdl2_ttf");
+        exe.linkSystemLibrary("SDL2_ttf");
     } else if (target.os.tag == .windows) {
         @compileError("Not implemented yet");
     } else if (target.isDarwin()) {
@@ -177,7 +177,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
     } else if (target.os.tag == .linux) {
         // on linux with compilation for native target,
         // we should rely on the system libraries to "just work"
-        exe.linkSystemLibrary("sdl2");
+        exe.linkSystemLibrary("SDL2");
     } else if (target.os.tag == .windows) {
         // try linking with vcpkg
         // TODO: Implement proper vcpkg support
