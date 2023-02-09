@@ -2,7 +2,7 @@ const std = @import("std");
 
 const Sdk = @import("Sdk.zig");
 
-const Builder = std.build.Builder;
+const Builder = std.Build.Builder;
 
 pub fn build(b: *Builder) !void {
     const sdk = Sdk.init(b, null);
@@ -10,7 +10,7 @@ pub fn build(b: *Builder) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const sdl_linkage = b.option(std.build.LibExeObjStep.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
+    const sdl_linkage = b.option(std.Build.LibExeObjStep.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
 
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
