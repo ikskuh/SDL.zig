@@ -29,7 +29,7 @@ pub fn build(b: *std.Build.Builder) !void {
     sdk.link(demo_basic, .dynamic); // link SDL2 as a shared library
 
     // Add "sdl2" package that exposes the SDL2 api (like SDL_Init or SDL_CreateWindow)
-    demo_basic.addPackage("sdl2", sdk.getNativeModule()); 
+    demo_basic.addModule("sdl2", sdk.getNativeModule()); 
 
     // Install the executable into the prefix when invoking "zig build"
     demo_basic.install();
