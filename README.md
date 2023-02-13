@@ -12,21 +12,24 @@ This is an example `build.zig` that will link the SDL2 library to your project.
 const std = @import("std");
 const Sdk = @import("Sdk.zig"); // Import the Sdk at build time
 
-pub fn build(b: *std.build.Builder) !void {
+pub fn build(b: *std.Build.Builder) !void {
     // Determine compilation target
     const target = b.standardTargetOptions(.{});
   
     // Create a new instance of the SDL2 Sdk
-    const sdk = Sdk.init(b);
+    const sdk = Sdk.init(b, null);
 
     // Create executable for our example
-    const demo_basic = b.addExecutable("demo-basic", "my-game.zig");
+    const demo_basic = b.addExecutable(.{
+        .name = "demo-basic",
+        .root_source_file = .{ .path = "my-game.zig" },
+    });
     
     demo_basic.setTarget(target);   // must be done before calling sdk.link
     sdk.link(demo_basic, .dynamic); // link SDL2 as a shared library
 
     // Add "sdl2" package that exposes the SDL2 api (like SDL_Init or SDL_CreateWindow)
-    demo_basic.addPackage(sdk.getNativePackage("sdl2")); 
+    demo_basic.addModule("sdl2", sdk.getNativeModule()); 
 
     // Install the executable into the prefix when invoking "zig build"
     demo_basic.install();
@@ -39,7 +42,7 @@ This package exposes the SDL2 API as defined in the SDL headers. Use this to cre
 
 ```zig
 const std = @import("std");
-const SDL = @import("sdl2"); // Add this package by using sdk.getNativePackage
+const SDL = @import("sdl2"); // Add this package by using sdk.getNativeModule
 
 pub fn main() !void {
     if (SDL.SDL_Init(SDL.SDL_INIT_VIDEO | SDL.SDL_INIT_EVENTS | SDL.SDL_INIT_AUDIO) < 0)
@@ -125,24 +128,24 @@ pub fn main() !void {
 ## `Sdk.zig` API
 
 ```zig
-/// Just call `Sdk.init(b)` to obtain a handle to the Sdk!
+/// Just call `Sdk.init(b, null)` to obtain a handle to the Sdk!
 const Sdk = @This();
 
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
-pub fn init(b: *Builder) *Sdk
+pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk
 
-/// Returns a package with the raw SDL api with proper argument types, but no functional/logical changes
+/// Returns a module with the raw SDL api with proper argument types, but no functional/logical changes
 /// for a more *ziggy* feeling.
 /// This is similar to the *C import* result.
-pub fn getNativePackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg;
+pub fn getNativeModule(sdk: *Sdk) *Build.Module;
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
-pub fn getWrapperPackage(sdk: *Sdk, package_name: []const u8) std.build.Pkg ;
+pub fn getWrapperModule(sdk: *Sdk) *Build.Module;
 
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.build.LibExeObjStep.Linkage) void;
+pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.Build.LibExeObjStep.Linkage) void;
 ```
 
 ## Dependencies
