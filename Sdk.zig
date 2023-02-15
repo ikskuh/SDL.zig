@@ -504,7 +504,7 @@ const CacheBuilder = struct {
                 self.build.allocator,
                 "{s}/{s}/o/{}",
                 .{
-                    self.build.cache_root,
+                    self.build.cache_root.path.?,
                     subdir,
                     std.fmt.fmtSliceHexLower(&hash),
                 },
@@ -514,7 +514,7 @@ const CacheBuilder = struct {
                 self.build.allocator,
                 "{s}/o/{}",
                 .{
-                    self.build.cache_root,
+                    self.build.cache_root.path.?,
                     std.fmt.fmtSliceHexLower(&hash),
                 },
             );
