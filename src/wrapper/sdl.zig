@@ -834,8 +834,8 @@ pub const Renderer = struct {
         var region = rect;
         if (c.SDL_RenderReadPixels(
             ren.ptr,
-            if (region) |r| r.getSdlPtr() else null,
-            if (format) |f| @enumToInt(f) orelse 0,
+            if (region) |r| r.getConstSdlPtr() else null,
+            if (format) |f| @enumToInt(f) else 0,
             pixels,
             @intCast(c_int, pitch),
         ) < 0)
