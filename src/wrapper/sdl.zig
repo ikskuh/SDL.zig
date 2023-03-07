@@ -639,6 +639,7 @@ pub const RendererFlip = enum(c.SDL_RendererFlip) {
     none = c.SDL_FLIP_NONE,
     horizontal = c.SDL_FLIP_HORIZONTAL,
     vertical = c.SDL_FLIP_VERTICAL,
+    both = c.SDL_FLIP_VERTICAL | c.SDL_FLIP_HORIZONTAL,
 };
 
 pub const Renderer = struct {
