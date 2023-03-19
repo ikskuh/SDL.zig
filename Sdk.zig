@@ -406,10 +406,12 @@ const PrepareStubSourceStep = struct {
 
         psss.* = .{
             .step = Step.init(
-                .custom,
-                "Prepare SDL2 stub sources",
-                sdk.build.allocator,
-                make,
+                .{
+                    .id = .custom,
+                    .name = "Prepare SDL2 stub sources",
+                    .owner = sdk.build,
+                    .makeFn = make,
+                },
             ),
             .sdk = sdk,
             .assembly_source = .{ .step = &psss.step },
@@ -422,7 +424,8 @@ const PrepareStubSourceStep = struct {
         return .{ .generated = &self.assembly_source };
     }
 
-    fn make(step: *Step) !void {
+    fn make(step: *Step, prog_node: *std.Progress.Node) !void {
+        _ = prog_node;
         const self = @fieldParentPtr(Self, "step", step);
 
         var cache = CacheBuilder.init(self.sdk.build, "sdl");
