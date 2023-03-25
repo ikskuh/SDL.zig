@@ -2697,3 +2697,4 @@ pub const SDL_SysWMInfo = extern struct {
     },
 };
 pub extern fn SDL_GetWindowWMInfo(window: *SDL_Window, info: *SDL_SysWMInfo) SDL_bool;
+pub extern fn SDL_SetMainReady() void;
