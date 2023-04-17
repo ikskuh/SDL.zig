@@ -916,7 +916,7 @@ pub const Texture = struct {
         };
     }
 
-    pub fn update(texture: Texture, pixels: []const u8, pitch: usize, rectangle: ?Rectangle) !void {
+    pub fn update(texture: Texture, pixels: []const anyopaque, pitch: usize, rectangle: ?Rectangle) !void {
         if (c.SDL_UpdateTexture(
             texture.ptr,
             if (rectangle) |rect| rect.getConstSdlPtr() else null,
