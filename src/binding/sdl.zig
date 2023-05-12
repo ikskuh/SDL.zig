@@ -195,7 +195,7 @@ pub extern fn SDL_RWFromFP(fp: ?*anyopaque, autoclose: SDL_bool) ?*SDL_RWops;
 pub extern fn SDL_RWFromMem(mem: ?*anyopaque, size: c_int) ?*SDL_RWops;
 pub extern fn SDL_RWFromConstMem(mem: ?*const anyopaque, size: c_int) ?*SDL_RWops;
 pub extern fn SDL_AllocRW() ?*SDL_RWops;
-pub extern fn SDL_FreeRW(area: SDL_RWops) void;
+pub extern fn SDL_FreeRW(area: *SDL_RWops) void;
 pub extern fn SDL_RWsize(context: *SDL_RWops) i64;
 pub extern fn SDL_RWseek(context: *SDL_RWops, offset: i64, whence: c_int) i64;
 pub extern fn SDL_RWtell(context: *SDL_RWops) i64;
