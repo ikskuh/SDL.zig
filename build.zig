@@ -454,11 +454,11 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
         else => |e| @panic(@errorName(e)),
     };
 
-    var parser = std.json.Parser.init(sdk.build.allocator, false);
+    var parser = std.json.Parser.init(sdk.build.allocator, .alloc_always);
 
     var tree = parser.parse(json_data) catch return error.InvalidJson;
 
-    var root_node = tree.root.Object;
+    var root_node = tree.root.object;
 
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
@@ -475,12 +475,12 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
             continue;
         // load paths
 
-        const node = entry.value_ptr.*.Object;
+        const node = entry.value_ptr.*.object;
 
         return Paths{
-            .include = node.get("include").?.String,
-            .libs = node.get("libs").?.String,
-            .bin = node.get("bin").?.String,
+            .include = node.get("include").?.string,
+            .libs = node.get("libs").?.string,
+            .bin = node.get("bin").?.string,
         };
     }
     return error.MissingTarget;
