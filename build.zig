@@ -55,7 +55,7 @@ pub fn build(b: *Builder) !void {
     });
     sdk.link(demo_wrapper, sdl_linkage);
     demo_wrapper.addModule("sdl2", sdk.getWrapperModule());
-    b.installArtifact(demo_wrapper);
+    std.Build.installArtifact(b, demo_wrapper);
 
     const demo_wrapper_image = b.addExecutable(.{
         .name = "demo-wrapper-image",
@@ -70,7 +70,7 @@ pub fn build(b: *Builder) !void {
     demo_wrapper_image.linkSystemLibrary("libpng");
     demo_wrapper_image.linkSystemLibrary("tiff");
     demo_wrapper_image.linkSystemLibrary("webp");
-    b.installArtifact(demo_wrapper_image);
+    std.Build.installArtifact(b, demo_wrapper_image);
 
     const demo_native = b.addExecutable(.{
         .name = "demo-native",
@@ -80,7 +80,7 @@ pub fn build(b: *Builder) !void {
     });
     sdk.link(demo_native, sdl_linkage);
     demo_native.addModule("sdl2", sdk.getNativeModule());
-    b.installArtifact(demo_native);
+    std.Build.installArtifact(b, demo_native);
 
     const run_demo_wrappr = b.addRunArtifact(demo_wrapper);
 
