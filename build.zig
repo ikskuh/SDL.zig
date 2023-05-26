@@ -311,7 +311,9 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
                     ) catch @panic("io error");
                     writer.writeAll(
                         \\
-                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
+                        \\You can obtain a SDL2 sdk for windows from https://github.com/libsdl-org/SDL/releases/tag/release-2.26.5
+                        \\
+                        \\You can download the "SDL2-devel-2.26.5-mingw.zip", the relevant include/libs/bin folders are in "x86_64-w64-mingw32"
                         \\
                     ) catch @panic("io error");
                 },
@@ -329,7 +331,8 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
                     ) catch @panic("io error");
                     writer.writeAll(
                         \\
-                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
+                        \\You can obtain a SDL2 sdk for windows from https://github.com/libsdl-org/SDL/releases/tag/release-2.26.5
+                        \\You'll likely want to download the "SDL2-devel-2.26.5-mingw.zip", the relevant include/libs/bin folders are in "x86_64-w64-mingw32"
                         \\
                     ) catch @panic("io error");
                 },
