@@ -31,7 +31,7 @@ pub fn build(b: *std.Build.Builder) !void {
     demo_basic.addModule("sdl2", sdk.getNativeModule());
 
     // Install the executable into the prefix when invoking "zig build"
-    std.Build.installArtifact(b, demo_basic);
+    b.installArtifact(demo_basic);
 }
 ```
 
