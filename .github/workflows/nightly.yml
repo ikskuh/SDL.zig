@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libsdl2-dev libsdl2-image-dev
+          sudo apt-get install libsdl2-dev libsdl2-image-dev libwebp
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1
@@ -66,7 +66,7 @@ jobs:
         target: [
             x86-windows-gnu,
             x86_64-windows-gnu,
-            # i386-windows-msvc, # disabled for now as it seems like zig detects the wrong files
+            # x86-windows-msvc, # disabled for now as it seems like zig detects the wrong files
             x86_64-windows-msvc,
           ]
 
@@ -83,7 +83,7 @@ jobs:
           version: master
 
       - name: Install VisualStudio (x86)
-        if: ${{ matrix.target == 'i386-windows-msvc' }}
+        if: ${{ matrix.target == 'x86-windows-msvc' }}
         uses: ilammy/msvc-dev-cmd@v1
         with:
           uwp: false
@@ -98,7 +98,7 @@ jobs:
 
       - name: Download SDL2 (MinGW)
         uses: carlosperate/download-file-action@v1.0.3
-        if: ${{ matrix.target == 'i386-windows-gnu' || matrix.target == 'x86_64-windows-gnu' }}
+        if: ${{ matrix.target == 'x86-windows-gnu' || matrix.target == 'x86_64-windows-gnu' }}
         with:
           file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-mingw.tar.gz
           file-name: SDL2.tar.gz
@@ -106,7 +106,7 @@ jobs:
 
       - name: Download SDL2 (Visual Studio)
         uses: carlosperate/download-file-action@v1.0.3
-        if: ${{ matrix.target == 'i386-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
+        if: ${{ matrix.target == 'x86-windows-msvc' || matrix.target == 'x86_64-windows-msvc' }}
         with:
           file-url: https://www.libsdl.org/release/SDL2-devel-2.0.18-VC.zip
           file-name: SDL2.tar.gz
@@ -118,7 +118,7 @@ jobs:
           file: SDL2.tar.gz
 
       - name: Create SDK file
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: .build_config/sdl.json
           contents: |
@@ -153,7 +153,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [i386-windows-gnu, x86_64-windows-gnu]
+        target: [x86-windows-gnu, x86_64-windows-gnu]
 
     runs-on: windows-latest
 
@@ -180,7 +180,7 @@ jobs:
           file: SDL2.tar.gz
 
       - name: Create SDK file
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: .build_config/sdl.json
           contents: |
@@ -206,7 +206,7 @@ jobs:
       fail-fast: false
       matrix:
         host: [ubuntu-latest, macos-latest]
-        target: [i386-windows-gnu, x86_64-windows-gnu]
+        target: [x86-windows-gnu, x86_64-windows-gnu]
         linkage: [static, dynamic]
 
     runs-on: ${{matrix.host}}
@@ -234,7 +234,7 @@ jobs:
           file: SDL2.tar.gz
 
       - name: Create SDK file
-        uses: DamianReeves/write-file-action@v1.0
+        uses: DamianReeves/write-file-action@v1.2
         with:
           path: .build_config/sdl.json
           contents: |
