@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install libsdl2-dev libsdl2-image-dev libwebp
+          sudo apt-get install libsdl2-dev libsdl2-image-dev libwebp-dev
 
       - name: Setup Zig
         uses: goto-bus-stop/setup-zig@v1

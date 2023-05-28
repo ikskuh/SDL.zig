@@ -70,7 +70,10 @@ pub fn build(b: *Builder) !void {
     demo_wrapper_image.linkSystemLibrary("libpng");
     demo_wrapper_image.linkSystemLibrary("tiff");
     demo_wrapper_image.linkSystemLibrary("webp");
-    b.installArtifact(demo_wrapper_image);
+
+    if (target.isNative() and target.isLinux()) {
+        b.installArtifact(demo_wrapper_image);
+    }
 
     const demo_native = b.addExecutable(.{
         .name = "demo-native",
