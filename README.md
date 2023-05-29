@@ -87,7 +87,7 @@ This package also exposes the SDL2 API with a more Zig-style API. Use this if yo
 
 ```zig
 const std = @import("std");
-const SDL = @import("sdl2"); // Add this package by using sdk.getWrapperPackage
+const SDL = @import("sdl2"); // Created in build.zig by using exe.addModule("sdl2", sdk.getWrapperModule());
 
 pub fn main() !void {
     try SDL.init(.{
