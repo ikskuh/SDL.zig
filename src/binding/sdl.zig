@@ -5,6 +5,7 @@ pub usingnamespace if (build_options.vulkan) @import("vulkan.zig") else struct {
 
 pub usingnamespace @import("sdl_image.zig");
 pub usingnamespace @import("sdl_ttf.zig");
+pub usingnamespace @import("sdl_mixer.zig");
 
 pub const SDL_INIT_TIMER: u32 = 0x00000001;
 pub const SDL_INIT_AUDIO: u32 = 0x00000010;
