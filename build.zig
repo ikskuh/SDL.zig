@@ -457,12 +457,8 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
         else => |e| @panic(@errorName(e)),
     };
 
-    var parser = std.json.Parser.init(sdk.build.allocator, .alloc_always);
-
-    var tree = parser.parse(json_data) catch return error.InvalidJson;
-
-    var root_node = tree.root.object;
-
+    var parsed = std.json.parseFromSlice(std.json.Value, sdk.build.allocator, json_data, .{}) catch return error.InvalidJson;
+    var root_node = parsed.value.object;
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
         const config_cross_target = std.zig.CrossTarget.parse(.{
