@@ -608,7 +608,7 @@ pub fn loadBmp(filename: [:0]const u8) !Surface {
 }
 
 pub fn createRgbSurfaceWithFormat(width: u31, height: u31, format: PixelFormatEnum) !Surface {
-    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(undefined, width, height, undefined, @enumToInt(format)) orelse return error.SdlError };
+    return Surface{ .ptr = c.SDL_CreateRGBSurfaceWithFormat(undefined, width, height, undefined, @intFromEnum(format)) orelse return error.SdlError };
 }
 
 pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_rectangle: ?*Rectangle) !void {
@@ -669,12 +669,12 @@ pub const Renderer = struct {
     }
 
     pub fn copyEx(ren: Renderer, tex: Texture, dstRect: ?Rectangle, srcRect: ?Rectangle, angle: f64, center: ?Point, flip: RendererFlip) !void {
-        if (c.SDL_RenderCopyEx(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @enumToInt(flip)) < 0)
+        if (c.SDL_RenderCopyEx(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @intFromEnum(flip)) < 0)
             return makeError();
     }
 
     pub fn copyExF(ren: Renderer, tex: Texture, dstRect: ?RectangleF, srcRect: ?Rectangle, angle: f64, center: ?PointF, flip: RendererFlip) !void {
-        if (c.SDL_RenderCopyExF(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @enumToInt(flip)) < 0)
+        if (c.SDL_RenderCopyExF(ren.ptr, tex.ptr, if (srcRect) |r| r.getConstSdlPtr() else null, if (dstRect) |r| r.getConstSdlPtr() else null, angle, if (center) |p| p.getConstSdlPtr() else null, @intFromEnum(flip)) < 0)
             return makeError();
     }
 
@@ -761,11 +761,11 @@ pub const Renderer = struct {
         var blend_mode: c.SDL_BlendMode = undefined;
         if (c.SDL_GetRenderDrawBlendMode(ren.ptr, &blend_mode) < 0)
             return makeError();
-        return @intToEnum(BlendMode, blend_mode);
+        return @enumFromInt(BlendMode, blend_mode);
     }
 
     pub fn setDrawBlendMode(ren: Renderer, blend_mode: BlendMode) !void {
-        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, @enumToInt(blend_mode)) < 0)
+        if (c.SDL_SetRenderDrawBlendMode(ren.ptr, @intFromEnum(blend_mode)) < 0)
             return makeError();
     }
 
@@ -836,7 +836,7 @@ pub const Renderer = struct {
         if (c.SDL_RenderReadPixels(
             ren.ptr,
             if (region) |r| r.getConstSdlPtr() else null,
-            if (format) |f| @enumToInt(f) else 0,
+            if (format) |f| @intFromEnum(f) else 0,
             pixels,
             @intCast(c_int, pitch),
         ) < 0)
@@ -943,8 +943,8 @@ pub const Texture = struct {
         return Info{
             .width = @intCast(usize, w),
             .height = @intCast(usize, h),
-            .access = @intToEnum(Access, access),
-            .format = @intToEnum(PixelFormatEnum, format),
+            .access = @enumFromInt(Access, access),
+            .format = @enumFromInt(PixelFormatEnum, format),
         };
     }
     pub fn resetColorMod(tex: Texture) !void {
@@ -975,23 +975,23 @@ pub const Texture = struct {
         var blend_mode: c.SDL_BlendMode = undefined;
         if (c.SDL_GetTextureBlendMode(tex.ptr, &blend_mode) < 0)
             return makeError();
-        return @intToEnum(BlendMode, blend_mode);
+        return @enumFromInt(BlendMode, blend_mode);
     }
 
     pub fn setBlendMode(tex: Texture, blend_mode: BlendMode) !void {
-        if (c.SDL_SetTextureBlendMode(tex.ptr, @enumToInt(blend_mode)) < 0)
+        if (c.SDL_SetTextureBlendMode(tex.ptr, @intFromEnum(blend_mode)) < 0)
             return makeError();
     }
 
     pub fn getScaleMode(tex: Texture) !ScaleMode {
         var scale_mode: c.SDL_ScaleMode = undefined;
-        if (c.SDL_GetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
+        if (c.SDL_GetTextureScaleMode(tex.ptr, @intFromEnum(scale_mode)) < 0)
             return makeError();
-        return @intToEnum(ScaleMode, scale_mode);
+        return @enumFromInt(ScaleMode, scale_mode);
     }
 
     pub fn setScaleMode(tex: Texture, scale_mode: ScaleMode) !void {
-        if (c.SDL_SetTextureScaleMode(tex.ptr, @enumToInt(scale_mode)) < 0)
+        if (c.SDL_SetTextureScaleMode(tex.ptr, @intFromEnum(scale_mode)) < 0)
             return makeError();
     }
 
@@ -1048,8 +1048,8 @@ pub const PixelFormatEnum = enum(u32) {
 pub fn createTexture(renderer: Renderer, format: PixelFormatEnum, access: Texture.Access, width: usize, height: usize) !Texture {
     const texptr = c.SDL_CreateTexture(
         renderer.ptr,
-        @enumToInt(format),
-        @enumToInt(access),
+        @intFromEnum(format),
+        @intFromEnum(access),
         @intCast(c_int, width),
         @intCast(c_int, height),
     ) orelse return makeError();
@@ -1119,7 +1119,7 @@ pub const WindowEvent = struct {
         return WindowEvent{
             .timestamp = ev.timestamp,
             .window_id = ev.windowID,
-            .type = switch (@intToEnum(Type, ev.event)) {
+            .type = switch (@enumFromInt(Type, ev.event)) {
                 .shown => Data{ .shown = {} },
                 .hidden => Data{ .hidden = {} },
                 .exposed => Data{ .exposed = {} },
@@ -1172,13 +1172,13 @@ pub const KeyModifierSet = struct {
     }
 
     pub fn get(self: KeyModifierSet, modifier: KeyModifierBit) bool {
-        return (self.storage & @enumToInt(modifier)) != 0;
+        return (self.storage & @intFromEnum(modifier)) != 0;
     }
     pub fn set(self: *KeyModifierSet, modifier: KeyModifierBit) void {
-        self.storage |= @enumToInt(modifier);
+        self.storage |= @intFromEnum(modifier);
     }
     pub fn clear(self: *KeyModifierSet, modifier: KeyModifierBit) void {
-        self.storage &= ~@enumToInt(modifier);
+        self.storage &= ~@intFromEnum(modifier);
     }
 };
 pub const KeyboardEvent = struct {
@@ -1203,10 +1203,10 @@ pub const KeyboardEvent = struct {
         return .{
             .timestamp = native.timestamp,
             .window_id = native.windowID,
-            .key_state = @intToEnum(KeyState, native.state),
+            .key_state = @enumFromInt(KeyState, native.state),
             .is_repeat = native.repeat != 0,
-            .scancode = @intToEnum(Scancode, native.keysym.scancode),
-            .keycode = @intToEnum(Keycode, native.keysym.sym),
+            .scancode = @enumFromInt(Scancode, native.keysym.scancode),
+            .keycode = @enumFromInt(Keycode, native.keysym.sym),
             .modifiers = KeyModifierSet.fromNative(native.keysym.mod),
         };
     }
@@ -1226,7 +1226,7 @@ pub const MouseButtonState = struct {
     storage: Storage,
 
     fn maskForButton(button_id: MouseButton) Storage {
-        const mask = @as(NativeBitField, 1) << (@enumToInt(button_id) - 1);
+        const mask = @as(NativeBitField, 1) << (@intFromEnum(button_id) - 1);
         return @intCast(Storage, mask);
     }
 
@@ -1314,8 +1314,8 @@ pub const MouseButtonEvent = struct {
             .timestamp = native.timestamp,
             .window_id = native.windowID,
             .mouse_instance_id = native.which,
-            .button = @intToEnum(MouseButton, native.button),
-            .state = @intToEnum(ButtonState, native.state),
+            .button = @enumFromInt(MouseButton, native.button),
+            .state = @enumFromInt(ButtonState, native.state),
             .clicks = native.clicks,
             .x = native.x,
             .y = native.y,
@@ -1361,7 +1361,7 @@ pub const MouseWheelEvent = struct {
             .mouse_instance_id = native.which,
             .delta_x = native.x,
             .delta_y = native.y,
-            .direction = @intToEnum(Direction, @intCast(u8, native.direction)),
+            .direction = @enumFromInt(Direction, @intCast(u8, native.direction)),
         };
     }
 };
@@ -1387,10 +1387,10 @@ pub const JoyAxisEvent = struct {
 
     pub fn normalizedValue(self: JoyAxisEvent, comptime FloatType: type) FloatType {
         const denominator = if (self.value > 0)
-            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+            @floatFromInt(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
         else
-            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
-        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+            @floatFromInt(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @floatFromInt(FloatType, self.value) / @fabs(denominator);
     }
 };
 
@@ -1421,7 +1421,7 @@ pub const JoyHatEvent = struct {
             .timestamp = native.timestamp,
             .joystick_id = native.which,
             .hat = native.hat,
-            .value = @intToEnum(HatValue, native.value),
+            .value = @enumFromInt(HatValue, native.value),
         };
     }
 };
@@ -1468,7 +1468,7 @@ pub const JoyButtonEvent = struct {
             .timestamp = native.timestamp,
             .joystick_id = native.which,
             .button = native.button,
-            .button_state = @intToEnum(ButtonState, native.state),
+            .button_state = @enumFromInt(ButtonState, native.state),
         };
     }
 };
@@ -1487,17 +1487,17 @@ pub const ControllerAxisEvent = struct {
         return .{
             .timestamp = native.timestamp,
             .joystick_id = native.which,
-            .axis = @intToEnum(GameController.Axis, native.axis),
+            .axis = @enumFromInt(GameController.Axis, native.axis),
             .value = native.value,
         };
     }
 
     pub fn normalizedValue(self: ControllerAxisEvent, comptime FloatType: type) FloatType {
         const denominator = if (self.value > 0)
-            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
+            @floatFromInt(FloatType, c.SDL_JOYSTICK_AXIS_MAX)
         else
-            @intToFloat(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
-        return @intToFloat(FloatType, self.value) / @fabs(denominator);
+            @floatFromInt(FloatType, c.SDL_JOYSTICK_AXIS_MIN);
+        return @floatFromInt(FloatType, self.value) / @fabs(denominator);
     }
 };
 
@@ -1520,8 +1520,8 @@ pub const ControllerButtonEvent = struct {
         return .{
             .timestamp = native.timestamp,
             .joystick_id = native.which,
-            .button = @intToEnum(GameController.Button, native.button),
-            .button_state = @intToEnum(ButtonState, native.state),
+            .button = @enumFromInt(GameController.Button, native.button),
+            .button_state = @enumFromInt(ButtonState, native.state),
         };
     }
 };
@@ -2010,7 +2010,7 @@ pub const KeyboardState = struct {
     states: []const u8,
 
     pub fn isPressed(ks: KeyboardState, scancode: Scancode) bool {
-        return ks.states[@intCast(usize, @enumToInt(scancode))] != 0;
+        return ks.states[@intCast(usize, @intFromEnum(scancode))] != 0;
     }
 };
 
@@ -2341,15 +2341,15 @@ pub const GameController = struct {
     }
 
     pub fn getButton(self: GameController, button: Button) u8 {
-        return c.SDL_GameControllerGetButton(self.ptr, @enumToInt(button));
+        return c.SDL_GameControllerGetButton(self.ptr, @intFromEnum(button));
     }
 
     pub fn getAxis(self: GameController, axis: Axis) i16 {
-        return c.SDL_GameControllerGetAxis(self.ptr, @enumToInt(axis));
+        return c.SDL_GameControllerGetAxis(self.ptr, @intFromEnum(axis));
     }
 
     pub fn getAxisNormalized(self: GameController, axis: Axis) f32 {
-        return @intToFloat(f32, self.getAxis(axis)) / @intToFloat(f32, c.SDL_JOYSTICK_AXIS_MAX);
+        return @floatFromInt(f32, self.getAxis(axis)) / @floatFromInt(f32, c.SDL_JOYSTICK_AXIS_MAX);
     }
 
     pub const Button = enum(i32) {
@@ -2410,7 +2410,7 @@ pub const AudioDevice = struct {
     }
 
     pub fn pause(self: AudioDevice, do_pause: bool) void {
-        c.SDL_PauseAudioDevice(self.id, @boolToInt(do_pause));
+        c.SDL_PauseAudioDevice(self.id, @intFromBool(do_pause));
     }
 
     pub fn lock(self: AudioDevice) void {
@@ -2580,7 +2580,7 @@ pub fn openAudioDevice(options: OpenAudioDeviceOptions) !OpenAudioDeviceResult {
         .userdata = options.desired_spec.userdata,
     });
     var obtained_spec = std.mem.zeroInit(c.SDL_AudioSpec, .{});
-    switch (c.SDL_OpenAudioDevice(options.device_name, @boolToInt(options.is_capture), &desired_spec, &obtained_spec, options.allowed_changes_from_desired.toNative())) {
+    switch (c.SDL_OpenAudioDevice(options.device_name, @intFromBool(options.is_capture), &desired_spec, &obtained_spec, options.allowed_changes_from_desired.toNative())) {
         0 => return makeError(),
         else => |device_id| return OpenAudioDeviceResult{
             .device = .{
@@ -2643,7 +2643,7 @@ pub fn createColorCursor(surface: Surface, hot_x: i32, hot_y: i32) !Cursor {
 
 pub fn createSystemCursor(id: SystemCursor) !Cursor {
     return Cursor{
-        .ptr = c.SDL_CreateSystemCursor(@enumToInt(id)) orelse return makeError(),
+        .ptr = c.SDL_CreateSystemCursor(@intFromEnum(id)) orelse return makeError(),
     };
 }
 
@@ -2664,7 +2664,7 @@ pub fn getDefaultCursor() !Cursor {
 }
 
 pub fn showCursor(toggle: ?bool) !bool {
-    const t = if (toggle) |show| @boolToInt(show) else c.SDL_QUERY;
+    const t = if (toggle) |show| @intFromBool(show) else c.SDL_QUERY;
     const ret = c.SDL_ShowCursor(t);
     if (ret < 0) {
         return makeError();
