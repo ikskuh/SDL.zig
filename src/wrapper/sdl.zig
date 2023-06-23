@@ -2795,7 +2795,7 @@ pub fn mixAudioFormat(dst: []u8, src: []const u8, format: AudioFormat, volume: c
         @ptrCast([*c]u8, dst),
         @ptrCast([*c]const u8, src),
         format.toNative(),
-        @intCast(u32, std.math.min(dst.len, src.len)),
+        @intCast(u32, @min(dst.len, src.len)),
         volume,
     );
 }
