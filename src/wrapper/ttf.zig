@@ -121,7 +121,7 @@ pub fn openFontMem(file: [:0]const u8, free: bool, point_size: c_int) !Font {
 }
 
 pub fn openFontRw(src: *sdl.c.SDL_RWops, free: bool, point_size: c_int) !Font {
-    if (sdl.c.TTF_OpenFontRW(src, @boolToInt(free), point_size)) |value| {
+    if (sdl.c.TTF_OpenFontRW(src, @intFromBool(free), point_size)) |value| {
         return Font{ .ptr = value };
     } else {
         return makeError();

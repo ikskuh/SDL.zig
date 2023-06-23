@@ -73,7 +73,7 @@ fn attribValueToInt(value: anytype) c_int {
 
             break :blk result;
         },
-        Profile, ReleaseBehaviour => @enumToInt(value),
+        Profile, ReleaseBehaviour => @intFromEnum(value),
         else => @compileError("Unsupported type for sdl.gl.Attribute"),
     };
 }
@@ -82,7 +82,7 @@ pub fn setAttribute(attrib: Attribute) !void {
     inline for (std.meta.fields(Attribute)) |fld| {
         if (attrib == @field(AttributeName, fld.name)) {
             const res = sdl.c.SDL_GL_SetAttribute(
-                @intCast(sdl.c.SDL_GLattr, @enumToInt(attrib)),
+                @intCast(sdl.c.SDL_GLattr, @intFromEnum(attrib)),
                 attribValueToInt(@field(attrib, fld.name)),
             );
             if (res != 0) {
