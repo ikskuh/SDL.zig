@@ -12,7 +12,7 @@ pub const InitFlags = packed struct {
 };
 
 pub fn init(flags: InitFlags) !void {
-    if (c.IMG_Init(@bitCast(u4, flags)) < 0)
+    if (c.IMG_Init(@as(u4, @bitCast(flags))) < 0)
         return error.SdlError;
 }
 
@@ -40,8 +40,8 @@ pub const ImgFormat = enum { png, jpg, bmp };
 
 pub fn loadTextureMem(ren: SDL.Renderer, img: [:0]const u8, format: ImgFormat) !SDL.Texture {
     const rw = c.SDL_RWFromConstMem(
-        @ptrCast(*const anyopaque, &img[0]),
-        @intCast(c_int, img.len),
+        @ptrCast(&img[0]),
+        @intCast(img.len),
     ) orelse return SDL.makeError();
 
     defer std.debug.assert(c.SDL_RWclose(rw) == 0);

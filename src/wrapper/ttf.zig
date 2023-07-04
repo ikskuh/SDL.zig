@@ -113,8 +113,8 @@ pub fn openFont(file: [:0]const u8, point_size: c_int) !Font {
 
 pub fn openFontMem(file: [:0]const u8, free: bool, point_size: c_int) !Font {
     const rw = sdl.c.SDL_RWFromConstMem(
-        @ptrCast(*const anyopaque, &file[0]),
-        @intCast(c_int, file.len),
+        @ptrCast(&file[0]),
+        @intCast(file.len),
     ) orelse return makeError();
 
     return openFontRw(rw, free, point_size);
