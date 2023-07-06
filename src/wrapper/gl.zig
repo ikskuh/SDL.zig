@@ -121,7 +121,7 @@ pub const Attribute = union(AttributeName) {
     context_release_behavior: ReleaseBehaviour,
 };
 
-pub const AttributeName = enum(c_int) {
+pub const AttributeName = enum(sdl.c.SDL_GLattr) {
     red_size = sdl.c.SDL_GL_RED_SIZE,
     green_size = sdl.c.SDL_GL_GREEN_SIZE,
     blue_size = sdl.c.SDL_GL_BLUE_SIZE,
