@@ -105,7 +105,7 @@ const host_system = @import("builtin").target;
 
 const Build = std.Build;
 const Step = Build.Step;
-const FileSource = Build.FileSource;
+const LazyPath = Build.LazyPath;
 const GeneratedFile = Build.GeneratedFile;
 const LibExeObjStep = Build.LibExeObjStep;
 
@@ -263,7 +263,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
             .target = exe.target,
             .optimize = exe.optimize,
         });
-        build_linux_sdl_stub.addAssemblyFileSource(sdk.prepare_sources.getStubFile());
+        build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
 
         // We need to link against libc
         exe.linkLibC();
@@ -365,15 +365,15 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
                 sdk_paths.include,
                 "SDL2",
             }) catch @panic("out of memory");
-            exe.addIncludePath(include_path);
+            exe.addIncludePath(.{ .path = include_path });
         } else {
-            exe.addIncludePath(sdk_paths.include);
+            exe.addIncludePath(.{ .path = sdk_paths.include });
         }
 
         // link the right libraries
         if (target.abi == .msvc) {
             // and links those as normal libraries
-            exe.addLibraryPath(sdk_paths.libs);
+            exe.addLibraryPath(.{ .path = sdk_paths.libs });
             exe.linkSystemLibraryName("SDL2");
         } else {
             const file_name = switch (linkage) {
@@ -386,7 +386,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
                 file_name,
             }) catch @panic("out of memory");
 
-            exe.addObjectFile(lib_path);
+            exe.addObjectFile(.{ .path = lib_path });
 
             if (linkage == .static) {
                 // link all system libraries required for SDL2:
@@ -512,7 +512,7 @@ const PrepareStubSourceStep = struct {
         return psss;
     }
 
-    pub fn getStubFile(self: *Self) FileSource {
+    pub fn getStubFile(self: *Self) LazyPath {
         return .{ .generated = &self.assembly_source };
     }
 
@@ -581,7 +581,7 @@ const CacheBuilder = struct {
         self.hasher.update(bytes);
     }
 
-    pub fn addFile(self: *Self, file: FileSource) !void {
+    pub fn addFile(self: *Self, file: LazyPath) !void {
         const path = file.getPath(self.build);
 
         const data = try std.fs.cwd().readFileAlloc(self.build.allocator, path, 1 << 32); // 4 GB
