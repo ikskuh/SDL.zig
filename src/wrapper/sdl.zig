@@ -1092,6 +1092,7 @@ pub const WindowEvent = struct {
     };
 
     const Data = union(Type) {
+        none: void,
         shown: void,
         hidden: void,
         exposed: void,
@@ -1108,7 +1109,6 @@ pub const WindowEvent = struct {
         close: void,
         take_focus: void,
         hit_test: void,
-        none: void,
     };
 
     timestamp: u32,
