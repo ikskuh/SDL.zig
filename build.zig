@@ -207,6 +207,10 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
         .source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
         .dependencies = &.{
             .{
+                .name = sdk.build.dupe("sdl-native"),
+                .module = sdk.getNativeModuleVulkan(vulkan),
+            },
+            .{
                 .name = sdk.build.dupe("vulkan"),
                 .module = vulkan,
             },
