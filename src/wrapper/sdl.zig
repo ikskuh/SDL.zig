@@ -1390,7 +1390,7 @@ pub const JoyAxisEvent = struct {
             @floatFromInt(c.SDL_JOYSTICK_AXIS_MAX)
         else
             @floatFromInt(c.SDL_JOYSTICK_AXIS_MIN);
-        return @as(FloatType, @floatFromInt(self.value)) / @fabs(denominator);
+        return @as(FloatType, @floatFromInt(self.value)) / @abs(denominator);
     }
 };
 
@@ -1497,7 +1497,7 @@ pub const ControllerAxisEvent = struct {
             @floatFromInt(c.SDL_JOYSTICK_AXIS_MAX)
         else
             @floatFromInt(c.SDL_JOYSTICK_AXIS_MIN);
-        return @as(FloatType, @floatFromInt(self.value)) / @fabs(denominator);
+        return @as(FloatType, @floatFromInt(self.value)) / @abs(denominator);
     }
 };
 
