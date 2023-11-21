@@ -103,19 +103,19 @@ pub const SDL_FRect = extern struct {
 };
 
 pub fn SDL_PointInRect(arg_p: [*c]const SDL_Point, arg_r: [*c]const SDL_Rect) SDL_bool {
-    var p = arg_p;
-    var r = arg_r;
+    const p = arg_p;
+    const r = arg_r;
     return if ((((p.*.x >= r.*.x) and (p.*.x < (r.*.x + r.*.w))) and (p.*.y >= r.*.y)) and (p.*.y < (r.*.y + r.*.h))) @as(c_int, 1) else @as(c_int, 0);
 }
 
 pub fn SDL_RectEmpty(arg_r: [*c]const SDL_Rect) SDL_bool {
-    var r = arg_r;
+    const r = arg_r;
     return if ((!(r != null) or (r.*.w <= @as(c_int, 0))) or (r.*.h <= @as(c_int, 0))) @as(c_int, 1) else @as(c_int, 0);
 }
 
 pub fn SDL_RectEquals(arg_a: [*c]const SDL_Rect, arg_b: [*c]const SDL_Rect) SDL_bool {
-    var a = arg_a;
-    var b = arg_b;
+    const a = arg_a;
+    const b = arg_b;
     return if ((((((a != null) and (b != null)) and (a.*.x == b.*.x)) and (a.*.y == b.*.y)) and (a.*.w == b.*.w)) and (a.*.h == b.*.h)) @as(c_int, 1) else @as(c_int, 0);
 }
 pub extern fn SDL_HasIntersection(A: [*c]const SDL_Rect, B: [*c]const SDL_Rect) SDL_bool;
