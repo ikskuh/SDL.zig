@@ -461,7 +461,7 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
         else => |e| @panic(@errorName(e)),
     };
 
-    var parsed = std.json.parseFromSlice(std.json.Value, sdk.build.allocator, json_data, .{}) catch return error.InvalidJson;
+    const parsed = std.json.parseFromSlice(std.json.Value, sdk.build.allocator, json_data, .{}) catch return error.InvalidJson;
     var root_node = parsed.value.object;
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {

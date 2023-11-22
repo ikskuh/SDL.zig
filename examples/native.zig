@@ -7,7 +7,7 @@ pub fn main() !void {
         sdlPanic();
     defer SDL.SDL_Quit();
 
-    var window = SDL.SDL_CreateWindow(
+    const window = SDL.SDL_CreateWindow(
         "SDL.zig Basic Demo",
         SDL.SDL_WINDOWPOS_CENTERED,
         SDL.SDL_WINDOWPOS_CENTERED,
@@ -17,7 +17,7 @@ pub fn main() !void {
     ) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyWindow(window);
 
-    var renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
+    const renderer = SDL.SDL_CreateRenderer(window, -1, SDL.SDL_RENDERER_ACCELERATED) orelse sdlPanic();
     defer _ = SDL.SDL_DestroyRenderer(renderer);
 
     const vertices = [_]SDL.SDL_Vertex{

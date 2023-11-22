@@ -365,7 +365,7 @@ pub const Window = struct {
     }
 
     pub fn getSurface(w: Window) !Surface {
-        var surface_ptr = c.SDL_GetWindowSurface(w.ptr) orelse return makeError();
+        const surface_ptr = c.SDL_GetWindowSurface(w.ptr) orelse return makeError();
         return Surface{ .ptr = surface_ptr };
     }
 
@@ -832,7 +832,7 @@ pub const Renderer = struct {
     }
 
     pub fn readPixels(ren: Renderer, rect: ?Rectangle, format: ?PixelFormatEnum, pixels: [*]u8, pitch: u32) !void {
-        var region = rect;
+        const region = rect;
         if (c.SDL_RenderReadPixels(
             ren.ptr,
             if (region) |r| r.getConstSdlPtr() else null,
@@ -984,7 +984,7 @@ pub const Texture = struct {
     }
 
     pub fn getScaleMode(tex: Texture) !ScaleMode {
-        var scale_mode: c.SDL_ScaleMode = undefined;
+        const scale_mode: c.SDL_ScaleMode = undefined;
         if (c.SDL_GetTextureScaleMode(tex.ptr, @intFromEnum(scale_mode)) < 0)
             return makeError();
         return @enumFromInt(scale_mode);
@@ -2771,7 +2771,7 @@ pub fn newAudioStream(
     dst_channels: u8,
     dst_rate: i32,
 ) !AudioStream {
-    var stream = c.SDL_NewAudioStream(
+    const stream = c.SDL_NewAudioStream(
         src_format.toNative(),
         src_channels,
         @intCast(src_rate),
