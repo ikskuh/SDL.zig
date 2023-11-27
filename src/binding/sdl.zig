@@ -2407,18 +2407,18 @@ pub inline fn SDL_AUDIO_ISUNSIGNED(x: anytype) @TypeOf(!(SDL_AUDIO_ISSIGNED(x) !
     return !(SDL_AUDIO_ISSIGNED(x) != 0);
 }
 pub const AUDIO_U8 = @as(c_int, 0x0008);
-pub const AUDIO_S8 = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8008, .hexadecimal);
+pub const AUDIO_S8 = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8008, .hex);
 pub const AUDIO_U16LSB = @as(c_int, 0x0010);
-pub const AUDIO_S16LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8010, .hexadecimal);
+pub const AUDIO_S16LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8010, .hex);
 pub const AUDIO_U16MSB = @as(c_int, 0x1010);
-pub const AUDIO_S16MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9010, .hexadecimal);
+pub const AUDIO_S16MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9010, .hex);
 pub const AUDIO_U16 = AUDIO_U16LSB;
 pub const AUDIO_S16 = AUDIO_S16LSB;
-pub const AUDIO_S32LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8020, .hexadecimal);
-pub const AUDIO_S32MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9020, .hexadecimal);
+pub const AUDIO_S32LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8020, .hex);
+pub const AUDIO_S32MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9020, .hex);
 pub const AUDIO_S32 = AUDIO_S32LSB;
-pub const AUDIO_F32LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8120, .hexadecimal);
-pub const AUDIO_F32MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9120, .hexadecimal);
+pub const AUDIO_F32LSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x8120, .hex);
+pub const AUDIO_F32MSB = @import("std").zig.c_translation.promoteIntLiteral(c_int, 0x9120, .hex);
 pub const AUDIO_F32 = AUDIO_F32LSB;
 pub const AUDIO_U16SYS = AUDIO_U16LSB;
 pub const AUDIO_S16SYS = AUDIO_S16LSB;
@@ -2434,21 +2434,21 @@ pub inline fn SDL_LoadWAV(file: anytype, spec: anytype, audio_buf: anytype, audi
     return SDL_LoadWAV_RW(SDL_RWFromFile(file, "rb"), @as(c_int, 1), spec, audio_buf, audio_len);
 }
 pub const SDL_MIX_MAXVOLUME = @as(c_int, 128);
-pub const SDL_WINDOWPOS_UNDEFINED_MASK = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 0x1FFF0000, .hexadecimal);
+pub const SDL_WINDOWPOS_UNDEFINED_MASK = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 0x1FFF0000, .hex);
 pub inline fn SDL_WINDOWPOS_UNDEFINED_DISPLAY(X: anytype) @TypeOf(SDL_WINDOWPOS_UNDEFINED_MASK | X) {
     return SDL_WINDOWPOS_UNDEFINED_MASK | X;
 }
 pub const SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_DISPLAY(@as(c_int, 0));
-pub inline fn SDL_WINDOWPOS_ISUNDEFINED(X: anytype) @TypeOf((X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hexadecimal)) == SDL_WINDOWPOS_UNDEFINED_MASK) {
-    return (X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hexadecimal)) == SDL_WINDOWPOS_UNDEFINED_MASK;
+pub inline fn SDL_WINDOWPOS_ISUNDEFINED(X: anytype) @TypeOf((X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hex)) == SDL_WINDOWPOS_UNDEFINED_MASK) {
+    return (X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hex)) == SDL_WINDOWPOS_UNDEFINED_MASK;
 }
-pub const SDL_WINDOWPOS_CENTERED_MASK = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 0x2FFF0000, .hexadecimal);
+pub const SDL_WINDOWPOS_CENTERED_MASK = @import("std").zig.c_translation.promoteIntLiteral(c_uint, 0x2FFF0000, .hex);
 pub inline fn SDL_WINDOWPOS_CENTERED_DISPLAY(X: anytype) @TypeOf(SDL_WINDOWPOS_CENTERED_MASK | X) {
     return SDL_WINDOWPOS_CENTERED_MASK | X;
 }
 pub const SDL_WINDOWPOS_CENTERED = SDL_WINDOWPOS_CENTERED_DISPLAY(@as(c_int, 0));
-pub inline fn SDL_WINDOWPOS_ISCENTERED(X: anytype) @TypeOf((X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hexadecimal)) == SDL_WINDOWPOS_CENTERED_MASK) {
-    return (X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hexadecimal)) == SDL_WINDOWPOS_CENTERED_MASK;
+pub inline fn SDL_WINDOWPOS_ISCENTERED(X: anytype) @TypeOf((X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hex)) == SDL_WINDOWPOS_CENTERED_MASK) {
+    return (X & @import("std").zig.c_translation.promoteIntLiteral(c_int, 0xFFFF0000, .hex)) == SDL_WINDOWPOS_CENTERED_MASK;
 }
 pub const SDL_TOUCH_MOUSEID = @import("std").zig.c_translation.cast(u32, -@as(c_int, 1));
 pub const SDL_MOUSE_TOUCHID = @import("std").zig.c_translation.cast(i64, -@as(c_int, 1));
