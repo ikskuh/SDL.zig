@@ -5,28 +5,30 @@
 //!
 
 const std = @import("std");
+const builtin = @import("builtin");
 
-const Builder = std.Build.Builder;
-
-pub fn build(b: *Builder) !void {
+pub fn build(b: *std.Build) !void {
     const sdk = Sdk.init(b, null);
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const sdl_linkage = b.option(std.Build.LibExeObjStep.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
+    const sdl_linkage = b.option(std.Build.Step.Compile.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
 
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
     if (!skip_tests) {
         const lib_test = b.addTest(.{
             .root_source_file = .{ .path = "src/wrapper/sdl.zig" },
-            .target = .{ .abi = if (target.isWindows()) target.abi else null },
+            .target = if (target.result.os.tag == .windows)
+                b.resolveTargetQuery(.{ .abi = target.result.abi })
+            else
+                null,
         });
-        lib_test.addModule("sdl-native", sdk.getNativeModule());
+        lib_test.root_module.addImport("sdl-native", sdk.getNativeModule());
         lib_test.linkSystemLibrary("sdl2_image");
         lib_test.linkSystemLibrary("sdl2_ttf");
-        if (lib_test.target.isDarwin()) {
+        if (lib_test.rootModuleTarget().isDarwin()) {
             // SDL_TTF
             lib_test.linkSystemLibrary("freetype");
             lib_test.linkSystemLibrary("harfbuzz");
@@ -54,7 +56,7 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_wrapper, sdl_linkage);
-    demo_wrapper.addModule("sdl2", sdk.getWrapperModule());
+    demo_wrapper.root_module.addImport("sdl2", sdk.getWrapperModule());
     b.installArtifact(demo_wrapper);
 
     const demo_wrapper_image = b.addExecutable(.{
@@ -64,14 +66,14 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_wrapper_image, sdl_linkage);
-    demo_wrapper_image.addModule("sdl2", sdk.getWrapperModule());
+    demo_wrapper_image.root_module.addImport("sdl2", sdk.getWrapperModule());
     demo_wrapper_image.linkSystemLibrary("sdl2_image");
     demo_wrapper_image.linkSystemLibrary("jpeg");
     demo_wrapper_image.linkSystemLibrary("libpng");
     demo_wrapper_image.linkSystemLibrary("tiff");
     demo_wrapper_image.linkSystemLibrary("webp");
 
-    if (target.isNative() and target.isLinux()) {
+    if (target.query.isNative() and target.result.os.tag == .linux) {
         b.installArtifact(demo_wrapper_image);
     }
 
@@ -82,7 +84,7 @@ pub fn build(b: *Builder) !void {
         .optimize = optimize,
     });
     sdk.link(demo_native, sdl_linkage);
-    demo_native.addModule("sdl2", sdk.getNativeModule());
+    demo_native.root_module.addImport("sdl2", sdk.getNativeModule());
     b.installArtifact(demo_native);
 
     const run_demo_wrappr = b.addRunArtifact(demo_wrapper);
@@ -107,7 +109,7 @@ const Build = std.Build;
 const Step = Build.Step;
 const LazyPath = Build.LazyPath;
 const GeneratedFile = Build.GeneratedFile;
-const LibExeObjStep = Build.LibExeObjStep;
+const Compile = Build.Step.Compile;
 
 const Sdk = @This();
 
@@ -155,8 +157,8 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", false);
     return sdk.build.createModule(.{
-        .source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
-        .dependencies = &.{
+        .root_source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
                 .module = build_options.createModule(),
@@ -173,8 +175,8 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", true);
     return sdk.build.createModule(.{
-        .source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
-        .dependencies = &.{
+        .root_source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
                 .module = build_options.createModule(),
@@ -190,8 +192,8 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
     return sdk.build.createModule(.{
-        .source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
-        .dependencies = &.{
+        .root_source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
                 .module = sdk.getNativeModule(),
@@ -204,8 +206,8 @@ pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
 /// provided as an argument.
 pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     return sdk.build.createModule(.{
-        .source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
-        .dependencies = &.{
+        .root_source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
                 .module = sdk.getNativeModuleVulkan(vulkan),
@@ -218,7 +220,7 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     });
 }
 
-pub fn linkTtf(_: *Sdk, exe: *LibExeObjStep) void {
+pub fn linkTtf(_: *Sdk, exe: *Compile) void {
     const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
 
     // This is required on all platforms
@@ -247,25 +249,25 @@ pub fn linkTtf(_: *Sdk, exe: *LibExeObjStep) void {
 
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void {
+pub fn link(sdk: *Sdk, exe: *Compile, linkage: Compile.Linkage) void {
     // TODO: Implement
 
     const b = sdk.build;
-    const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
-    const is_native = exe.target.isNative();
+    const target = exe.root_module.resolved_target.?;
+    const is_native = target.query.isNative();
 
     // This is required on all platforms
     exe.linkLibC();
 
-    if (target.os.tag == .linux and !is_native) {
+    if (target.result.os.tag == .linux and !is_native) {
         // for cross-compilation to Linux, we use a magic trick:
         // we compile a stub .so file we will link against an SDL2.so even if that file
         // doesn't exist on our system
 
         const build_linux_sdl_stub = b.addSharedLibrary(.{
             .name = "SDL2",
-            .target = exe.target,
-            .optimize = exe.optimize,
+            .target = exe.root_module.resolved_target.?,
+            .optimize = exe.root_module.optimize.?,
         });
         build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
 
@@ -274,29 +276,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
 
         // link against the output of our stub
         exe.linkLibrary(build_linux_sdl_stub);
-    } else if (target.os.tag == .linux) {
+    } else if (target.result.os.tag == .linux) {
         // on linux with compilation for native target,
         // we should rely on the system libraries to "just work"
         exe.linkSystemLibrary("sdl2");
-    } else if (target.os.tag == .windows) {
-        // try linking with vcpkg
-        // TODO: Implement proper vcpkg support
-        exe.addVcpkgPaths(linkage) catch {};
-        if (exe.vcpkg_bin_path) |path| {
-
-            // we found SDL2 in vcpkg, just install and use this variant
-            const src_path = std.fs.path.join(b.allocator, &.{ path, "SDL2.dll" }) catch @panic("out of memory");
-
-            if (std.fs.cwd().access(src_path, .{})) {
-                // we found SDL2.dll, so just link via vcpkg:
-                exe.linkSystemLibrary("sdl2");
-                b.installBinFile(src_path, "SDL2.dll");
-                return;
-            } else |_| {
-                //
-            }
-        }
-
+    } else if (target.result.os.tag == .windows) {
         const sdk_paths = sdk.getPaths(target) catch |err| {
             const writer = std.io.getStdErr().writer();
 
@@ -358,11 +342,11 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
         // linking on windows is sadly not as trivial as on linux:
         // we have to respect 6 different configurations {x86,x64}-{msvc,mingw}-{dynamic,static}
 
-        if (target.abi == .msvc and linkage != .dynamic)
+        if (target.result.abi == .msvc and linkage != .dynamic)
             @panic("SDL cannot be linked statically for MSVC");
 
         // These will be added for C-Imports or C files.
-        if (target.abi != .msvc) {
+        if (target.result.abi != .msvc) {
             // SDL2 (mingw) ships the SDL include files under `include/SDL2/` which is very inconsitent with
             // all other platforms, so we just remove this prefix here
             const include_path = std.fs.path.join(b.allocator, &[_][]const u8{
@@ -375,10 +359,10 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
         }
 
         // link the right libraries
-        if (target.abi == .msvc) {
+        if (target.result.abi == .msvc) {
             // and links those as normal libraries
             exe.addLibraryPath(.{ .path = sdk_paths.libs });
-            exe.linkSystemLibraryName("SDL2");
+            exe.linkSystemLibrary2("SDL2", .{ .use_pkg_config = .no });
         } else {
             const file_name = switch (linkage) {
                 .static => "libSDL2.a",
@@ -420,7 +404,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
             }) catch @panic("out of memory");
             sdk.build.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
-    } else if (target.isDarwin()) {
+    } else if (target.result.isDarwin()) {
         // TODO: Implement cross-compilaton to macOS via system root provisioning
         if (!host_system.os.tag.isDarwin())
             @panic("Cannot cross-compile to macOS yet.");
@@ -441,7 +425,7 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: LibExeObjStep.Linkage) void
         exe.linkFramework("CoreHaptics");
         exe.linkSystemLibrary("iconv");
     } else {
-        const triple_string = target.zigTriple(b.allocator) catch "unkown-unkown-unkown";
+        const triple_string = target.query.zigTriple(b.allocator) catch "unkown-unkown-unkown";
         std.log.warn("Linking SDL2 for {s} is not tested, linking might fail!", .{triple_string});
 
         // on all other platforms, just try the system way:
@@ -455,7 +439,7 @@ const Paths = struct {
     bin: []const u8,
 };
 
-fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
+fn getPaths(sdk: *Sdk, target_local: std.Build.ResolvedTarget) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
     const json_data = std.fs.cwd().readFileAlloc(sdk.build.allocator, sdk.config_path, 1 << 20) catch |err| switch (err) {
         error.FileNotFound => return error.FileNotFound,
         else => |e| @panic(@errorName(e)),
@@ -465,16 +449,15 @@ fn getPaths(sdk: *Sdk, target_local: std.Target) error{ MissingTarget, FileNotFo
     var root_node = parsed.value.object;
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
-        const config_cross_target = std.zig.CrossTarget.parse(.{
-            .arch_os_abi = entry.key_ptr.*,
-        }) catch return error.InvalidTarget;
-        const config_target = (std.zig.system.NativeTargetInfo.detect(config_cross_target) catch @panic("out of memory")).target;
+        const config_target = sdk.build.resolveTargetQuery(
+            std.Target.Query.parse(.{ .arch_os_abi = entry.key_ptr.* }) catch return error.InvalidTarget,
+        );
 
-        if (target_local.cpu.arch != config_target.cpu.arch)
+        if (target_local.result.cpu.arch != config_target.result.cpu.arch)
             continue;
-        if (target_local.os.tag != config_target.os.tag)
+        if (target_local.result.os.tag != config_target.result.os.tag)
             continue;
-        if (target_local.abi != config_target.abi)
+        if (target_local.result.abi != config_target.result.abi)
             continue;
         // load paths
 
@@ -555,10 +538,10 @@ const PrepareStubSourceStep = struct {
     }
 };
 
-fn tripleName(allocator: std.mem.Allocator, target_local: std.Target) ![]u8 {
-    const arch_name = @tagName(target_local.cpu.arch);
-    const os_name = @tagName(target_local.os.tag);
-    const abi_name = @tagName(target_local.abi);
+fn tripleName(allocator: std.mem.Allocator, target_local: std.Build.ResolvedTarget) ![]u8 {
+    const arch_name = @tagName(target_local.result.cpu.arch);
+    const os_name = @tagName(target_local.result.os.tag);
+    const abi_name = @tagName(target_local.result.abi);
 
     return std.fmt.allocPrint(allocator, "{s}-{s}-{s}", .{ arch_name, os_name, abi_name });
 }
