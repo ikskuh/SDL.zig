@@ -9,6 +9,7 @@ pub const c = @import("sdl-native");
 pub const image = @import("image.zig");
 pub const ttf = @import("ttf.zig");
 pub const gl = @import("gl.zig");
+pub const vulkan = @import("vulkan.zig");
 
 pub const Error = error{SdlError};
 
@@ -352,6 +353,14 @@ pub const Window = struct {
             Window{ .ptr = ptr }
         else
             null;
+    }
+
+    pub fn getID(w: Window) !u32 {
+        const id = c.SDL_GetWindowID(w.ptr);
+        if (id == 0) {
+            return makeError();
+        }
+        return id;
     }
 
     pub fn destroy(w: Window) void {

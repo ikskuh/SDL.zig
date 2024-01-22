@@ -28,7 +28,7 @@ pub fn build(b: *std.Build.Builder) !void {
     sdk.link(demo_basic, .dynamic); // link SDL2 as a shared library
 
     // Add "sdl2" package that exposes the SDL2 api (like SDL_Init or SDL_CreateWindow)
-    demo_basic.addModule("sdl2", sdk.getNativeModule());
+    demo_basic.root_module.addImport("sdl2", sdk.getNativeModule());
 
     // Install the executable into the prefix when invoking "zig build"
     b.installArtifact(demo_basic);
@@ -87,7 +87,7 @@ This package also exposes the SDL2 API with a more Zig-style API. Use this if yo
 
 ```zig
 const std = @import("std");
-const SDL = @import("sdl2"); // Created in build.zig by using exe.addModule("sdl2", sdk.getWrapperModule());
+const SDL = @import("sdl2"); // Created in build.zig by using exe.root_module.addImport("sdl2", sdk.getWrapperModule());
 
 pub fn main() !void {
     try SDL.init(.{
