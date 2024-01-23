@@ -835,6 +835,13 @@ pub const Renderer = struct {
             return makeError();
     }
 
+    pub fn getTarget(ren: Renderer) ?Texture {
+        if (c.SDL_GetRenderTarget(ren.ptr)) |ptr| {
+            return Texture{ .ptr = ptr };
+        }
+        return null;
+    }
+
     pub fn setTarget(ren: Renderer, tex: ?Texture) !void {
         if (c.SDL_SetRenderTarget(ren.ptr, if (tex) |t| t.ptr else null) < 0)
             return makeError();
