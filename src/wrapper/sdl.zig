@@ -2436,6 +2436,21 @@ pub const AudioDevice = struct {
     pub fn unlock(self: AudioDevice) void {
         c.SDL_UnlockAudioDevice(self.id);
     }
+
+    pub fn queueAudio(self: AudioDevice, data: []const u8) !void {
+        if (c.SDL_QueueAudio(self.id, data.ptr, @truncate(data.len)) != 0) {
+            return makeError();
+        }
+    }
+
+    pub fn clearQueuedAudio(self: AudioDevice) void {
+        c.SDL_ClearQueuedAudio(self.id);
+    }
+
+    pub fn getQueuedAudioSize(self: AudioDevice) usize {
+        const res = c.SDL_GetQueuedAudioSize(self.id);
+        return @intCast(res);
+    }
 };
 
 const is_little_endian = @import("builtin").target.cpu.arch.endian() == .Little;
