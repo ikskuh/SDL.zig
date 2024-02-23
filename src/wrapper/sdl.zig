@@ -30,8 +30,8 @@ pub fn makeError() error{SdlError} {
 }
 
 pub const Rectangle = extern struct {
-    x: c_int,
-    y: c_int,
+    x: c_int = 0,
+    y: c_int = 0,
     width: c_int,
     height: c_int,
 
