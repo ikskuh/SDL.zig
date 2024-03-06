@@ -254,7 +254,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: Compile.Linkage) void {
 
     const b = sdk.build;
     const target = exe.root_module.resolved_target.?;
-    const is_native = target.query.isNative();
+    const is_native = target.query.isNativeOs();
 
     // This is required on all platforms
     exe.linkLibC();
