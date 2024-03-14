@@ -13,7 +13,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const sdl_linkage = b.option(std.Build.Step.Compile.Linkage, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
+    const sdl_linkage = b.option(std.builtin.LinkMode, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
 
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
@@ -249,7 +249,7 @@ pub fn linkTtf(_: *Sdk, exe: *Compile) void {
 
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *Compile, linkage: Compile.Linkage) void {
+pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
     // TODO: Implement
 
     const b = sdk.build;
