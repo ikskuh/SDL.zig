@@ -353,15 +353,15 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
                 sdk_paths.include,
                 "SDL2",
             }) catch @panic("out of memory");
-            exe.addIncludePath(.{ .path = include_path });
+            exe.addIncludePath(.{ .cwd_relative = include_path });
         } else {
-            exe.addIncludePath(.{ .path = sdk_paths.include });
+            exe.addIncludePath(.{ .cwd_relative = sdk_paths.include });
         }
 
         // link the right libraries
         if (target.result.abi == .msvc) {
             // and links those as normal libraries
-            exe.addLibraryPath(.{ .path = sdk_paths.libs });
+            exe.addLibraryPath(.{ .cwd_relative = sdk_paths.libs });
             exe.linkSystemLibrary2("SDL2", .{ .use_pkg_config = .no });
         } else {
             const file_name = switch (linkage) {
@@ -374,7 +374,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
                 file_name,
             }) catch @panic("out of memory");
 
-            exe.addObjectFile(.{ .path = lib_path });
+            exe.addObjectFile(.{ .cwd_relative = lib_path });
 
             if (linkage == .static) {
                 // link all system libraries required for SDL2:
