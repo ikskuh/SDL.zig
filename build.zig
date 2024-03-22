@@ -336,7 +336,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
                 },
             }
 
-            std.os.exit(1);
+            std.process.exit(1);
         };
 
         // linking on windows is sadly not as trivial as on linux:
