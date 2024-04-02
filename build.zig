@@ -505,7 +505,7 @@ const PrepareStubSourceStep = struct {
 
     fn make(step: *Step, prog_node: *std.Progress.Node) !void {
         _ = prog_node;
-        const self = @fieldParentPtr(Self, "step", step);
+        const self: *Self = @fieldParentPtr("step", step);
 
         var cache = CacheBuilder.init(self.sdk.build, "sdl");
 
