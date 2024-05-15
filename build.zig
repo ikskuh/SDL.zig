@@ -19,7 +19,7 @@ pub fn build(b: *std.Build) !void {
 
     if (!skip_tests) {
         const lib_test = b.addTest(.{
-            .root_source_file = .{ .path = "src/wrapper/sdl.zig" },
+            .root_source_file = .{ .cwd_relative = "src/wrapper/sdl.zig" },
             .target = if (target.result.os.tag == .windows)
                 b.resolveTargetQuery(.{ .abi = target.result.abi })
             else
@@ -51,7 +51,7 @@ pub fn build(b: *std.Build) !void {
 
     const demo_wrapper = b.addExecutable(.{
         .name = "demo-wrapper",
-        .root_source_file = .{ .path = "examples/wrapper.zig" },
+        .root_source_file = .{ .cwd_relative = "examples/wrapper.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -61,7 +61,7 @@ pub fn build(b: *std.Build) !void {
 
     const demo_wrapper_image = b.addExecutable(.{
         .name = "demo-wrapper-image",
-        .root_source_file = .{ .path = "examples/wrapper-image.zig" },
+        .root_source_file = .{ .cwd_relative = "examples/wrapper-image.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -79,7 +79,7 @@ pub fn build(b: *std.Build) !void {
 
     const demo_native = b.addExecutable(.{
         .name = "demo-native",
-        .root_source_file = .{ .path = "examples/native.zig" },
+        .root_source_file = .{ .cwd_relative = "examples/native.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -157,7 +157,7 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", false);
     return sdk.build.createModule(.{
-        .root_source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
         .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
@@ -175,7 +175,7 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", true);
     return sdk.build.createModule(.{
-        .root_source_file = .{ .path = sdkPath("/src/binding/sdl.zig") },
+        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
         .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
@@ -192,7 +192,7 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
     return sdk.build.createModule(.{
-        .root_source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
         .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
@@ -206,7 +206,7 @@ pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
 /// provided as an argument.
 pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     return sdk.build.createModule(.{
-        .root_source_file = .{ .path = sdkPath("/src/wrapper/sdl.zig") },
+        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
         .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
@@ -500,7 +500,7 @@ const PrepareStubSourceStep = struct {
     }
 
     pub fn getStubFile(self: *Self) LazyPath {
-        return .{ .generated = &self.assembly_source };
+        return .{ .generated = .{ .file = &self.assembly_source } };
     }
 
     fn make(step: *Step, prog_node: *std.Progress.Node) !void {
