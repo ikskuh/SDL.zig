@@ -23,6 +23,9 @@ pub fn main() !void {
     var renderer = try SDL.createRenderer(window, null, .{ .accelerated = true });
     defer renderer.destroy();
 
+    const p = [_]SDL.Point{ .{.x = 0, .y = 0 }, .{ .x = 200, .y = 10 },
+                            .{ .x = 100, .y = 300 }, .{ .x = 400, .y = 400 }};
+    
     mainLoop: while (true) {
         while (SDL.pollEvent()) |ev| {
             switch (ev) {
@@ -50,6 +53,13 @@ pub fn main() !void {
             .width = 100,
             .height = 50,
         });
+
+        try renderer.setColor(SDL.Color.parse("#22A41D") catch unreachable);
+        try renderer.drawLines(&p);
+
+        try renderer.setColor(SDL.Color.parse("#FF0000") catch unreachable);
+        try renderer.drawPoints(&p);
+
 
         if (target_os.tag != .linux) {
             // Ubuntu CI doesn't have this function available yet
