@@ -500,7 +500,7 @@ const PrepareStubSourceStep = struct {
     }
 
     pub fn getStubFile(self: *Self) LazyPath {
-        return .{ .generated = .{ .file = &self.assembly_source } };
+        return .{ .generated = &self.assembly_source };
     }
 
     fn make(step: *Step, prog_node: *std.Progress.Node) !void {
