@@ -42,6 +42,10 @@ pub const Font = struct {
         sdl.c.TTF_SetFontStyle(self.ptr, value);
     }
 
+    pub fn setSize(self: Font, point_size: c_int) void {
+        sdl.c.TTF_SetFontSize(self.ptr, point_size);
+    }
+
     pub fn height(self: Font) c_int {
         return sdl.c.TTF_FontHeight(self.ptr);
     }
