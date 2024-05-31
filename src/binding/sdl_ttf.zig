@@ -20,6 +20,7 @@ pub extern fn TTF_CloseFont(font: *TTF_Font) void;
 
 pub extern fn TTF_GetFontStyle(font: *TTF_Font) c_int;
 pub extern fn TTF_SetFontStyle(font: *TTF_Font, style: c_int) void;
+pub extern fn TTF_SetFontSize(font: *TTF_Font, point_size: c_int) void;
 pub extern fn TTF_FontHeight(font: *TTF_Font) c_int;
 
 pub extern fn TTF_SizeText(font: *TTF_Font, text: [*c]const u8, width: ?*c_int, height: ?*c_int) c_int;
