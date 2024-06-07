@@ -422,6 +422,10 @@ pub const Window = struct {
         }
         return info;
     }
+
+    pub fn setTitle(w: Window, title: [:0]const u8) void {
+        c.SDL_SetWindowTitle(w.ptr, title);
+    }
 };
 
 pub const WindowPosition = union(enum) {
