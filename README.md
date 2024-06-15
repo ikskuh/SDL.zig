@@ -10,14 +10,14 @@ This is an example `build.zig` that will link the SDL2 library to your project.
 
 ```zig
 const std = @import("std");
-const Sdk = @import("Sdk.zig"); // Import the Sdk at build time
+const sdl = @import("SDL.zig/build.zig"); // Replace with the actual path in your project
 
 pub fn build(b: *std.Build.Builder) !void {
     // Determine compilation target
     const target = b.standardTargetOptions(.{});
 
     // Create a new instance of the SDL2 Sdk
-    const sdk = Sdk.init(b, null);
+    const sdk = sdl.init(b, null);
 
     // Create executable for our example
     const demo_basic = b.addExecutable(.{
@@ -25,6 +25,7 @@ pub fn build(b: *std.Build.Builder) !void {
         .root_source_file = .{ .path = "my-game.zig" },
         .target = target,
     });
+
     sdk.link(demo_basic, .dynamic); // link SDL2 as a shared library
 
     // Add "sdl2" package that exposes the SDL2 api (like SDL_Init or SDL_CreateWindow)
@@ -124,7 +125,7 @@ pub fn main() !void {
 }
 ```
 
-## `Sdk.zig` API
+## `build.zig` API
 
 ```zig
 /// Just call `Sdk.init(b, null)` to obtain a handle to the Sdk!
