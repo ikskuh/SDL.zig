@@ -148,7 +148,7 @@ pub const Color = extern struct {
 
     /// returns a initialized color struct with alpha = 255
     pub fn rgb(r: u8, g: u8, b: u8) Color {
-        return Color{ .r = r, .g = g, .b = b, .a = 255 };
+        return Color{ .r = r, .g = g, .b = b };
     }
 
     /// returns a initialized color struct
