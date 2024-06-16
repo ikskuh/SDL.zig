@@ -23,15 +23,15 @@ pub fn main() !void {
     const vertices = [_]SDL.SDL_Vertex{
         .{
             .position = .{ .x = 400, .y = 150 },
-            .color = .{ .r = 255, .g = 0, .b = 0 },
+            .color = .{ .r = 255, .g = 0, .b = 0, .a = 255 },
         },
         .{
             .position = .{ .x = 350, .y = 200 },
-            .color = .{ .r = 0, .g = 0, .b = 255 },
+            .color = .{ .r = 0, .g = 0, .b = 255, .a = 255 },
         },
         .{
             .position = .{ .x = 450, .y = 200 },
-            .color = .{ .r = 0, .g = 255, .b = 0 },
+            .color = .{ .r = 0, .g = 255, .b = 0, .a = 255 },
         },
     };
 
