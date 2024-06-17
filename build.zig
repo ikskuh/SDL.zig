@@ -220,20 +220,24 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     });
 }
 
-pub fn linkTtf(_: *Sdk, exe: *Compile) void {
-    const target = (std.zig.system.NativeTargetInfo.detect(exe.target) catch @panic("failed to detect native target info!")).target;
+pub fn linkTtf(sdk: *Sdk, exe: *Compile) void {
+    const b = sdk.build;
+    const target = exe.root_module.resolved_target.?;
+    const is_native = target.query.isNativeOs();
 
-    // This is required on all platforms
-    exe.linkLibC();
+    if (target.result.os.tag == .linux) {
+        if (!is_native) {
+            @panic("Cannot cross-compile with TTF to linux yet.");
+        }
 
-    if (target.os.tag == .linux) {
+        // on linux with compilation for native target,
+        // we should rely on the system libraries to "just work"
         exe.linkSystemLibrary("sdl2_ttf");
-    } else if (target.os.tag == .windows) {
-        @compileError("Not implemented yet");
-    } else if (target.isDarwin()) {
-
-        // on MacOS, we require a brew install
-        // requires sdl_ttf to be installed via brew
+    } else if (target.result.os.tag == .windows) {
+        @panic("Cannot link TTF on windows yet.");
+    } else if (target.result.isDarwin()) {
+        if (!host_system.os.tag.isDarwin())
+            @panic("Cannot cross-compile with TTF to macOS yet.");
 
         exe.linkSystemLibrary("sdl2_ttf");
         exe.linkSystemLibrary("freetype");
@@ -242,6 +246,9 @@ pub fn linkTtf(_: *Sdk, exe: *Compile) void {
         exe.linkSystemLibrary("zlib");
         exe.linkSystemLibrary("graphite2");
     } else {
+        const triple_string = target.query.zigTriple(b.allocator) catch "unkown-unkown-unkown";
+        std.log.warn("Linking SDL2_TTF for {s} is not tested, linking might fail!", .{triple_string});
+
         // on all other platforms, just try the system way:
         exe.linkSystemLibrary("sdl2_ttf");
     }
