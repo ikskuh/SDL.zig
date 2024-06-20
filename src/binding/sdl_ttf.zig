@@ -39,3 +39,10 @@ pub extern fn TTF_RenderText_Blended(
     text: [*c]const u8,
     foreground: sdl.SDL_Color,
 ) ?*sdl.SDL_Surface;
+
+pub extern fn TTF_RenderText_Blended_Wrapped(
+    font: *TTF_Font,
+    text: [*c]const u8,
+    foreground: sdl.SDL_Color,
+    wrap_length: u32,
+) ?*sdl.SDL_Surface;

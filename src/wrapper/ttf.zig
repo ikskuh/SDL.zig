@@ -93,6 +93,17 @@ pub const Font = struct {
         };
     }
 
+    pub fn renderTextBlendedWrapped(self: Font, text: [:0]const u8, foreground: sdl.Color, wrap_length: u32) !sdl.Surface {
+        return sdl.Surface{
+            .ptr = sdl.c.TTF_RenderText_Blended_Wrapped(
+                self.ptr,
+                text.ptr,
+                .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
+                wrap_length,
+            ) orelse return makeError(),
+        };
+    }
+
     pub fn close(self: Font) void {
         sdl.c.TTF_CloseFont(self.ptr);
     }
