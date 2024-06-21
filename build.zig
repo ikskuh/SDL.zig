@@ -220,6 +220,8 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     });
 }
 
+/// Links SDL2 TTF to the given exe.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn linkTtf(sdk: *Sdk, exe: *Compile) void {
     const b = sdk.build;
     const target = exe.root_module.resolved_target.?;
