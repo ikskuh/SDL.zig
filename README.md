@@ -140,12 +140,26 @@ pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk
 /// This is similar to the *C import* result.
 pub fn getNativeModule(sdk: *Sdk) *Build.Module;
 
+/// Returns a module with the raw SDL api with proper argument types, but no functional/logical changes
+/// for a more *ziggy* feeling, with Vulkan support! The Vulkan module provided by `vulkan-zig` must be
+/// provided as an argument.
+/// This is similar to the *C import* result.
+pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module;
+
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperModule(sdk: *Sdk) *Build.Module;
+
+/// Returns the smart wrapper with Vulkan support. The Vulkan module provided by `vulkan-zig` must be
+/// provided as an argument.
+pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module;
 
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.Build.LibExeObjStep.Linkage) void;
+
+/// Links SDL2 TTF to the given exe.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
+pub fn linkTtf(sdk: *Sdk, exe: *Compile) void;
 ```
 
 ## Dependencies
