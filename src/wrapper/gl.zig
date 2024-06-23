@@ -3,22 +3,22 @@ const std = @import("std");
 
 pub const Context = struct {
     ptr: sdl.c.SDL_GLContext,
+
+    pub fn makeCurrent(self: Context, window: sdl.Window) !void {
+        if (sdl.c.SDL_GL_MakeCurrent(window.ptr, self.ptr) != 0) {
+            return sdl.makeError();
+        }
+    }
+
+    pub fn delete(self: Context) void {
+        _ = sdl.c.SDL_GL_DeleteContext(self.ptr);
+    }
 };
 
 pub fn createContext(window: sdl.Window) !Context {
     return Context{
         .ptr = sdl.c.SDL_GL_CreateContext(window.ptr) orelse return sdl.makeError(),
     };
-}
-
-pub fn makeCurrent(context: Context, window: sdl.Window) !void {
-    if (sdl.c.SDL_GL_MakeCurrent(window.ptr, context.ptr) != 0) {
-        return sdl.makeError();
-    }
-}
-
-pub fn deleteContext(context: Context) void {
-    _ = sdl.c.SDL_GL_DeleteContext(context.ptr);
 }
 
 pub fn getProcAddress(proc: [:0]const u8) ?*const anyopaque {
