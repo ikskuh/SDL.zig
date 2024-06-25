@@ -7,103 +7,89 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-pub fn build(b: *std.Build) !void {
+pub fn build(b: *std.Build) void {
     const sdk = Sdk.init(b, null);
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
     const sdl_linkage = b.option(std.builtin.LinkMode, "link", "Defines how to link SDL2 when building with mingw32") orelse .dynamic;
-
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
     if (!skip_tests) {
         const lib_test = b.addTest(.{
-            .root_source_file = .{ .cwd_relative = "src/wrapper/sdl.zig" },
+            .root_source_file = b.path("src/wrapper/sdl.zig"),
             .target = if (target.result.os.tag == .windows)
                 b.resolveTargetQuery(.{ .abi = target.result.abi })
             else
                 null,
         });
         lib_test.root_module.addImport("sdl-native", sdk.getNativeModule());
-        lib_test.linkSystemLibrary("sdl2_image");
-        lib_test.linkSystemLibrary("sdl2_ttf");
-        if (lib_test.rootModuleTarget().isDarwin()) {
-            // SDL_TTF
-            lib_test.linkSystemLibrary("freetype");
-            lib_test.linkSystemLibrary("harfbuzz");
-            lib_test.linkSystemLibrary("bz2");
-            lib_test.linkSystemLibrary("zlib");
-            lib_test.linkSystemLibrary("graphite2");
 
-            // SDL_IMAGE
-            lib_test.linkSystemLibrary("jpeg");
-            lib_test.linkSystemLibrary("libpng");
-            lib_test.linkSystemLibrary("tiff");
-            lib_test.linkSystemLibrary("sdl2");
-            lib_test.linkSystemLibrary("webp");
-        }
+        sdk.linkImage(lib_test);
+        sdk.linkTtf(lib_test);
         sdk.link(lib_test, .dynamic);
 
         const test_lib_step = b.step("test", "Runs the library tests.");
         test_lib_step.dependOn(&lib_test.step);
     }
 
-    const demo_wrapper = b.addExecutable(.{
-        .name = "demo-wrapper",
-        .root_source_file = .{ .cwd_relative = "examples/wrapper.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    sdk.link(demo_wrapper, sdl_linkage);
-    demo_wrapper.root_module.addImport("sdl2", sdk.getWrapperModule());
-    b.installArtifact(demo_wrapper);
+    {
+        const exe = b.addExecutable(.{
+            .name = "demo-wrapper",
+            .root_source_file = b.path("examples/wrapper.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+        sdk.link(exe, sdl_linkage);
+        exe.root_module.addImport("sdl2", sdk.getWrapperModule());
 
-    const demo_wrapper_image = b.addExecutable(.{
-        .name = "demo-wrapper-image",
-        .root_source_file = .{ .cwd_relative = "examples/wrapper-image.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    sdk.link(demo_wrapper_image, sdl_linkage);
-    demo_wrapper_image.root_module.addImport("sdl2", sdk.getWrapperModule());
-    demo_wrapper_image.linkSystemLibrary("sdl2_image");
-    demo_wrapper_image.linkSystemLibrary("jpeg");
-    demo_wrapper_image.linkSystemLibrary("libpng");
-    demo_wrapper_image.linkSystemLibrary("tiff");
-    demo_wrapper_image.linkSystemLibrary("webp");
+        b.installArtifact(exe);
 
-    if (target.query.isNative() and target.result.os.tag == .linux) {
-        b.installArtifact(demo_wrapper_image);
+        const run = b.addRunArtifact(exe);
+        const run_step = b.step("run-wrapper", "Runs the demo for the SDL2 wrapper library");
+        run_step.dependOn(&run.step);
     }
 
-    const demo_native = b.addExecutable(.{
-        .name = "demo-native",
-        .root_source_file = .{ .cwd_relative = "examples/native.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
-    sdk.link(demo_native, sdl_linkage);
-    demo_native.root_module.addImport("sdl2", sdk.getNativeModule());
-    b.installArtifact(demo_native);
+    {
+        if (target.query.isNative() and target.result.os.tag == .linux) {
+            const exe = b.addExecutable(.{
+                .name = "demo-wrapper-image",
+                .root_source_file = b.path("examples/wrapper-image.zig"),
+                .target = target,
+                .optimize = optimize,
+            });
+            sdk.linkImage(exe);
+            sdk.link(exe, sdl_linkage);
+            exe.root_module.addImport("sdl2", sdk.getWrapperModule());
 
-    const run_demo_wrappr = b.addRunArtifact(demo_wrapper);
+            b.installArtifact(exe);
 
-    const run_demo_wrappr_image = b.addRunArtifact(demo_wrapper_image);
+            const run = b.addRunArtifact(exe);
+            const run_step = b.step("run-wrapper-image", "Runs the demo for the SDL2 wrapper library");
+            run_step.dependOn(&run.step);
+        }
+    }
 
-    const run_demo_native = b.addRunArtifact(demo_native);
+    {
+        const exe = b.addExecutable(.{
+            .name = "demo-native",
+            .root_source_file = b.path("examples/native.zig"),
+            .target = target,
+            .optimize = optimize,
+        });
+        sdk.link(exe, sdl_linkage);
+        exe.root_module.addImport("sdl2", sdk.getNativeModule());
 
-    const run_demo_wrapper_step = b.step("run-wrapper", "Runs the demo for the SDL2 wrapper library");
-    run_demo_wrapper_step.dependOn(&run_demo_wrappr.step);
+        b.installArtifact(exe);
 
-    const run_demo_wrapper_image_step = b.step("run-wrapper-image", "Runs the demo for the SDL2 wrapper library");
-    run_demo_wrapper_image_step.dependOn(&run_demo_wrappr_image.step);
-
-    const run_demo_native_step = b.step("run-native", "Runs the demo for the SDL2 native library");
-    run_demo_native_step.dependOn(&run_demo_native.step);
+        const run = b.addRunArtifact(exe);
+        const run_step = b.step("run-native", "Runs the demo for the SDL2 native library");
+        run_step.dependOn(&run.step);
+    }
 }
 
-const host_system = @import("builtin").target;
+const host_system = builtin.target;
 
 const Build = std.Build;
 const Step = Build.Step;
@@ -113,11 +99,11 @@ const Compile = Build.Step.Compile;
 
 const Sdk = @This();
 
-fn sdkPath(comptime suffix: []const u8) []const u8 {
+fn sdkPath(comptime suffix: []const u8) LazyPath {
     if (suffix[0] != '/') @compileError("relToPath requires an absolute path!");
     return comptime blk: {
         const root_dir = std.fs.path.dirname(@src().file) orelse ".";
-        break :blk root_dir ++ suffix;
+        break :blk .{ .cwd_relative = root_dir ++ suffix };
     };
 }
 
@@ -156,15 +142,13 @@ pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk {
 pub fn getNativeModule(sdk: *Sdk) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", false);
-    return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
-        .imports = &.{
-            .{
-                .name = sdk.build.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
-        },
+
+    const module = sdk.build.createModule(.{
+        .root_source_file = sdkPath("/src/binding/sdl.zig"),
     });
+    module.addImport("build_options", build_options.createModule());
+
+    return module;
 }
 
 /// Returns a module with the raw SDL api with proper argument types, but no functional/logical changes
@@ -174,50 +158,35 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
 pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", true);
-    return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
-        .imports = &.{
-            .{
-                .name = sdk.build.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
-            .{
-                .name = sdk.build.dupe("vulkan"),
-                .module = vulkan,
-            },
-        },
+
+    const module = sdk.build.createModule(.{
+        .root_source_file = sdkPath("/src/binding/sdl.zig"),
     });
+    module.addImport("build_options", build_options.createModule());
+    module.addImport("vulkan", vulkan);
+
+    return module;
 }
 
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
-    return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
-        .imports = &.{
-            .{
-                .name = sdk.build.dupe("sdl-native"),
-                .module = sdk.getNativeModule(),
-            },
-        },
+    const module = sdk.build.createModule(.{
+        .root_source_file = sdkPath("/src/wrapper/sdl.zig"),
     });
+    module.addImport("sdl-native", sdk.getNativeModule());
+    return module;
 }
 
 /// Returns the smart wrapper with Vulkan support. The Vulkan module provided by `vulkan-zig` must be
 /// provided as an argument.
 pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
-    return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
-        .imports = &.{
-            .{
-                .name = sdk.build.dupe("sdl-native"),
-                .module = sdk.getNativeModuleVulkan(vulkan),
-            },
-            .{
-                .name = sdk.build.dupe("vulkan"),
-                .module = vulkan,
-            },
-        },
+    const module = sdk.build.createModule(.{
+        .root_source_file = "/src/wrapper/sdl.zig",
     });
+    module.addImport("sdl-native", sdk.getNativeModuleVulkan(vulkan));
+    module.addImport("vulkan", vulkan);
+
+    return module;
 }
 
 /// Links SDL2 TTF to the given exe.
@@ -256,6 +225,21 @@ pub fn linkTtf(sdk: *Sdk, exe: *Compile) void {
     }
 }
 
+/// Links SDL2 Image to the given exe.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
+pub fn linkImage(sdk: *Sdk, exe: *Compile) void {
+    _ = sdk;
+
+    exe.linkSystemLibrary("sdl2_image");
+
+    if (exe.rootModuleTarget().isDarwin()) {
+        exe.linkSystemLibrary("jpeg");
+        exe.linkSystemLibrary("libpng");
+        exe.linkSystemLibrary("tiff");
+        exe.linkSystemLibrary("webp");
+    }
+}
+
 /// Links SDL2 to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
@@ -275,13 +259,13 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
 
         const build_linux_sdl_stub = b.addSharedLibrary(.{
             .name = "SDL2",
-            .target = exe.root_module.resolved_target.?,
+            .target = target,
             .optimize = exe.root_module.optimize.?,
         });
         build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
 
         // We need to link against libc
-        exe.linkLibC();
+        build_linux_sdl_stub.linkLibC();
 
         // link against the output of our stub
         exe.linkLibrary(build_linux_sdl_stub);
@@ -291,61 +275,56 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
         exe.linkSystemLibrary("sdl2");
     } else if (target.result.os.tag == .windows) {
         const sdk_paths = sdk.getPaths(target) catch |err| {
-            const writer = std.io.getStdErr().writer();
-
             const target_name = tripleName(sdk.build.allocator, target) catch @panic("out of memory");
 
             switch (err) {
                 error.FileNotFound => {
-                    writer.print("Could not auto-detect SDL2 sdk configuration. Please provide {s} with the following contents filled out:\n", .{
-                        sdk.config_path,
-                    }) catch @panic("io error");
-                    writer.print("{{\n  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
-                    writer.writeAll(
+                    std.debug.panic(
+                        \\Could not auto-detect SDL2 sdk configuration. Please provide {s} with the following contents filled out:
+                        \\{{
+                        \\  "{s}": {{
                         \\    "include": "<path to sdl2 sdk>/include",
                         \\    "libs": "<path to sdl2 sdk>/lib",
                         \\    "bin": "<path to sdl2 sdk>/bin"
-                        \\  }
-                        \\}
-                        \\
-                    ) catch @panic("io error");
-                    writer.writeAll(
+                        \\  }}
+                        \\}}
                         \\
                         \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
                         \\
-                    ) catch @panic("io error");
-                },
-                error.MissingTarget => {
-                    writer.print("{s} is missing a SDK definition for {s}. Please add the following section to the file and fill the paths:\n", .{
+                    , .{
                         sdk.config_path,
                         target_name,
-                    }) catch @panic("io error");
-                    writer.print("  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
-                    writer.writeAll(
-                        \\  "include": "<path to sdl2 sdk>/include",
-                        \\  "libs": "<path to sdl2 sdk>/lib",
-                        \\  "bin": "<path to sdl2 sdk>/bin"
-                        \\}
-                    ) catch @panic("io error");
-                    writer.writeAll(
+                    });
+                },
+                error.MissingTarget => {
+                    std.debug.panic(
+                        \\{s} is missing a SDK definition for {1s}. Please add the following section to the file and fill the paths:
+                        \\{{
+                        \\  "{1s}": {{
+                        \\    "include": "<path to sdl2 sdk>/include",
+                        \\    "libs": "<path to sdl2 sdk>/lib",
+                        \\    "bin": "<path to sdl2 sdk>/bin"
+                        \\  }}
+                        \\}}
                         \\
                         \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
                         \\
-                    ) catch @panic("io error");
+                    , .{
+                        sdk.config_path,
+                        target_name,
+                    });
                 },
                 error.InvalidJson => {
-                    writer.print("{s} contains invalid JSON. Please fix that file!\n", .{
+                    std.debug.panic("{s} contains invalid JSON. Please fix that file!", .{
                         sdk.config_path,
-                    }) catch @panic("io error");
+                    });
                 },
                 error.InvalidTarget => {
-                    writer.print("{s} contains a invalid zig triple. Please fix that file!\n", .{
+                    std.debug.panic("{s} contains a invalid zig triple. Please fix that file!", .{
                         sdk.config_path,
-                    }) catch @panic("io error");
+                    });
                 },
             }
-
-            std.process.exit(1);
         };
 
         // linking on windows is sadly not as trivial as on linux:
@@ -422,16 +401,21 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
         // requires sdl2 and sdl2_image to be installed via brew
         exe.linkSystemLibrary("sdl2");
 
-        exe.linkFramework("IOKit");
-        exe.linkFramework("Cocoa");
-        exe.linkFramework("CoreAudio");
-        exe.linkFramework("Carbon");
-        exe.linkFramework("Metal");
-        exe.linkFramework("QuartzCore");
-        exe.linkFramework("AudioToolbox");
-        exe.linkFramework("ForceFeedback");
-        exe.linkFramework("GameController");
-        exe.linkFramework("CoreHaptics");
+        const frameworks = [_][]const u8{
+            "IOKit",
+            "Cocoa",
+            "CoreAudio",
+            "Carbon",
+            "Metal",
+            "QuartzCore",
+            "AudioToolbox",
+            "ForceFeedback",
+            "GameController",
+            "CoreHaptics",
+        };
+        for (frameworks) |framework|
+            exe.linkFramework(framework);
+
         exe.linkSystemLibrary("iconv");
     } else {
         const triple_string = target.query.zigTriple(b.allocator) catch "unkown-unkown-unkown";
@@ -623,11 +607,5 @@ const CacheBuilder = struct {
             .path = path,
             .dir = try std.fs.cwd().makeOpenPath(path, .{}),
         };
-    }
-
-    pub fn createAndGetPath(self: *Self) ![]const u8 {
-        const path = try self.createPath();
-        try std.fs.cwd().makePath(path);
-        return path;
     }
 };

@@ -160,6 +160,10 @@ pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.Build.LibExeObjStep.Lin
 /// Links SDL2 TTF to the given exe.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
 pub fn linkTtf(sdk: *Sdk, exe: *Compile) void;
+
+/// Links SDL2 Image to the given exe.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
+pub fn linkImage(sdk: *Sdk, exe: *Compile) void;
 ```
 
 ## Dependencies
