@@ -117,14 +117,14 @@ prepare_sources: *PrepareStubSourceStep,
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
 pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk {
-    const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
+    const sdk = b.allocator.create(Sdk) catch @panic("OOM");
     const config_path = maybe_config_path orelse std.fs.path.join(
         b.allocator,
         &[_][]const u8{
             b.pathFromRoot(".build_config"),
             "sdl.json",
         },
-    ) catch @panic("out of memory");
+    ) catch @panic("OOM");
 
     sdk.* = .{
         .build = b,
@@ -275,7 +275,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
         exe.linkSystemLibrary("sdl2");
     } else if (target.result.os.tag == .windows) {
         const sdk_paths = sdk.getPaths(target) catch |err| {
-            const target_name = tripleName(sdk.build.allocator, target) catch @panic("out of memory");
+            const target_name = tripleName(sdk.build.allocator, target) catch @panic("OOM");
 
             switch (err) {
                 error.FileNotFound => {
@@ -340,7 +340,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
             const include_path = std.fs.path.join(b.allocator, &[_][]const u8{
                 sdk_paths.include,
                 "SDL2",
-            }) catch @panic("out of memory");
+            }) catch @panic("OOM");
             exe.addIncludePath(.{ .cwd_relative = include_path });
         } else {
             exe.addIncludePath(.{ .cwd_relative = sdk_paths.include });
@@ -360,7 +360,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
             const lib_path = std.fs.path.join(b.allocator, &[_][]const u8{
                 sdk_paths.libs,
                 file_name,
-            }) catch @panic("out of memory");
+            }) catch @panic("OOM");
 
             exe.addObjectFile(.{ .cwd_relative = lib_path });
 
@@ -389,7 +389,7 @@ pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
             const sdl2_dll_path = std.fs.path.join(sdk.build.allocator, &[_][]const u8{
                 sdk_paths.bin,
                 "SDL2.dll",
-            }) catch @panic("out of memory");
+            }) catch @panic("OOM");
             sdk.build.installBinFile(sdl2_dll_path, "SDL2.dll");
         }
     } else if (target.result.isDarwin()) {
@@ -474,7 +474,7 @@ const PrepareStubSourceStep = struct {
     assembly_source: GeneratedFile,
 
     pub fn create(sdk: *Sdk) *PrepareStubSourceStep {
-        const psss = sdk.build.allocator.create(Self) catch @panic("out of memory");
+        const psss = sdk.build.allocator.create(Self) catch @panic("OOM");
 
         psss.* = .{
             .step = Step.init(
