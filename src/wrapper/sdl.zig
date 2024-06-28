@@ -417,7 +417,8 @@ pub const Window = struct {
 
     pub fn getWMInfo(w: Window) !c.SDL_SysWMInfo {
         var info: c.SDL_SysWMInfo = undefined;
-        if (c.SDL_GetWindowWMInfo(w.ptr, &info) != 0) {
+        info.version = c.SDL_VERSION;
+        if (c.SDL_GetWindowWMInfo(w.ptr, &info) != c.SDL_TRUE) {
             return makeError();
         }
         return info;

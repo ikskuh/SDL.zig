@@ -2695,6 +2695,10 @@ pub const SDL_SysWMInfo = extern struct {
             hdc: std.os.windows.HDC,
             hinstance: std.os.windows.HINSTANCE,
         },
+        x11: extern struct {
+            display: *opaque {},
+            window: c_ulong,
+        },
         // TODO: other variants
     },
 };
