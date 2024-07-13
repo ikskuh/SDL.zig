@@ -300,24 +300,26 @@ fn linkMacOS(exe: *Compile, comptime library: Library) !void {
         .SDL2_ttf => "sdl2_ttf",
     });
 
-    if (library == .SDL2) {
-        exe.linkFramework("IOKit");
-        exe.linkFramework("Cocoa");
-        exe.linkFramework("CoreAudio");
-        exe.linkFramework("Carbon");
-        exe.linkFramework("Metal");
-        exe.linkFramework("QuartzCore");
-        exe.linkFramework("AudioToolbox");
-        exe.linkFramework("ForceFeedback");
-        exe.linkFramework("GameController");
-        exe.linkFramework("CoreHaptics");
-        exe.linkSystemLibrary("iconv");
-    } else if (library == .SDL2_ttf) {
-        exe.linkSystemLibrary("freetype");
-        exe.linkSystemLibrary("harfbuzz");
-        exe.linkSystemLibrary("bz2");
-        exe.linkSystemLibrary("zlib");
-        exe.linkSystemLibrary("graphite2");
+    switch (library) {
+        .SDL2 => {
+            exe.linkFramework("Cocoa");
+            exe.linkFramework("CoreAudio");
+            exe.linkFramework("Carbon");
+            exe.linkFramework("Metal");
+            exe.linkFramework("QuartzCore");
+            exe.linkFramework("AudioToolbox");
+            exe.linkFramework("ForceFeedback");
+            exe.linkFramework("GameController");
+            exe.linkFramework("CoreHaptics");
+            exe.linkSystemLibrary("iconv");
+        },
+        .SDL2_ttf => {
+            exe.linkSystemLibrary("freetype");
+            exe.linkSystemLibrary("harfbuzz");
+            exe.linkSystemLibrary("bz2");
+            exe.linkSystemLibrary("zlib");
+            exe.linkSystemLibrary("graphite2");
+        },
     }
 }
 
