@@ -7,8 +7,10 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
+const Library = enum { SDL2, SDL2_ttf };
+
 pub fn build(b: *std.Build) !void {
-    const sdk = Sdk.init(b, null);
+    const sdk = Sdk.init(b, null, null);
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -43,7 +45,7 @@ pub fn build(b: *std.Build) !void {
             lib_test.linkSystemLibrary("sdl2");
             lib_test.linkSystemLibrary("webp");
         }
-        sdk.link(lib_test, .dynamic);
+        sdk.link(lib_test, .dynamic, .SDL2);
 
         const test_lib_step = b.step("test", "Runs the library tests.");
         test_lib_step.dependOn(&lib_test.step);
@@ -55,7 +57,7 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
-    sdk.link(demo_wrapper, sdl_linkage);
+    sdk.link(demo_wrapper, sdl_linkage, .SDL2);
     demo_wrapper.root_module.addImport("sdl2", sdk.getWrapperModule());
     b.installArtifact(demo_wrapper);
 
@@ -65,7 +67,7 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
-    sdk.link(demo_wrapper_image, sdl_linkage);
+    sdk.link(demo_wrapper_image, sdl_linkage, .SDL2);
     demo_wrapper_image.root_module.addImport("sdl2", sdk.getWrapperModule());
     demo_wrapper_image.linkSystemLibrary("sdl2_image");
     demo_wrapper_image.linkSystemLibrary("jpeg");
@@ -83,7 +85,7 @@ pub fn build(b: *std.Build) !void {
         .target = target,
         .optimize = optimize,
     });
-    sdk.link(demo_native, sdl_linkage);
+    sdk.link(demo_native, sdl_linkage, .SDL2);
     demo_native.root_module.addImport("sdl2", sdk.getNativeModule());
     b.installArtifact(demo_native);
 
@@ -124,25 +126,30 @@ fn sdkPath(comptime suffix: []const u8) []const u8 {
 const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
 
 build: *Build,
-config_path: []const u8,
+sdl_config_path: []const u8,
 
 prepare_sources: *PrepareStubSourceStep,
+sdl_ttf_config_path: []const u8,
 
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
-pub fn init(b: *Build, maybe_config_path: ?[]const u8) *Sdk {
+pub fn init(b: *Build, maybe_config_path: ?[]const u8, maybe_sdl_ttf_config_path: ?[]const u8) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
-    const config_path = maybe_config_path orelse std.fs.path.join(
+
+    const sdl_config_path = maybe_config_path orelse std.fs.path.join(
         b.allocator,
-        &[_][]const u8{
-            b.pathFromRoot(".build_config"),
-            "sdl.json",
-        },
+        &[_][]const u8{ b.pathFromRoot(".build_config"), "sdl.json" },
+    ) catch @panic("out of memory");
+
+    const sdl_ttf_config_path = maybe_sdl_ttf_config_path orelse std.fs.path.join(
+        b.allocator,
+        &[_][]const u8{ b.pathFromRoot(".build_config"), "sdl_ttf.json" },
     ) catch @panic("out of memory");
 
     sdk.* = .{
         .build = b,
-        .config_path = config_path,
+        .sdl_config_path = sdl_config_path,
+        .sdl_ttf_config_path = sdl_ttf_config_path,
         .prepare_sources = undefined,
     };
     sdk.prepare_sources = PrepareStubSourceStep.create(sdk);
@@ -220,225 +227,159 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     });
 }
 
-/// Links SDL2 TTF to the given exe.
-/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn linkTtf(sdk: *Sdk, exe: *Compile) void {
-    const b = sdk.build;
-    const target = exe.root_module.resolved_target.?;
-    const is_native = target.query.isNativeOs();
+fn linkLinuxCross(sdk: *Sdk, exe: *Compile) !void {
+    const build_linux_sdl_stub = sdk.build.addSharedLibrary(.{
+        .name = "SDL2",
+        .target = exe.root_module.resolved_target.?,
+        .optimize = exe.root_module.optimize.?,
+    });
+    build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
+    exe.linkLibrary(build_linux_sdl_stub);
+}
 
-    if (target.result.os.tag == .linux) {
-        if (!is_native) {
-            @panic("Cannot cross-compile with TTF to linux yet.");
-        }
+fn linkWindows(
+    sdk: *Sdk,
+    exe: *Compile,
+    linkage: std.builtin.LinkMode,
+    comptime library: Library,
+    paths: Paths,
+) !void {
+    exe.addIncludePath(.{ .cwd_relative = paths.include });
+    exe.addLibraryPath(.{ .cwd_relative = paths.libs });
 
-        // on linux with compilation for native target,
-        // we should rely on the system libraries to "just work"
-        exe.linkSystemLibrary("sdl2_ttf");
-    } else if (target.result.os.tag == .windows) {
-        @panic("Cannot link TTF on windows yet.");
-    } else if (target.result.isDarwin()) {
-        if (!host_system.os.tag.isDarwin())
-            @panic("Cannot cross-compile with TTF to macOS yet.");
+    const lib_name = switch (library) {
+        .SDL2 => "SDL2",
+        .SDL2_ttf => "SDL2_ttf",
+    };
 
-        exe.linkSystemLibrary("sdl2_ttf");
-        exe.linkSystemLibrary("freetype");
-        exe.linkSystemLibrary("harfbuzz");
-        exe.linkSystemLibrary("bz2");
-        exe.linkSystemLibrary("zlib");
-        exe.linkSystemLibrary("graphite2");
+    if (exe.root_module.resolved_target.?.result.abi == .msvc) {
+        exe.linkSystemLibrary2(lib_name, .{ .use_pkg_config = .no });
     } else {
-        const triple_string = target.query.zigTriple(b.allocator) catch "unkown-unkown-unkown";
-        std.log.warn("Linking SDL2_TTF for {s} is not tested, linking might fail!", .{triple_string});
+        const file_name = try std.fmt.allocPrint(sdk.build.allocator, "lib{s}.{s}", .{
+            lib_name,
+            if (linkage == .static) "a" else "dll.a",
+        });
+        defer sdk.build.allocator.free(file_name);
 
-        // on all other platforms, just try the system way:
-        exe.linkSystemLibrary("sdl2_ttf");
+        const lib_path = try std.fs.path.join(sdk.build.allocator, &[_][]const u8{ paths.libs, file_name });
+        defer sdk.build.allocator.free(lib_path);
+
+        exe.addObjectFile(.{ .cwd_relative = lib_path });
+
+        if (linkage == .static and library == .SDL2) {
+            const static_libs = [_][]const u8{
+                "setupapi",
+                "user32",
+                "gdi32",
+                "winmm",
+                "imm32",
+                "ole32",
+                "oleaut32",
+                "shell32",
+                "version",
+                "uuid",
+            };
+            for (static_libs) |lib| exe.linkSystemLibrary(lib);
+        }
+    }
+
+    if (linkage == .dynamic and exe.kind == .exe) {
+        const dll_name = try std.fmt.allocPrint(sdk.build.allocator, "{s}.dll", .{lib_name});
+        defer sdk.build.allocator.free(dll_name);
+
+        const dll_path = try std.fs.path.join(sdk.build.allocator, &[_][]const u8{ paths.bin, dll_name });
+        defer sdk.build.allocator.free(dll_path);
+
+        sdk.build.installBinFile(dll_path, dll_name);
     }
 }
 
-/// Links SDL2 to the given exe and adds required installs if necessary.
-/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *Compile, linkage: std.builtin.LinkMode) void {
-    // TODO: Implement
+fn linkMacOS(exe: *Compile, comptime library: Library) !void {
+    exe.linkSystemLibrary(switch (library) {
+        .SDL2 => "sdl2",
+        .SDL2_ttf => "sdl2_ttf",
+    });
 
+    switch (library) {
+        .SDL2 => {
+            exe.linkFramework("Cocoa");
+            exe.linkFramework("CoreAudio");
+            exe.linkFramework("Carbon");
+            exe.linkFramework("Metal");
+            exe.linkFramework("QuartzCore");
+            exe.linkFramework("AudioToolbox");
+            exe.linkFramework("ForceFeedback");
+            exe.linkFramework("GameController");
+            exe.linkFramework("CoreHaptics");
+            exe.linkSystemLibrary("iconv");
+        },
+        .SDL2_ttf => {
+            exe.linkSystemLibrary("freetype");
+            exe.linkSystemLibrary("harfbuzz");
+            exe.linkSystemLibrary("bz2");
+            exe.linkSystemLibrary("zlib");
+            exe.linkSystemLibrary("graphite2");
+        },
+    }
+}
+
+/// Links SDL2 or SDL2_ttf to the given exe and adds required installs if necessary.
+/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
+pub fn link(
+    sdk: *Sdk,
+    exe: *Compile,
+    linkage: std.builtin.LinkMode,
+    comptime library: Library,
+) void {
     const b = sdk.build;
     const target = exe.root_module.resolved_target.?;
     const is_native = target.query.isNativeOs();
 
-    // This is required on all platforms
     exe.linkLibC();
 
-    if (target.result.os.tag == .linux and !is_native) {
-        // for cross-compilation to Linux, we use a magic trick:
-        // we compile a stub .so file we will link against an SDL2.so even if that file
-        // doesn't exist on our system
-
-        const build_linux_sdl_stub = b.addSharedLibrary(.{
-            .name = "SDL2",
-            .target = exe.root_module.resolved_target.?,
-            .optimize = exe.root_module.optimize.?,
-        });
-        build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
-
-        // We need to link against libc
-        exe.linkLibC();
-
-        // link against the output of our stub
-        exe.linkLibrary(build_linux_sdl_stub);
-    } else if (target.result.os.tag == .linux) {
-        // on linux with compilation for native target,
-        // we should rely on the system libraries to "just work"
-        exe.linkSystemLibrary("sdl2");
-    } else if (target.result.os.tag == .windows) {
-        const sdk_paths = sdk.getPaths(target) catch |err| {
-            const writer = std.io.getStdErr().writer();
-
-            const target_name = tripleName(sdk.build.allocator, target) catch @panic("out of memory");
-
-            switch (err) {
-                error.FileNotFound => {
-                    writer.print("Could not auto-detect SDL2 sdk configuration. Please provide {s} with the following contents filled out:\n", .{
-                        sdk.config_path,
-                    }) catch @panic("io error");
-                    writer.print("{{\n  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
-                    writer.writeAll(
-                        \\    "include": "<path to sdl2 sdk>/include",
-                        \\    "libs": "<path to sdl2 sdk>/lib",
-                        \\    "bin": "<path to sdl2 sdk>/bin"
-                        \\  }
-                        \\}
-                        \\
-                    ) catch @panic("io error");
-                    writer.writeAll(
-                        \\
-                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
-                        \\
-                    ) catch @panic("io error");
-                },
-                error.MissingTarget => {
-                    writer.print("{s} is missing a SDK definition for {s}. Please add the following section to the file and fill the paths:\n", .{
-                        sdk.config_path,
-                        target_name,
-                    }) catch @panic("io error");
-                    writer.print("  \"{s}\": {{\n", .{target_name}) catch @panic("io error");
-                    writer.writeAll(
-                        \\  "include": "<path to sdl2 sdk>/include",
-                        \\  "libs": "<path to sdl2 sdk>/lib",
-                        \\  "bin": "<path to sdl2 sdk>/bin"
-                        \\}
-                    ) catch @panic("io error");
-                    writer.writeAll(
-                        \\
-                        \\You can obtain a SDL2 sdk for windows from https://www.libsdl.org/download-2.0.php
-                        \\
-                    ) catch @panic("io error");
-                },
-                error.InvalidJson => {
-                    writer.print("{s} contains invalid JSON. Please fix that file!\n", .{
-                        sdk.config_path,
-                    }) catch @panic("io error");
-                },
-                error.InvalidTarget => {
-                    writer.print("{s} contains a invalid zig triple. Please fix that file!\n", .{
-                        sdk.config_path,
-                    }) catch @panic("io error");
-                },
+    if (target.result.os.tag == .linux) {
+        if (!is_native) {
+            if (library == .SDL2) {
+                linkLinuxCross(sdk, exe) catch |err| {
+                    std.debug.panic("Failed to link {s} for Linux cross-compilation: {s}", .{ @tagName(library), @errorName(err) });
+                };
+            } else {
+                std.debug.panic("Cross-compilation not supported for {s} on Linux", .{@tagName(library)});
             }
-
-            std.process.exit(1);
+        } else {
+            exe.linkSystemLibrary(switch (library) {
+                .SDL2 => "sdl2",
+                .SDL2_ttf => "sdl2_ttf",
+            });
+        }
+    } else if (target.result.os.tag == .windows) {
+        const paths = switch (library) {
+            .SDL2 => getPaths(sdk, sdk.sdl_config_path, target, .SDL2),
+            .SDL2_ttf => getPaths(sdk, sdk.sdl_ttf_config_path, target, .SDL2_ttf),
+        } catch |err| {
+            std.debug.panic("Failed to get paths for {s}: {s}", .{ @tagName(library), @errorName(err) });
         };
 
-        // linking on windows is sadly not as trivial as on linux:
-        // we have to respect 6 different configurations {x86,x64}-{msvc,mingw}-{dynamic,static}
-
-        if (target.result.abi == .msvc and linkage != .dynamic)
-            @panic("SDL cannot be linked statically for MSVC");
-
-        // These will be added for C-Imports or C files.
-        if (target.result.abi != .msvc) {
-            // SDL2 (mingw) ships the SDL include files under `include/SDL2/` which is very inconsitent with
-            // all other platforms, so we just remove this prefix here
-            const include_path = std.fs.path.join(b.allocator, &[_][]const u8{
-                sdk_paths.include,
-                "SDL2",
-            }) catch @panic("out of memory");
-            exe.addIncludePath(.{ .cwd_relative = include_path });
-        } else {
-            exe.addIncludePath(.{ .cwd_relative = sdk_paths.include });
-        }
-
-        // link the right libraries
-        if (target.result.abi == .msvc) {
-            // and links those as normal libraries
-            exe.addLibraryPath(.{ .cwd_relative = sdk_paths.libs });
-            exe.linkSystemLibrary2("SDL2", .{ .use_pkg_config = .no });
-        } else {
-            const file_name = switch (linkage) {
-                .static => "libSDL2.a",
-                .dynamic => "libSDL2.dll.a",
-            };
-
-            const lib_path = std.fs.path.join(b.allocator, &[_][]const u8{
-                sdk_paths.libs,
-                file_name,
-            }) catch @panic("out of memory");
-
-            exe.addObjectFile(.{ .cwd_relative = lib_path });
-
-            if (linkage == .static) {
-                // link all system libraries required for SDL2:
-                const static_libs = [_][]const u8{
-                    "setupapi",
-                    "user32",
-                    "gdi32",
-                    "winmm",
-                    "imm32",
-                    "ole32",
-                    "oleaut32",
-                    "shell32",
-                    "version",
-                    "uuid",
-                };
-                for (static_libs) |lib|
-                    exe.linkSystemLibrary(lib);
-            }
-        }
-
-        if (linkage == .dynamic and exe.kind == .exe) {
-            // On window, we need to copy SDL2.dll to the bin directory
-            // for executables
-            const sdl2_dll_path = std.fs.path.join(sdk.build.allocator, &[_][]const u8{
-                sdk_paths.bin,
-                "SDL2.dll",
-            }) catch @panic("out of memory");
-            sdk.build.installBinFile(sdl2_dll_path, "SDL2.dll");
-        }
+        linkWindows(sdk, exe, linkage, library, paths) catch |err| {
+            std.debug.panic("Failed to link {s} for Windows: {s}", .{ @tagName(library), @errorName(err) });
+        };
     } else if (target.result.isDarwin()) {
-        // TODO: Implement cross-compilaton to macOS via system root provisioning
-        if (!host_system.os.tag.isDarwin())
-            @panic("Cannot cross-compile to macOS yet.");
-
-        // on MacOS, we require a brew install
-        // requires sdl2 and sdl2_image to be installed via brew
-        exe.linkSystemLibrary("sdl2");
-
-        exe.linkFramework("IOKit");
-        exe.linkFramework("Cocoa");
-        exe.linkFramework("CoreAudio");
-        exe.linkFramework("Carbon");
-        exe.linkFramework("Metal");
-        exe.linkFramework("QuartzCore");
-        exe.linkFramework("AudioToolbox");
-        exe.linkFramework("ForceFeedback");
-        exe.linkFramework("GameController");
-        exe.linkFramework("CoreHaptics");
-        exe.linkSystemLibrary("iconv");
+        if (!host_system.os.tag.isDarwin()) {
+            std.debug.panic("Cross-compilation not supported for {s} on macOS", .{@tagName(library)});
+        }
+        linkMacOS(exe, library) catch |err| {
+            std.debug.panic("Failed to link {s} for macOS: {s}", .{ @tagName(library), @errorName(err) });
+        };
     } else {
-        const triple_string = target.query.zigTriple(b.allocator) catch "unkown-unkown-unkown";
-        std.log.warn("Linking SDL2 for {s} is not tested, linking might fail!", .{triple_string});
-
-        // on all other platforms, just try the system way:
-        exe.linkSystemLibrary("sdl2");
+        const triple_string = target.query.zigTriple(b.allocator) catch |err| {
+            std.debug.panic("Failed to get target triple: {s}", .{@errorName(err)});
+        };
+        defer b.allocator.free(triple_string);
+        std.log.warn("Linking {s} for {s} is not tested, linking might fail!", .{ @tagName(library), triple_string });
+        exe.linkSystemLibrary(switch (library) {
+            .SDL2 => "sdl2",
+            .SDL2_ttf => "sdl2_ttf",
+        });
     }
 }
 
@@ -448,18 +389,101 @@ const Paths = struct {
     bin: []const u8,
 };
 
-fn getPaths(sdk: *Sdk, target_local: std.Build.ResolvedTarget) error{ MissingTarget, FileNotFound, InvalidJson, InvalidTarget }!Paths {
-    const json_data = std.fs.cwd().readFileAlloc(sdk.build.allocator, sdk.config_path, 1 << 20) catch |err| switch (err) {
-        error.FileNotFound => return error.FileNotFound,
-        else => |e| @panic(@errorName(e)),
+const GetPathsError = error{
+    FileNotFound,
+    InvalidJson,
+    InvalidTarget,
+    MissingTarget,
+};
+
+fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, err: GetPathsError, library: Library) !void {
+    const writer = std.io.getStdErr().writer();
+    const target_name = try tripleName(sdk.build.allocator, target_local);
+    defer sdk.build.allocator.free(target_name);
+
+    const lib_name = switch (library) {
+        .SDL2 => "SDL2",
+        .SDL2_ttf => "SDL2_ttf",
     };
 
-    const parsed = std.json.parseFromSlice(std.json.Value, sdk.build.allocator, json_data, .{}) catch return error.InvalidJson;
+    const download_url = switch (library) {
+        .SDL2 => "https://github.com/libsdl-org/SDL/releases",
+        .SDL2_ttf => "https://github.com/libsdl-org/SDL_ttf/releases",
+    };
+
+    switch (err) {
+        GetPathsError.FileNotFound => {
+            try writer.print("Could not auto-detect {s} sdk configuration. Please provide {s} with the following contents filled out:\n", .{ lib_name, config_path });
+            try writer.print("{{\n  \"{s}\": {{\n", .{target_name});
+            try writer.writeAll(
+                \\    "include": "<path to sdk>/include",
+                \\    "libs": "<path to sdk>/lib",
+                \\    "bin": "<path to sdk>/bin"
+                \\  }
+                \\}
+                \\
+            );
+            try writer.print(
+                \\
+                \\You can obtain a {s} sdk for Windows from {s}
+                \\
+            , .{ lib_name, download_url });
+        },
+        GetPathsError.MissingTarget => {
+            try writer.print("{s} is missing a SDK definition for {s}. Please add the following section to the file and fill the paths:\n", .{ config_path, target_name });
+            try writer.print("  \"{s}\": {{\n", .{target_name});
+            try writer.writeAll(
+                \\  "include": "<path to sdk>/include",
+                \\  "libs": "<path to sdk>/lib",
+                \\  "bin": "<path to sdk>/bin"
+                \\}
+            );
+            try writer.print(
+                \\
+                \\You can obtain a {s} sdk for Windows from {s}
+                \\
+            , .{ lib_name, download_url });
+        },
+        GetPathsError.InvalidJson => {
+            try writer.print("{s} contains invalid JSON. Please fix that file!\n", .{config_path});
+        },
+        GetPathsError.InvalidTarget => {
+            try writer.print("{s} contains an invalid zig triple. Please fix that file!\n", .{config_path});
+        },
+    }
+}
+
+fn getPaths(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, library: Library) GetPathsError!Paths {
+    const json_data = std.fs.cwd().readFileAlloc(sdk.build.allocator, config_path, 1 << 20) catch |err| switch (err) {
+        error.FileNotFound => {
+            printPathsErrorMessage(sdk, config_path, target_local, GetPathsError.FileNotFound, library) catch |e| {
+                std.debug.panic("Failed to print error message: {s}", .{@errorName(e)});
+            };
+            return GetPathsError.FileNotFound;
+        },
+        else => |e| {
+            std.log.err("Failed to read config file: {s}", .{@errorName(e)});
+            return GetPathsError.FileNotFound;
+        },
+    };
+    defer sdk.build.allocator.free(json_data);
+
+    const parsed = std.json.parseFromSlice(std.json.Value, sdk.build.allocator, json_data, .{}) catch {
+        printPathsErrorMessage(sdk, config_path, target_local, GetPathsError.InvalidJson, library) catch |e| {
+            std.debug.panic("Failed to print error message: {s}", .{@errorName(e)});
+        };
+        return GetPathsError.InvalidJson;
+    };
+    defer parsed.deinit();
+
     var root_node = parsed.value.object;
     var config_iterator = root_node.iterator();
     while (config_iterator.next()) |entry| {
         const config_target = sdk.build.resolveTargetQuery(
-            std.Target.Query.parse(.{ .arch_os_abi = entry.key_ptr.* }) catch return error.InvalidTarget,
+            std.Target.Query.parse(.{ .arch_os_abi = entry.key_ptr.* }) catch {
+                std.log.err("Invalid target in config file: {s}", .{entry.key_ptr.*});
+                return GetPathsError.InvalidTarget;
+            },
         );
 
         if (target_local.result.cpu.arch != config_target.result.cpu.arch)
@@ -468,17 +492,20 @@ fn getPaths(sdk: *Sdk, target_local: std.Build.ResolvedTarget) error{ MissingTar
             continue;
         if (target_local.result.abi != config_target.result.abi)
             continue;
-        // load paths
 
         const node = entry.value_ptr.*.object;
 
         return Paths{
-            .include = node.get("include").?.string,
-            .libs = node.get("libs").?.string,
-            .bin = node.get("bin").?.string,
+            .include = sdk.build.allocator.dupe(u8, node.get("include").?.string) catch @panic("out of memory"),
+            .libs = sdk.build.allocator.dupe(u8, node.get("libs").?.string) catch @panic("out of memory"),
+            .bin = sdk.build.allocator.dupe(u8, node.get("bin").?.string) catch @panic("out of memory"),
         };
     }
-    return error.MissingTarget;
+
+    printPathsErrorMessage(sdk, config_path, target_local, GetPathsError.MissingTarget, library) catch |e| {
+        std.debug.panic("Failed to print error message: {s}", .{@errorName(e)});
+    };
+    return GetPathsError.MissingTarget;
 }
 
 const PrepareStubSourceStep = struct {
