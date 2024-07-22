@@ -7,7 +7,7 @@
 const std = @import("std");
 const builtin = @import("builtin");
 
-const Library = enum { SDL2, SDL2_ttf };
+pub const Library = enum { SDL2, SDL2_ttf };
 
 pub fn build(b: *std.Build) !void {
     const sdk = Sdk.init(b, null, null);
