@@ -1675,6 +1675,7 @@ pub const SDL_JOYBUTTONDOWN: c_int = 1539;
 pub const SDL_JOYBUTTONUP: c_int = 1540;
 pub const SDL_JOYDEVICEADDED: c_int = 1541;
 pub const SDL_JOYDEVICEREMOVED: c_int = 1542;
+pub const SDL_JOYBATTERYUPDATED: c_int = 1543;
 pub const SDL_CONTROLLERAXISMOTION: c_int = 1616;
 pub const SDL_CONTROLLERBUTTONDOWN: c_int = 1617;
 pub const SDL_CONTROLLERBUTTONUP: c_int = 1618;
@@ -1830,6 +1831,12 @@ pub const SDL_JoyDeviceEvent = extern struct {
     timestamp: u32,
     which: i32,
 };
+pub const SDL_JoyBatteryEvent = extern struct {
+    type: u32,
+    timestamp: u32,
+    which: SDL_JoystickID,
+    level: SDL_JoystickPowerLevel,
+};
 pub const SDL_ControllerAxisEvent = extern struct {
     type: u32,
     timestamp: u32,
@@ -1964,6 +1971,7 @@ pub const SDL_Event = extern union {
     jhat: SDL_JoyHatEvent,
     jbutton: SDL_JoyButtonEvent,
     jdevice: SDL_JoyDeviceEvent,
+    jbattery: SDL_JoyBatteryEvent,
     caxis: SDL_ControllerAxisEvent,
     cbutton: SDL_ControllerButtonEvent,
     cdevice: SDL_ControllerDeviceEvent,
