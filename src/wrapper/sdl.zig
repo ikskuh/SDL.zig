@@ -2393,6 +2393,10 @@ pub const GameController = struct {
         };
     }
 
+    pub fn is(joystick_index: u31) bool {
+        return c.SDL_IsGameController(joystick_index) > 0;
+    }
+
     pub fn close(self: GameController) void {
         c.SDL_GameControllerClose(self.ptr);
     }
