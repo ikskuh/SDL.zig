@@ -2404,8 +2404,8 @@ pub const GameController = struct {
         c.SDL_GameControllerClose(self.ptr);
     }
 
-    pub fn nameForIndex(joystick_index: u31) ?[:0]const u8 {
-        return stringToSlice(c.SDL_GameControllerNameForIndex(joystick_index), 0);
+    pub fn nameForIndex(joystick_index: u31) []const u8 {
+        return stringToSlice(c.SDL_GameControllerNameForIndex(joystick_index));
     }
 
     pub fn getButton(self: GameController, button: Button) u8 {
