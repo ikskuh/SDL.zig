@@ -1615,6 +1615,7 @@ pub const Event = union(enum) {
     pub const TextEditingEvent = c.SDL_TextEditingEvent;
     pub const TextInputEvent = c.SDL_TextInputEvent;
     pub const JoyDeviceEvent = c.SDL_JoyDeviceEvent;
+    pub const JoyBatteryEvent = c.SDL_JoyBatteryEvent;
     pub const ControllerDeviceEvent = c.SDL_ControllerDeviceEvent;
     pub const AudioDeviceEvent = c.SDL_AudioDeviceEvent;
     pub const SensorEvent = c.SDL_SensorEvent;
@@ -1652,6 +1653,7 @@ pub const Event = union(enum) {
     joy_button_up: JoyButtonEvent,
     joy_device_added: JoyDeviceEvent,
     joy_device_removed: JoyDeviceEvent,
+    joy_battery_level: JoyBatteryEvent,
     controller_axis_motion: ControllerAxisEvent,
     controller_button_down: ControllerButtonEvent,
     controller_button_up: ControllerButtonEvent,
@@ -1703,6 +1705,7 @@ pub const Event = union(enum) {
             c.SDL_JOYBUTTONUP => Event{ .joy_button_up = JoyButtonEvent.fromNative(raw.jbutton) },
             c.SDL_JOYDEVICEADDED => Event{ .joy_device_added = raw.jdevice },
             c.SDL_JOYDEVICEREMOVED => Event{ .joy_device_removed = raw.jdevice },
+            c.SDL_JOYBATTERYUPDATED => Event{ .joy_battery_level = raw.jbattery },
             c.SDL_CONTROLLERAXISMOTION => Event{ .controller_axis_motion = ControllerAxisEvent.fromNative(raw.caxis) },
             c.SDL_CONTROLLERBUTTONDOWN => Event{ .controller_button_down = ControllerButtonEvent.fromNative(raw.cbutton) },
             c.SDL_CONTROLLERBUTTONUP => Event{ .controller_button_up = ControllerButtonEvent.fromNative(raw.cbutton) },
