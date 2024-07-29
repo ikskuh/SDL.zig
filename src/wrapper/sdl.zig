@@ -398,6 +398,10 @@ pub const Window = struct {
         c.SDL_SetWindowPosition(w.ptr, p.x, p.y);
     }
 
+    pub fn setSize(w: Window, s: Size) !void {
+        c.SDL_SetWindowSize(w.ptr, s.width, s.height);
+    }
+
     pub fn setMinimumSize(w: Window, width: c_int, height: c_int) void {
         c.SDL_SetWindowMinimumSize(w.ptr, width, height);
     }
