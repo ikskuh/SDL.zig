@@ -431,6 +431,15 @@ pub const Window = struct {
     pub fn setTitle(w: Window, title: [:0]const u8) void {
         c.SDL_SetWindowTitle(w.ptr, title);
     }
+
+    pub fn setVisible(w: Window, visible: bool) void {
+        if (visible) {
+            c.SDL_ShowWindow(w.ptr);
+        } else {
+            c.SDL_HideWindow(w.ptr);
+        }
+    }
+
 };
 
 pub const WindowPosition = union(enum) {
