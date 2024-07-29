@@ -440,6 +440,17 @@ pub const Window = struct {
         }
     }
 
+    pub fn setFullscreen(w: Window, dimension: WindowFlags.Dimension) !void {
+        const flags: u32 = switch (dimension) {
+            .fullscreen => c.SDL_WINDOW_FULLSCREEN,
+            .fullscreen_desktop => c.SDL_WINDOW_FULLSCREEN_DESKTOP,
+            else => 0,
+        };
+
+        if (c.SDL_SetWindowFullscreen(w.ptr, flags) != 0) {
+            return makeError();
+        }
+    }
 };
 
 pub const WindowPosition = union(enum) {
