@@ -398,6 +398,10 @@ pub const Window = struct {
         c.SDL_SetWindowPosition(w.ptr, p.x, p.y);
     }
 
+    pub fn setSize(w: Window, s: Size) !void {
+        c.SDL_SetWindowSize(w.ptr, s.width, s.height);
+    }
+
     pub fn setMinimumSize(w: Window, width: c_int, height: c_int) void {
         c.SDL_SetWindowMinimumSize(w.ptr, width, height);
     }
@@ -426,6 +430,26 @@ pub const Window = struct {
 
     pub fn setTitle(w: Window, title: [:0]const u8) void {
         c.SDL_SetWindowTitle(w.ptr, title);
+    }
+
+    pub fn setVisible(w: Window, visible: bool) void {
+        if (visible) {
+            c.SDL_ShowWindow(w.ptr);
+        } else {
+            c.SDL_HideWindow(w.ptr);
+        }
+    }
+
+    pub fn setFullscreen(w: Window, dimension: WindowFlags.Dimension) !void {
+        const flags: u32 = switch (dimension) {
+            .fullscreen => c.SDL_WINDOW_FULLSCREEN,
+            .fullscreen_desktop => c.SDL_WINDOW_FULLSCREEN_DESKTOP,
+            else => 0,
+        };
+
+        if (c.SDL_SetWindowFullscreen(w.ptr, flags) != 0) {
+            return makeError();
+        }
     }
 };
 
