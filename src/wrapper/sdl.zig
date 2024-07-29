@@ -2420,6 +2420,10 @@ pub const GameController = struct {
         return @as(f32, @floatFromInt(self.getAxis(axis))) / @as(f32, @floatFromInt(c.SDL_JOYSTICK_AXIS_MAX));
     }
 
+    pub fn instanceId(self: GameController) c.SDL_JoystickID {
+        return c.SDL_JoystickInstanceID(c.SDL_GameControllerGetJoystick(self.ptr));
+    }
+
     pub const Button = enum(i32) {
         a = c.SDL_CONTROLLER_BUTTON_A,
         b = c.SDL_CONTROLLER_BUTTON_B,
