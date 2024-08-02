@@ -10,7 +10,7 @@ const builtin = @import("builtin");
 pub const Library = enum { SDL2, SDL2_ttf };
 
 pub fn build(b: *std.Build) !void {
-    const sdk = Sdk.init(b, null, null);
+    const sdk = Sdk.init(b, .{ .dep_name = null });
 
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
@@ -115,15 +115,13 @@ const Compile = Build.Step.Compile;
 
 const Sdk = @This();
 
-fn sdkPath(comptime suffix: []const u8) []const u8 {
-    if (suffix[0] != '/') @compileError("relToPath requires an absolute path!");
-    return comptime blk: {
-        const root_dir = std.fs.path.dirname(@src().file) orelse ".";
-        break :blk root_dir ++ suffix;
-    };
-}
-
 const sdl2_symbol_definitions = @embedFile("stubs/libSDL2.def");
+
+const SdkOption = struct {
+    dep_name: ?[]const u8 = "sdl",
+    maybe_config_path: ?[]const u8 = null,
+    maybe_sdl_ttf_config_path: ?[]const u8 = null,
+};
 
 build: *Build,
 sdl_config_path: []const u8,
@@ -133,21 +131,26 @@ sdl_ttf_config_path: []const u8,
 
 /// Creates a instance of the Sdk and initializes internal steps.
 /// Initialize once, use everywhere (in your `build` function).
-pub fn init(b: *Build, maybe_config_path: ?[]const u8, maybe_sdl_ttf_config_path: ?[]const u8) *Sdk {
+pub fn init(b: *Build, opt: SdkOption) *Sdk {
     const sdk = b.allocator.create(Sdk) catch @panic("out of memory");
 
-    const sdl_config_path = maybe_config_path orelse std.fs.path.join(
+    const sdl_config_path = opt.maybe_config_path orelse std.fs.path.join(
         b.allocator,
         &[_][]const u8{ b.pathFromRoot(".build_config"), "sdl.json" },
     ) catch @panic("out of memory");
 
-    const sdl_ttf_config_path = maybe_sdl_ttf_config_path orelse std.fs.path.join(
+    const sdl_ttf_config_path = opt.maybe_sdl_ttf_config_path orelse std.fs.path.join(
         b.allocator,
         &[_][]const u8{ b.pathFromRoot(".build_config"), "sdl_ttf.json" },
     ) catch @panic("out of memory");
 
+    const builder = if (opt.dep_name) |name|
+        b.dependency(name, .{}).builder
+    else
+        b;
+
     sdk.* = .{
-        .build = b,
+        .build = builder,
         .sdl_config_path = sdl_config_path,
         .sdl_ttf_config_path = sdl_ttf_config_path,
         .prepare_sources = undefined,
@@ -164,7 +167,7 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", false);
     return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
+        .root_source_file = sdk.build.path("src/binding/sdl.zig"),
         .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
@@ -182,7 +185,7 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     const build_options = sdk.build.addOptions();
     build_options.addOption(bool, "vulkan", true);
     return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/binding/sdl.zig") },
+        .root_source_file = sdk.build.path("src/binding/sdl.zig"),
         .imports = &.{
             .{
                 .name = sdk.build.dupe("build_options"),
@@ -199,7 +202,7 @@ pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
 /// Returns the smart wrapper for the SDL api. Contains convenient zig types, tagged unions and so on.
 pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
     return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
+        .root_source_file = sdk.build.path("src/wrapper/sdl.zig"),
         .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
@@ -213,7 +216,7 @@ pub fn getWrapperModule(sdk: *Sdk) *Build.Module {
 /// provided as an argument.
 pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
     return sdk.build.createModule(.{
-        .root_source_file = .{ .cwd_relative = sdkPath("/src/wrapper/sdl.zig") },
+        .root_source_file = sdk.build.path("src/wrapper/sdl.zig"),
         .imports = &.{
             .{
                 .name = sdk.build.dupe("sdl-native"),
