@@ -293,7 +293,8 @@ fn linkWindows(
         const dll_path = try std.fs.path.join(sdk.build.allocator, &[_][]const u8{ paths.bin, dll_name });
         defer sdk.build.allocator.free(dll_path);
 
-        sdk.build.installBinFile(dll_path, dll_name);
+        const install_bin = sdk.build.addInstallBinFile(.{ .cwd_relative = dll_path }, dll_name);
+        exe.step.dependOn(&install_bin.step);
     }
 }
 
