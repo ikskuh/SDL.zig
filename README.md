@@ -161,13 +161,9 @@ pub fn getWrapperModule(sdk: *Sdk) *Build.Module;
 /// provided as an argument.
 pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module;
 
-/// Links SDL2 to the given exe and adds required installs if necessary.
+/// Links SDL2 or SDL2_ttf to the given exe and adds required installs if necessary.
 /// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn link(sdk: *Sdk, exe: *LibExeObjStep, linkage: std.Build.LibExeObjStep.Linkage) void;
-
-/// Links SDL2 TTF to the given exe.
-/// **Important:** The target of the `exe` must already be set, otherwise the Sdk will do the wrong thing!
-pub fn linkTtf(sdk: *Sdk, exe: *Compile) void;
+pub fn link(sdk: *Sdk, exe: *Build.Step.Compile, linkage: std.builtin.LinkMode, comptime library: Library) void;
 ```
 
 ## Dependencies
