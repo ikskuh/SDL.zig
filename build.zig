@@ -543,7 +543,7 @@ const PrepareStubSourceStep = struct {
         return .{ .generated = .{ .file = &self.assembly_source } };
     }
 
-    fn make(step: *Step, make_opt: std.Build.Step.MakeOptions) !void {
+    fn make(step: *Step, make_opt: std.Progress.Node) !void {
         _ = make_opt;
         const self: *Self = @fieldParentPtr("step", step);
 
