@@ -30,7 +30,7 @@ pub fn build(b: *std.Build) !void {
         lib_test.root_module.addImport("sdl-native", sdk.getNativeModule());
         lib_test.linkSystemLibrary("sdl2_image");
         lib_test.linkSystemLibrary("sdl2_ttf");
-        if (lib_test.rootModuleTarget().isDarwin()) {
+        if (lib_test.rootModuleTarget().isDarwinLibC()) {
             // SDL_TTF
             lib_test.linkSystemLibrary("freetype");
             lib_test.linkSystemLibrary("harfbuzz");
@@ -367,7 +367,7 @@ pub fn link(
         linkWindows(sdk, exe, linkage, library, paths) catch |err| {
             std.debug.panic("Failed to link {s} for Windows: {s}", .{ @tagName(library), @errorName(err) });
         };
-    } else if (target.result.isDarwin()) {
+    } else if (target.result.isDarwinLibC()) {
         if (!host_system.os.tag.isDarwin()) {
             std.debug.panic("Cross-compilation not supported for {s} on macOS", .{@tagName(library)});
         }

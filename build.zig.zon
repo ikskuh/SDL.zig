@@ -2,6 +2,7 @@
     .name = .SDL2,
     .version = "0.0.0",
     .minimum_zig_version = "0.14.0",
+    .fingerprint = 0x1b740bc58a90c0c8,
     .paths = .{
         "LICENSE",
         "build.zig",
