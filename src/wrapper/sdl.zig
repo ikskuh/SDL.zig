@@ -726,7 +726,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawLines(ren: Renderer, points: [] const Point) !void {
+    pub fn drawLines(ren: Renderer, points: []const Point) !void {
         if (c.SDL_RenderDrawLines(ren.ptr, @ptrCast(points.ptr), @intCast(points.len)) < 0)
             return makeError();
     }
@@ -736,7 +736,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawLinesF(ren: Renderer, points: [] const PointF) !void {
+    pub fn drawLinesF(ren: Renderer, points: []const PointF) !void {
         if (c.SDL_RenderDrawLinesF(ren.ptr, @ptrCast(points.ptr), @intCast(points.len)) < 0)
             return makeError();
     }
@@ -746,7 +746,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawPoints(ren: Renderer, points: [] const Point) !void {
+    pub fn drawPoints(ren: Renderer, points: []const Point) !void {
         if (c.SDL_RenderDrawPoints(ren.ptr, @ptrCast(points.ptr), @intCast(points.len)) < 0)
             return makeError();
     }
@@ -756,7 +756,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawPointsF(ren: Renderer, points: [] const PointF) !void {
+    pub fn drawPointsF(ren: Renderer, points: []const PointF) !void {
         if (c.SDL_RenderDrawPointsF(ren.ptr, @ptrCast(points.ptr), @intCast(points.len)) < 0)
             return makeError();
     }
@@ -766,7 +766,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn fillRects(ren: Renderer, rects: [] const Rectangle) !void {
+    pub fn fillRects(ren: Renderer, rects: []const Rectangle) !void {
         if (c.SDL_RenderFillRects(ren, @ptrCast(rects.ptr), @intCast(rects.len)) < 0)
             return makeError();
     }
@@ -776,7 +776,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn fillRectsF(ren: Renderer, rects: [] const RectangleF) !void {
+    pub fn fillRectsF(ren: Renderer, rects: []const RectangleF) !void {
         if (c.SDL_RenderFillRectsF(ren, @ptrCast(rects.ptr), @intCast(rects.len)) < 0)
             return makeError();
     }
@@ -786,7 +786,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawRects(ren: Renderer, rects: [] const Rectangle) !void {
+    pub fn drawRects(ren: Renderer, rects: []const Rectangle) !void {
         if (c.SDL_RenderDrawRects(ren, @ptrCast(rects.ptr), @intCast(rects.len)) < 0)
             return makeError();
     }
@@ -796,7 +796,7 @@ pub const Renderer = struct {
             return makeError();
     }
 
-    pub fn drawRectsF(ren: Renderer, rects: [] const RectangleF) !void {
+    pub fn drawRectsF(ren: Renderer, rects: []const RectangleF) !void {
         if (c.SDL_RenderDrawRectsF(ren, @ptrCast(rects.ptr), @intCast(rects.len)) < 0)
             return makeError();
     }
@@ -1700,6 +1700,7 @@ pub const Event = union(enum) {
     drop_begin: DropEvent,
     drop_complete: DropEvent,
     user: UserEvent,
+    unsupported: u32,
 
     pub fn from(raw: c.SDL_Event) Event {
         return switch (raw.type) {
@@ -1753,7 +1754,7 @@ pub const Event = union(enum) {
             c.SDL_RENDER_TARGETS_RESET => Event{ .render_targets_reset = raw.common },
             c.SDL_RENDER_DEVICE_RESET => Event{ .render_device_reset = raw.common },
             c.SDL_USEREVENT => Event{ .user = UserEvent.from(raw.user) },
-            else => @panic("Unsupported event type detected!"),
+            else => Event{ .unsupported = raw.type },
         };
     }
 };
