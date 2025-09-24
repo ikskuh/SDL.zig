@@ -174,16 +174,8 @@ pub fn init(b: *Build, opt: SdkOption) *Sdk {
 /// for a more *ziggy* feeling.
 /// This is similar to the *C import* result.
 pub fn getNativeModule(sdk: *Sdk) *Build.Module {
-    const build_options = sdk.builder.addOptions();
-    build_options.addOption(bool, "vulkan", false);
     return sdk.builder.createModule(.{
         .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
-        .imports = &.{
-            .{
-                .name = sdk.builder.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
-        },
     });
 }
 
@@ -192,15 +184,9 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
 /// provided as an argument.
 /// This is similar to the *C import* result.
 pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
-    const build_options = sdk.builder.addOptions();
-    build_options.addOption(bool, "vulkan", true);
     return sdk.builder.createModule(.{
         .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
         .imports = &.{
-            .{
-                .name = sdk.builder.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
             .{
                 .name = sdk.builder.dupe("vulkan"),
                 .module = vulkan,
