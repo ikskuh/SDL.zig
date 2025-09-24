@@ -2534,7 +2534,7 @@ pub const AudioDevice = struct {
     }
 };
 
-const is_little_endian = @import("builtin").target.cpu.arch.endian() == .Little;
+const is_little_endian = @import("builtin").target.cpu.arch.endian() == .little;
 
 pub const AudioFormat = struct {
     pub const @"u8" = AudioFormat{
