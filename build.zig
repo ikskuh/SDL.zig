@@ -419,7 +419,7 @@ const GetPathsError = error{
 };
 
 fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, err: GetPathsError, library: Library) !void {
-    const writer = std.io.getStdErr().writer();
+    var writer = std.fs.File.stderr().writer(&.{}).interface;
     const target_name = try tripleName(sdk.builder.allocator, target_local);
     defer sdk.builder.allocator.free(target_name);
 
@@ -473,6 +473,8 @@ fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.
             try writer.print("{s} contains an invalid zig triple. Please fix that file!\n", .{config_path});
         },
     }
+
+    try writer.flush();
 }
 
 fn getPaths(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, library: Library) GetPathsError!Paths {
@@ -575,7 +577,7 @@ const PrepareStubSourceStep = struct {
         var file = try dirpath.dir.createFile("sdl.S", .{});
         defer file.close();
 
-        var writer = file.writer();
+        var writer = file.writer(&.{}).interface;
         try writer.writeAll(".text\n");
 
         var iter = std.mem.splitScalar(u8, sdl2_symbol_definitions, '\n');
@@ -588,6 +590,8 @@ const PrepareStubSourceStep = struct {
             try writer.print("{s}:\n", .{sym});
             try writer.writeAll("  .byte 0\n");
         }
+
+        try writer.flush();
 
         self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
             dirpath.path,
@@ -642,20 +646,20 @@ const CacheBuilder = struct {
         const path = if (self.subdir) |subdir|
             try std.fmt.allocPrint(
                 self.builder.allocator,
-                "{s}/{s}/o/{}",
+                "{s}/{s}/o/{x}",
                 .{
                     self.builder.cache_root.path.?,
                     subdir,
-                    std.fmt.fmtSliceHexLower(&hash),
+                    &hash,
                 },
             )
         else
             try std.fmt.allocPrint(
                 self.builder.allocator,
-                "{s}/o/{}",
+                "{s}/o/{x}",
                 .{
                     self.builder.cache_root.path.?,
-                    std.fmt.fmtSliceHexLower(&hash),
+                    &hash,
                 },
             );
 
