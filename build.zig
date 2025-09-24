@@ -20,14 +20,18 @@ pub fn build(b: *std.Build) !void {
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
     if (!skip_tests) {
-        const lib_test = b.addTest(.{
+        const lib_test_mod = b.createModule(.{
             .root_source_file = .{ .cwd_relative = "src/wrapper/sdl.zig" },
             .target = if (target.result.os.tag == .windows)
                 b.resolveTargetQuery(.{ .abi = target.result.abi })
             else
-                null,
+                target,
         });
-        lib_test.root_module.addImport("sdl-native", sdk.getNativeModule());
+
+        const lib_test = b.addTest(.{
+            .root_module = lib_test_mod,
+        });
+        lib_test_mod.addImport("sdl-native", sdk.getNativeModule());
         lib_test.linkSystemLibrary("sdl2_image");
         lib_test.linkSystemLibrary("sdl2_ttf");
         if (lib_test.rootModuleTarget().isDarwinLibC()) {
@@ -51,24 +55,30 @@ pub fn build(b: *std.Build) !void {
         test_lib_step.dependOn(&lib_test.step);
     }
 
-    const demo_wrapper = b.addExecutable(.{
-        .name = "demo-wrapper",
+    const demo_wrapper_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/wrapper.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_wrapper = b.addExecutable(.{
+        .name = "demo-wrapper",
+        .root_module = demo_wrapper_mod,
+    });
     sdk.link(demo_wrapper, sdl_linkage, .SDL2);
-    demo_wrapper.root_module.addImport("sdl2", sdk.getWrapperModule());
+    demo_wrapper_mod.addImport("sdl2", sdk.getWrapperModule());
     b.installArtifact(demo_wrapper);
 
-    const demo_wrapper_image = b.addExecutable(.{
-        .name = "demo-wrapper-image",
+    const demo_wrapper_image_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/wrapper-image.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_wrapper_image = b.addExecutable(.{
+        .name = "demo-wrapper-image",
+        .root_module = demo_wrapper_image_mod,
+    });
     sdk.link(demo_wrapper_image, sdl_linkage, .SDL2);
-    demo_wrapper_image.root_module.addImport("sdl2", sdk.getWrapperModule());
+    demo_wrapper_image_mod.addImport("sdl2", sdk.getWrapperModule());
     demo_wrapper_image.linkSystemLibrary("sdl2_image");
     demo_wrapper_image.linkSystemLibrary("jpeg");
     demo_wrapper_image.linkSystemLibrary("libpng");
@@ -79,14 +89,17 @@ pub fn build(b: *std.Build) !void {
         b.installArtifact(demo_wrapper_image);
     }
 
-    const demo_native = b.addExecutable(.{
-        .name = "demo-native",
+    const demo_native_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/native.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_native = b.addExecutable(.{
+        .name = "demo-native",
+        .root_module = demo_native_mod,
+    });
     sdk.link(demo_native, sdl_linkage, .SDL2);
-    demo_native.root_module.addImport("sdl2", sdk.getNativeModule());
+    demo_native_mod.addImport("sdl2", sdk.getNativeModule());
     b.installArtifact(demo_native);
 
     const run_demo_wrappr = b.addRunArtifact(demo_wrapper);
@@ -231,10 +244,15 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
 }
 
 fn linkLinuxCross(sdk: *Sdk, exe: *Compile) !void {
-    const build_linux_sdl_stub = sdk.builder.addSharedLibrary(.{
-        .name = "SDL2",
+    const module = sdk.builder.createModule(.{
+        .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
         .target = exe.root_module.resolved_target.?,
         .optimize = exe.root_module.optimize.?,
+    });
+    const build_linux_sdl_stub = sdk.builder.addLibrary(.{
+        .name = "SDL2",
+        .root_module = module,
+        .linkage = .dynamic,
     });
     build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
     exe.linkLibrary(build_linux_sdl_stub);
