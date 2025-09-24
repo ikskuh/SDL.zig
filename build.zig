@@ -22,10 +22,7 @@ pub fn build(b: *std.Build) !void {
     if (!skip_tests) {
         const lib_test_mod = b.createModule(.{
             .root_source_file = .{ .cwd_relative = "src/wrapper/sdl.zig" },
-            .target = if (target.result.os.tag == .windows)
-                b.resolveTargetQuery(.{ .abi = target.result.abi })
-            else
-                target,
+            .target = target,
         });
 
         const lib_test = b.addTest(.{
