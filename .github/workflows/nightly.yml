@@ -36,9 +36,8 @@ jobs:
       - name: Build Example
         run: zig build install
 
-      # Skipped on Ubuntu as it doesn't have SDL2.0.18 yet
-      # - name: Run tests
-      #   run: zig build test
+      - name: Run tests
+        run: zig build test
 
   build-macos:
     runs-on: macos-latest
