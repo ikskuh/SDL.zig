@@ -567,7 +567,8 @@ const PrepareStubSourceStep = struct {
         var file = try dirpath.dir.createFile("sdl.S", .{});
         defer file.close();
 
-        var writer = file.writer(&.{}).interface;
+        var file_writer = file.writer(&.{});
+        const writer = &file_writer.interface;
         try writer.writeAll(".text\n");
 
         var iter = std.mem.splitScalar(u8, sdl2_symbol_definitions, '\n');
@@ -581,12 +582,11 @@ const PrepareStubSourceStep = struct {
             try writer.writeAll("  .byte 0\n");
         }
 
-        try writer.flush();
-
         self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
             dirpath.path,
             "sdl.S",
         });
+        try writer.flush();
     }
 };
 
