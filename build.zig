@@ -257,7 +257,14 @@ fn linkWindows(
     };
 
     if (exe.root_module.resolved_target.?.result.abi == .msvc) {
-        exe.linkSystemLibrary2(lib_name, .{ .use_pkg_config = .no });
+        // For MSVC, we need to explicitly link against the .lib file, not the .dll
+        const lib_file_name = try std.fmt.allocPrint(sdk.builder.allocator, "{s}.lib", .{lib_name});
+        defer sdk.builder.allocator.free(lib_file_name);
+
+        const lib_path = try std.fs.path.join(sdk.builder.allocator, &[_][]const u8{ paths.libs, lib_file_name });
+        defer sdk.builder.allocator.free(lib_path);
+
+        exe.addObjectFile(.{ .cwd_relative = lib_path });
     } else {
         const file_name = try std.fmt.allocPrint(sdk.builder.allocator, "lib{s}.{s}", .{
             lib_name,
@@ -626,12 +633,13 @@ const CacheBuilder = struct {
         var hash: [20]u8 = undefined;
         self.hasher.final(&hash);
 
+        const cache_root = self.builder.cache_root.path orelse ".zig-cache";
         const path = if (self.subdir) |subdir|
             try std.fmt.allocPrint(
                 self.builder.allocator,
                 "{s}/{s}/o/{x}",
                 .{
-                    self.builder.cache_root.path.?,
+                    cache_root,
                     subdir,
                     &hash,
                 },
@@ -641,7 +649,7 @@ const CacheBuilder = struct {
                 self.builder.allocator,
                 "{s}/o/{x}",
                 .{
-                    self.builder.cache_root.path.?,
+                    cache_root,
                     &hash,
                 },
             );
