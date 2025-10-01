@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 5 * * *' # run at 5 AM UTC
 
+env:
+  ZIG_VERSION: 0.15.1
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -23,9 +26,9 @@ jobs:
           sudo apt-get install libsdl2-dev libsdl2-image-dev libwebp-dev
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: SDL version
         run: sdl2-config --version
@@ -49,9 +52,9 @@ jobs:
         run: brew install sdl2 sdl2_image sdl2_ttf harfbuzz graphite2
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: Build Examples
         run: zig build install
@@ -78,9 +81,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: Install VisualStudio (x86)
         if: ${{ matrix.target == 'x86-windows-msvc' }}
@@ -163,9 +166,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: Download SDL2 (MinGW)
         uses: carlosperate/download-file-action@v1.0.3
@@ -217,9 +220,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: Download SDL2 (MinGW)
         uses: carlosperate/download-file-action@v1.0.3
@@ -270,9 +273,9 @@ jobs:
           submodules: 'recursive'
 
       - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v1
+        uses: goto-bus-stop/setup-zig@v2
         with:
-          version: master
+          version: ${{ env.ZIG_VERSION }}
 
       - name: Build
         run: zig build -Dskip-test -Dtarget=${{matrix.target}} --verbose
