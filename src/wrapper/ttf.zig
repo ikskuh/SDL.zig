@@ -50,6 +50,10 @@ pub const Font = struct {
         return sdl.c.TTF_FontHeight(self.ptr);
     }
 
+    pub fn lineSkip(self: Font) c_int {
+        return sdl.c.TTF_FontLineSkip(self.ptr);
+    }
+
     pub fn sizeText(self: Font, text: [:0]const u8) !sdl.Size {
         var w: c_int = undefined;
         var h: c_int = undefined;
@@ -104,6 +108,24 @@ pub const Font = struct {
         };
     }
 
+    pub fn renderUtf8Blended(self: Font, text: [:0]const u8, foreground: sdl.Color) !sdl.Surface {
+        return sdl.Surface{
+            .ptr = sdl.c.TTF_RenderUTF8_Blended(
+                self.ptr,
+                text.ptr,
+                .{ .r = foreground.r, .g = foreground.g, .b = foreground.b, .a = foreground.a },
+            ) orelse return makeError(),
+        };
+    }
+
+    pub fn ascent(self: Font) c_int {
+        return sdl.c.TTF_FontAscent(self.ptr);
+    }
+
+    pub fn descent(self: Font) c_int {
+        return sdl.c.TTF_FontDescent(self.ptr);
+    }
+
     pub fn close(self: Font) void {
         sdl.c.TTF_CloseFont(self.ptr);
     }
@@ -137,6 +159,14 @@ pub fn openFontMem(file: [:0]const u8, free: bool, point_size: c_int) !Font {
 
 pub fn openFontRw(src: *sdl.c.SDL_RWops, free: bool, point_size: c_int) !Font {
     if (sdl.c.TTF_OpenFontRW(src, @intFromBool(free), point_size)) |value| {
+        return Font{ .ptr = value };
+    } else {
+        return makeError();
+    }
+}
+
+pub fn openFontIndex(file: [:0]const u8, point_size: c_int, index: c_int) !Font {
+    if (sdl.c.TTF_OpenFontIndex(file.ptr, point_size, index)) |value| {
         return Font{ .ptr = value };
     } else {
         return makeError();

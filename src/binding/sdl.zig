@@ -2758,14 +2758,18 @@ pub const TTF_SetError = SDL_SetError;
 
 pub extern fn TTF_OpenFont(file: [*c]const u8, point_size: c_int) ?*TTF_Font;
 pub extern fn TTF_OpenFontRW(src: *SDL_RWops, free_src: c_int, point_size: c_int) ?*TTF_Font;
+pub extern fn TTF_OpenFontIndex(file: [*c]const u8, point_size: c_int, index: c_int) ?*TTF_Font;
 pub extern fn TTF_CloseFont(font: *TTF_Font) void;
 
 pub extern fn TTF_GetFontStyle(font: *TTF_Font) c_int;
 pub extern fn TTF_SetFontStyle(font: *TTF_Font, style: c_int) void;
 pub extern fn TTF_SetFontSize(font: *TTF_Font, point_size: c_int) void;
 pub extern fn TTF_FontHeight(font: *TTF_Font) c_int;
+pub extern fn TTF_FontLineSkip(font: *TTF_Font) c_int;
 
 pub extern fn TTF_SizeText(font: *TTF_Font, text: [*c]const u8, width: ?*c_int, height: ?*c_int) c_int;
+pub extern fn TTF_FontAscent(font: *TTF_Font) c_int;
+pub extern fn TTF_FontDescent(font: *TTF_Font) c_int;
 
 pub extern fn TTF_RenderText_Solid(font: *TTF_Font, text: [*c]const u8, foreground: SDL_Color) ?*SDL_Surface;
 
@@ -2787,6 +2791,12 @@ pub extern fn TTF_RenderText_Blended_Wrapped(
     text: [*c]const u8,
     foreground: SDL_Color,
     wrap_length: u32,
+) ?*SDL_Surface;
+
+pub extern fn TTF_RenderUTF8_Blended(
+    font: *TTF_Font,
+    text: [*c]const u8,
+    foreground: SDL_Color,
 ) ?*SDL_Surface;
 
 // Vulkan

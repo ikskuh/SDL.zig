@@ -658,6 +658,15 @@ pub fn blitScaled(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_
     ) < 0) return error.SdlError;
 }
 
+pub fn blit(src: Surface, src_rectangle: ?*Rectangle, dest: Surface, dest_rectangle: ?*Rectangle) !void {
+    if (c.SDL_BlitSurface(
+        src.ptr,
+        if (src_rectangle) |rect| rect.getSdlPtr() else null,
+        dest.ptr,
+        if (dest_rectangle) |rect| rect.getSdlPtr() else null,
+    ) < 0) return error.SdlError;
+}
+
 pub const BlendMode = enum(c.SDL_BlendMode) {
     none = c.SDL_BLENDMODE_NONE,
     blend = c.SDL_BLENDMODE_BLEND,
@@ -898,9 +907,10 @@ pub const Renderer = struct {
         return result;
     }
 
-    pub fn setViewport(ren: Renderer, rect: Rectangle) !void {
-        var vp = rect;
-        if (c.SDL_RenderSetViewport(ren.ptr, vp.getSdlPtr()) < 0)
+    // the SDL_Rect structure representing the drawing area, or NULL to set the viewport to the entire target.
+    pub fn setViewport(ren: Renderer, rect: ?Rectangle) !void {
+        const vp = if (rect) |r| r.getConstSdlPtr() else null;
+        if (c.SDL_RenderSetViewport(ren.ptr, vp) < 0)
             return makeError();
     }
 
