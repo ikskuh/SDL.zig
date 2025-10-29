@@ -15,22 +15,27 @@ const sdl = @import("sdl"); // Replace with the actual name in your build.zig.zo
 pub fn build(b: *std.Build) !void {
     // Determine compilation target
     const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
 
     // Create a new instance of the SDL2 Sdk
-    // Specifiy dependency name explicitly if necessary (use sdl by default) 
+    // Specify dependency name explicitly if necessary (use sdl by default)
     const sdk = sdl.init(b, .{});
 
     // Create executable for our example
-    const demo_basic = b.addExecutable(.{
-        .name = "demo-basic",
+    const root_module = b.createModule(.{
         .root_source_file = b.path("my-game.zig"),
         .target = target,
+        .optimize = optimize,
+    });
+    const demo_basic = b.addExecutable(.{
+        .name = "demo-basic",
+        .root_module = root_module,
     });
 
     sdk.link(demo_basic, .dynamic, sdl.Library.SDL2); // link SDL2 as a shared library
 
     // Add "sdl2" package that exposes the SDL2 api (like SDL_Init or SDL_CreateWindow)
-    demo_basic.root_module.addImport("sdl2", sdk.getNativeModule());
+    root_module.addImport("sdl2", sdk.getNativeModule());
 
     // Install the executable into the prefix when invoking "zig build"
     b.installArtifact(demo_basic);
@@ -211,9 +216,9 @@ Legend:
 ## Contributing
 
 You can contribute to this project in several ways:
-- Use it!  
+- Use it!
   This helps me to track bugs (which i know that there are some), and usability defects (which we can resolve then). I want this library to have the best development experience possible.
-- Implement/improve the linking experience:  
+- Implement/improve the linking experience:
   Right now, it's not possible to cross-compile for MacOS, which is very sad. We might find a way to do so, though! Also VCPKG is not well supported on windows platforms.
-- Improve the wrapper.  
+- Improve the wrapper.
   Just add the functions you need and make a PR. Or improve existing ones. I won't do it for you, so you have to get your own hands dirty!

@@ -118,8 +118,6 @@ patch_file 's/__builtin_bswap128(\([^)]*\))/@byteSwap(@TypeOf(\1), \1)/g'
 # Verify we didn't fuck up
 zig fmt "${OUTFILE}"
 
-patch_file '/usingnamespace/d'
-
 echo "test \"all decls\" { @import(\"std\").testing.refAllDecls(@import(\"${OUTFILE}\")); }" > test.zig
 
 # known issues:

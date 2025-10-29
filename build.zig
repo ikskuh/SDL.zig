@@ -20,14 +20,15 @@ pub fn build(b: *std.Build) !void {
     const skip_tests = b.option(bool, "skip-test", "When set, skips the test suite to be run. This is required for cross-builds") orelse false;
 
     if (!skip_tests) {
-        const lib_test = b.addTest(.{
+        const lib_test_mod = b.createModule(.{
             .root_source_file = .{ .cwd_relative = "src/wrapper/sdl.zig" },
-            .target = if (target.result.os.tag == .windows)
-                b.resolveTargetQuery(.{ .abi = target.result.abi })
-            else
-                null,
+            .target = target,
         });
-        lib_test.root_module.addImport("sdl-native", sdk.getNativeModule());
+
+        const lib_test = b.addTest(.{
+            .root_module = lib_test_mod,
+        });
+        lib_test_mod.addImport("sdl-native", sdk.getNativeModule());
         lib_test.linkSystemLibrary("sdl2_image");
         lib_test.linkSystemLibrary("sdl2_ttf");
         if (lib_test.rootModuleTarget().isDarwinLibC()) {
@@ -51,24 +52,30 @@ pub fn build(b: *std.Build) !void {
         test_lib_step.dependOn(&lib_test.step);
     }
 
-    const demo_wrapper = b.addExecutable(.{
-        .name = "demo-wrapper",
+    const demo_wrapper_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/wrapper.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_wrapper = b.addExecutable(.{
+        .name = "demo-wrapper",
+        .root_module = demo_wrapper_mod,
+    });
     sdk.link(demo_wrapper, sdl_linkage, .SDL2);
-    demo_wrapper.root_module.addImport("sdl2", sdk.getWrapperModule());
+    demo_wrapper_mod.addImport("sdl2", sdk.getWrapperModule());
     b.installArtifact(demo_wrapper);
 
-    const demo_wrapper_image = b.addExecutable(.{
-        .name = "demo-wrapper-image",
+    const demo_wrapper_image_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/wrapper-image.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_wrapper_image = b.addExecutable(.{
+        .name = "demo-wrapper-image",
+        .root_module = demo_wrapper_image_mod,
+    });
     sdk.link(demo_wrapper_image, sdl_linkage, .SDL2);
-    demo_wrapper_image.root_module.addImport("sdl2", sdk.getWrapperModule());
+    demo_wrapper_image_mod.addImport("sdl2", sdk.getWrapperModule());
     demo_wrapper_image.linkSystemLibrary("sdl2_image");
     demo_wrapper_image.linkSystemLibrary("jpeg");
     demo_wrapper_image.linkSystemLibrary("libpng");
@@ -79,14 +86,17 @@ pub fn build(b: *std.Build) !void {
         b.installArtifact(demo_wrapper_image);
     }
 
-    const demo_native = b.addExecutable(.{
-        .name = "demo-native",
+    const demo_native_mod = b.createModule(.{
         .root_source_file = .{ .cwd_relative = "examples/native.zig" },
         .target = target,
         .optimize = optimize,
     });
+    const demo_native = b.addExecutable(.{
+        .name = "demo-native",
+        .root_module = demo_native_mod,
+    });
     sdk.link(demo_native, sdl_linkage, .SDL2);
-    demo_native.root_module.addImport("sdl2", sdk.getNativeModule());
+    demo_native_mod.addImport("sdl2", sdk.getNativeModule());
     b.installArtifact(demo_native);
 
     const run_demo_wrappr = b.addRunArtifact(demo_wrapper);
@@ -164,16 +174,8 @@ pub fn init(b: *Build, opt: SdkOption) *Sdk {
 /// for a more *ziggy* feeling.
 /// This is similar to the *C import* result.
 pub fn getNativeModule(sdk: *Sdk) *Build.Module {
-    const build_options = sdk.builder.addOptions();
-    build_options.addOption(bool, "vulkan", false);
     return sdk.builder.createModule(.{
         .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
-        .imports = &.{
-            .{
-                .name = sdk.builder.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
-        },
     });
 }
 
@@ -182,15 +184,9 @@ pub fn getNativeModule(sdk: *Sdk) *Build.Module {
 /// provided as an argument.
 /// This is similar to the *C import* result.
 pub fn getNativeModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
-    const build_options = sdk.builder.addOptions();
-    build_options.addOption(bool, "vulkan", true);
     return sdk.builder.createModule(.{
         .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
         .imports = &.{
-            .{
-                .name = sdk.builder.dupe("build_options"),
-                .module = build_options.createModule(),
-            },
             .{
                 .name = sdk.builder.dupe("vulkan"),
                 .module = vulkan,
@@ -231,10 +227,15 @@ pub fn getWrapperModuleVulkan(sdk: *Sdk, vulkan: *Build.Module) *Build.Module {
 }
 
 fn linkLinuxCross(sdk: *Sdk, exe: *Compile) !void {
-    const build_linux_sdl_stub = sdk.builder.addSharedLibrary(.{
-        .name = "SDL2",
+    const module = sdk.builder.createModule(.{
+        .root_source_file = sdk.builder.path("src/binding/sdl.zig"),
         .target = exe.root_module.resolved_target.?,
         .optimize = exe.root_module.optimize.?,
+    });
+    const build_linux_sdl_stub = sdk.builder.addLibrary(.{
+        .name = "SDL2",
+        .root_module = module,
+        .linkage = .dynamic,
     });
     build_linux_sdl_stub.addAssemblyFile(sdk.prepare_sources.getStubFile());
     exe.linkLibrary(build_linux_sdl_stub);
@@ -256,7 +257,14 @@ fn linkWindows(
     };
 
     if (exe.root_module.resolved_target.?.result.abi == .msvc) {
-        exe.linkSystemLibrary2(lib_name, .{ .use_pkg_config = .no });
+        // For MSVC, we need to explicitly link against the .lib file, not the .dll
+        const lib_file_name = try std.fmt.allocPrint(sdk.builder.allocator, "{s}.lib", .{lib_name});
+        defer sdk.builder.allocator.free(lib_file_name);
+
+        const lib_path = try std.fs.path.join(sdk.builder.allocator, &[_][]const u8{ paths.libs, lib_file_name });
+        defer sdk.builder.allocator.free(lib_path);
+
+        exe.addObjectFile(.{ .cwd_relative = lib_path });
     } else {
         const file_name = try std.fmt.allocPrint(sdk.builder.allocator, "lib{s}.{s}", .{
             lib_name,
@@ -401,7 +409,7 @@ const GetPathsError = error{
 };
 
 fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, err: GetPathsError, library: Library) !void {
-    const writer = std.io.getStdErr().writer();
+    var writer = std.fs.File.stderr().writer(&.{}).interface;
     const target_name = try tripleName(sdk.builder.allocator, target_local);
     defer sdk.builder.allocator.free(target_name);
 
@@ -455,6 +463,8 @@ fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.
             try writer.print("{s} contains an invalid zig triple. Please fix that file!\n", .{config_path});
         },
     }
+
+    try writer.flush();
 }
 
 fn getPaths(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, library: Library) GetPathsError!Paths {
@@ -557,7 +567,8 @@ const PrepareStubSourceStep = struct {
         var file = try dirpath.dir.createFile("sdl.S", .{});
         defer file.close();
 
-        var writer = file.writer();
+        var file_writer = file.writer(&.{});
+        const writer = &file_writer.interface;
         try writer.writeAll(".text\n");
 
         var iter = std.mem.splitScalar(u8, sdl2_symbol_definitions, '\n');
@@ -575,6 +586,7 @@ const PrepareStubSourceStep = struct {
             dirpath.path,
             "sdl.S",
         });
+        try writer.flush();
     }
 };
 
@@ -621,23 +633,24 @@ const CacheBuilder = struct {
         var hash: [20]u8 = undefined;
         self.hasher.final(&hash);
 
+        const cache_root = self.builder.cache_root.path orelse ".zig-cache";
         const path = if (self.subdir) |subdir|
             try std.fmt.allocPrint(
                 self.builder.allocator,
-                "{s}/{s}/o/{}",
+                "{s}/{s}/o/{x}",
                 .{
-                    self.builder.cache_root.path.?,
+                    cache_root,
                     subdir,
-                    std.fmt.fmtSliceHexLower(&hash),
+                    &hash,
                 },
             )
         else
             try std.fmt.allocPrint(
                 self.builder.allocator,
-                "{s}/o/{}",
+                "{s}/o/{x}",
                 .{
-                    self.builder.cache_root.path.?,
-                    std.fmt.fmtSliceHexLower(&hash),
+                    cache_root,
+                    &hash,
                 },
             );
 
