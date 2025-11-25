@@ -408,8 +408,15 @@ const GetPathsError = error{
     MissingTarget,
 };
 
-fn printPathsErrorMessage(sdk: *Sdk, config_path: []const u8, target_local: std.Build.ResolvedTarget, err: GetPathsError, library: Library) !void {
-    var writer = std.fs.File.stderr().writer(&.{}).interface;
+fn printPathsErrorMessage(
+    sdk: *Sdk,
+    config_path: []const u8,
+    target_local: std.Build.ResolvedTarget,
+    err: GetPathsError,
+    library: Library,
+) !void {
+    var stderr_writer = std.fs.File.stderr().writer(&.{});
+    const writer = &stderr_writer.interface;
     const target_name = try tripleName(sdk.builder.allocator, target_local);
     defer sdk.builder.allocator.free(target_name);
 
@@ -567,7 +574,8 @@ const PrepareStubSourceStep = struct {
         var file = try dirpath.dir.createFile("sdl.S", .{});
         defer file.close();
 
-        var file_writer = file.writer(&.{});
+        var file_buff: [1024]u8 = undefined;
+        var file_writer = file.writer(&file_buff);
         const writer = &file_writer.interface;
         try writer.writeAll(".text\n");
 
@@ -581,12 +589,12 @@ const PrepareStubSourceStep = struct {
             try writer.print("{s}:\n", .{sym});
             try writer.writeAll("  .byte 0\n");
         }
+        try writer.flush();
 
         self.assembly_source.path = try std.fs.path.join(self.sdk.builder.allocator, &[_][]const u8{
             dirpath.path,
             "sdl.S",
         });
-        try writer.flush();
     }
 };
 
